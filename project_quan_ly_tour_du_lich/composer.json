@@ -1,0 +1,18 @@
+{
+    "name": "tour-management/tour-du-lich",
+    "description": "Hệ thống quản lý tour du lịch",
+    "type": "project",
+    "require": {
+        "php": ">=7.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
+
+
