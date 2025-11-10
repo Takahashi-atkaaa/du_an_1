@@ -1,4 +1,4 @@
-<?php 
+<?php
 class NhaCungCap 
 {
     public $conn;

@@ -1,4 +1,4 @@
-<?php 
+<?php
 class KhachHang 
 {
     public $conn;

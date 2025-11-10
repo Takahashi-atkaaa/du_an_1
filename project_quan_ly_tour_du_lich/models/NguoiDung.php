@@ -1,4 +1,4 @@
-<?php 
+<?php
 // Model cho NguoiDung - tương tác với cơ sở dữ liệu
 class NguoiDung 
 {

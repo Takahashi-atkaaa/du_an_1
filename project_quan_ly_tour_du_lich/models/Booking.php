@@ -1,4 +1,4 @@
-<?php 
+<?php
 // Model cho Booking - tương tác với cơ sở dữ liệu
 class Booking 
 {
@@ -82,7 +82,7 @@ class Booking
             $data['trang_thai'] ?? 'cho_xac_nhan',
             $id
         ]);
-    }
+}
 
     // Xóa booking
     public function delete($id) {

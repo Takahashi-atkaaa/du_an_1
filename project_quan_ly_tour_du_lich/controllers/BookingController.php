@@ -36,7 +36,7 @@ class BookingController {
     
     public function show() {
         requireLogin();
-        $id = $_GET['id'] ?? 0;
+            $id = $_GET['id'] ?? 0;
         $booking = $this->bookingModel->findById($id);
         
         if (!$booking || $booking['khach_hang_id'] != $_SESSION['user_id']) {

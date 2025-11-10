@@ -1,4 +1,4 @@
-<?php 
+<?php
 class HDV 
 {
     public $conn;
@@ -20,5 +20,5 @@ class HDV
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch();
-    }
+}
 }

@@ -1,4 +1,4 @@
-<?php 
+<?php
 // Model cho Tour - tương tác với cơ sở dữ liệu
 class Tour 
 {

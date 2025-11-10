@@ -1,141 +1,199 @@
--- Tạo database
-CREATE DATABASE IF NOT EXISTS quan_ly_tour_du_lich CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- ============================================
+-- 🧭 DATABASE: QUAN_LY_TOUR_DU_LICH
+-- Phiên bản: Có 4 tác nhân, Admin quyền cao nhất
+-- ============================================
+
+CREATE DATABASE IF NOT EXISTS quan_ly_tour_du_lich;
 USE quan_ly_tour_du_lich;
 
--- Bảng người dùng
-CREATE TABLE IF NOT EXISTS nguoi_dung (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    ten VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    password VARCHAR(255) NOT NULL,
-    vai_tro ENUM('admin', 'hdv', 'khach_hang', 'nha_cung_cap') DEFAULT 'khach_hang',
-    so_dien_thoai VARCHAR(20),
-    dia_chi TEXT,
-    trang_thai TINYINT(1) DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ==============================
+-- 1. BẢNG NGƯỜI DÙNG (CHUNG)
+-- ==============================
+CREATE TABLE nguoi_dung (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  ten_dang_nhap VARCHAR(100) UNIQUE,
+  mat_khau VARCHAR(255),
+  ho_ten VARCHAR(255),
+  email VARCHAR(255),
+  so_dien_thoai VARCHAR(20),
+  vai_tro ENUM('Admin','HDV','KhachHang','NhaCungCap'),
+  quyen_cap_cao BOOLEAN DEFAULT FALSE,
+  trang_thai ENUM('HoatDong','BiKhoa') DEFAULT 'HoatDong',
+  ngay_tao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 
--- Bảng khách hàng
-CREATE TABLE IF NOT EXISTS khach_hang (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nguoi_dung_id INT NOT NULL,
-    cmnd_cccd VARCHAR(20),
-    ngay_sinh DATE,
-    gioi_tinh ENUM('nam', 'nu', 'khac'),
-    FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 2. BẢNG KHÁCH HÀNG (THÔNG TIN RIÊNG)
+-- ======================================
+CREATE TABLE khach_hang (
+  khach_hang_id INT PRIMARY KEY AUTO_INCREMENT,
+  nguoi_dung_id INT,
+  dia_chi VARCHAR(255),
+  gioi_tinh ENUM('Nam','Nữ','Khác'),
+  ngay_sinh DATE,
+  FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id)
+);
 
--- Bảng HDV (Hướng dẫn viên)
-CREATE TABLE IF NOT EXISTS hdv (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nguoi_dung_id INT NOT NULL,
-    bang_cap VARCHAR(100),
-    kinh_nghiem TEXT,
-    FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 3. BẢNG NHÂN SỰ (HDV, ĐIỀU HÀNH, TÀI XẾ)
+-- ======================================
+CREATE TABLE nhan_su (
+  nhan_su_id INT PRIMARY KEY AUTO_INCREMENT,
+  nguoi_dung_id INT,
+  vai_tro ENUM('HDV','DieuHanh','TaiXe','Khac'),
+  chung_chi TEXT,
+  ngon_ngu TEXT,
+  kinh_nghiem TEXT,
+  suc_khoe TEXT,
+  FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id)
+);
 
--- Bảng nhà cung cấp
-CREATE TABLE IF NOT EXISTS nha_cung_cap (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    nguoi_dung_id INT NOT NULL,
-    ten_cong_ty VARCHAR(200),
-    ma_so_thue VARCHAR(50),
-    dia_chi TEXT,
-    so_dien_thoai VARCHAR(20),
-    FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 4. BẢNG NHÀ CUNG CẤP
+-- ======================================
+CREATE TABLE nha_cung_cap (
+  id_nha_cung_cap INT PRIMARY KEY AUTO_INCREMENT,
+  nguoi_dung_id INT,
+  ten_don_vi VARCHAR(255),
+  loai_dich_vu ENUM('KhachSan','NhaHang','Xe','Ve','Visa','BaoHiem','Khac'),
+  dia_chi VARCHAR(255),
+  lien_he VARCHAR(100),
+  mo_ta TEXT,
+  danh_gia_tb FLOAT,
+  FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id)
+);
 
--- Bảng tour
-CREATE TABLE IF NOT EXISTS tours (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    ten_tour VARCHAR(200) NOT NULL,
-    mo_ta TEXT,
-    gia DECIMAL(15,2) NOT NULL,
-    so_ngay INT DEFAULT 1,
-    so_dem INT DEFAULT 0,
-    diem_khoi_hanh VARCHAR(100),
-    diem_den VARCHAR(100),
-    hinh_anh VARCHAR(255),
-    so_cho_trong INT DEFAULT 0,
-    trang_thai ENUM('dang_mo', 'het_cho', 'dang_chuan_bi', 'da_ket_thuc') DEFAULT 'dang_mo',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 5. BẢNG TOUR
+-- ======================================
+CREATE TABLE tour (
+  tour_id INT PRIMARY KEY AUTO_INCREMENT,
+  ten_tour VARCHAR(255),
+  loai_tour ENUM('TrongNuoc','QuocTe','TheoYeuCau'),
+  mo_ta TEXT,
+  gia_co_ban DECIMAL(15,2),
+  chinh_sach TEXT,
+  id_nha_cung_cap INT,
+  tao_boi INT,
+  trang_thai ENUM('HoatDong','TamDung','HetHan') DEFAULT 'HoatDong',
+  FOREIGN KEY (id_nha_cung_cap) REFERENCES nha_cung_cap(id_nha_cung_cap),
+  FOREIGN KEY (tao_boi) REFERENCES nguoi_dung(id)
+);
 
--- Bảng booking (Đặt tour)
-CREATE TABLE IF NOT EXISTS bookings (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    tour_id INT NOT NULL,
-    khach_hang_id INT NOT NULL,
-    hdv_id INT,
-    so_luong_nguoi INT NOT NULL DEFAULT 1,
-    ngay_khoi_hanh DATE,
-    ngay_ket_thuc DATE,
-    tong_tien DECIMAL(15,2) NOT NULL,
-    trang_thai ENUM('cho_xac_nhan', 'da_xac_nhan', 'dang_di', 'hoan_thanh', 'da_huy') DEFAULT 'cho_xac_nhan',
-    ghi_chu TEXT,
-    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE,
-    FOREIGN KEY (khach_hang_id) REFERENCES nguoi_dung(id) ON DELETE CASCADE,
-    FOREIGN KEY (hdv_id) REFERENCES nguoi_dung(id) ON DELETE SET NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 6. BẢNG LỊCH TRÌNH TOUR
+-- ======================================
+CREATE TABLE lich_trinh_tour (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  ngay_thu INT,
+  dia_diem VARCHAR(255),
+  hoat_dong TEXT,
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id)
+);
 
--- Bảng giao dịch (Thanh toán)
-CREATE TABLE IF NOT EXISTS giao_dich (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    booking_id INT NOT NULL,
-    so_tien DECIMAL(15,2) NOT NULL,
-    loai_giao_dich ENUM('thanh_toan', 'hoan_tien') DEFAULT 'thanh_toan',
-    phuong_thuc ENUM('tien_mat', 'chuyen_khoan', 'the') DEFAULT 'tien_mat',
-    trang_thai ENUM('cho_xu_ly', 'thanh_cong', 'that_bai') DEFAULT 'cho_xu_ly',
-    ghi_chu TEXT,
-    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE CASCADE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 7. BẢNG HÌNH ẢNH TOUR
+-- ======================================
+CREATE TABLE hinh_anh_tour (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  url_anh VARCHAR(255),
+  mo_ta VARCHAR(255),
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id)
+);
 
--- Bảng đánh giá
-CREATE TABLE IF NOT EXISTS danh_gia (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    tour_id INT NOT NULL,
-    khach_hang_id INT NOT NULL,
-    booking_id INT,
-    diem_so INT NOT NULL CHECK (diem_so >= 1 AND diem_so <= 5),
-    noi_dung TEXT,
-    trang_thai TINYINT(1) DEFAULT 1,
-    FOREIGN KEY (tour_id) REFERENCES tours(id) ON DELETE CASCADE,
-    FOREIGN KEY (khach_hang_id) REFERENCES nguoi_dung(id) ON DELETE CASCADE,
-    FOREIGN KEY (booking_id) REFERENCES bookings(id) ON DELETE SET NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- ======================================
+-- 8. BẢNG BOOKING (ĐẶT TOUR)
+-- ======================================
+CREATE TABLE booking (
+  booking_id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  khach_hang_id INT,
+  ngay_dat DATE,
+  ngay_khoi_hanh DATE,
+  so_nguoi INT,
+  tong_tien DECIMAL(15,2),
+  trang_thai ENUM('ChoXacNhan','DaCoc','HoanTat','Huy'),
+  ghi_chu TEXT,
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id),
+  FOREIGN KEY (khach_hang_id) REFERENCES khach_hang(khach_hang_id)
+);
 
--- Thêm dữ liệu mẫu
--- Tạo tài khoản mặc định (password: password)
--- Lưu ý: Password đã được hash bằng password_hash('password', PASSWORD_DEFAULT)
--- Để tạo hash mới, chạy: php generate_password.php
+-- ======================================
+-- 9. BẢNG LỊCH KHỞI HÀNH (PHÂN CÔNG HDV)
+-- ======================================
+CREATE TABLE lich_khoi_hanh (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  ngay_khoi_hanh DATE,
+  ngay_ket_thuc DATE,
+  diem_tap_trung VARCHAR(255),
+  hdv_id INT,
+  trang_thai ENUM('SapKhoiHanh','DangChay','HoanThanh'),
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id),
+  FOREIGN KEY (hdv_id) REFERENCES nhan_su(nhan_su_id)
+);
 
-INSERT INTO nguoi_dung (ten, email, password, vai_tro) VALUES
-('Admin', 'admin@example.com', '$2y$12$9eUtO/stZ3WwiOshqytBwOjySbJuJjrI4ndgrmyiJe93RJR0Jp4kC', 'admin'),
-('Hướng dẫn viên 1', 'hdv@example.com', '$2y$12$9eUtO/stZ3WwiOshqytBwOjySbJuJjrI4ndgrmyiJe93RJR0Jp4kC', 'hdv'),
-('Khách hàng 1', 'khach@example.com', '$2y$12$9eUtO/stZ3WwiOshqytBwOjySbJuJjrI4ndgrmyiJe93RJR0Jp4kC', 'khach_hang');
+-- ======================================
+-- 10. BẢNG NHẬT KÝ TOUR
+-- ======================================
+CREATE TABLE nhat_ky_tour (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  nhan_su_id INT,
+  noi_dung TEXT,
+  ngay_ghi DATE,
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id),
+  FOREIGN KEY (nhan_su_id) REFERENCES nhan_su(nhan_su_id)
+);
 
--- Thêm tour mẫu
-INSERT INTO tours (ten_tour, mo_ta, gia, so_ngay, so_dem, diem_khoi_hanh, diem_den, so_cho_trong) VALUES
-('Tour Hà Nội - Sapa', 'Tour khám phá Sapa với cảnh đẹp núi rừng và văn hóa dân tộc', 2500000, 3, 2, 'Hà Nội', 'Sapa', 20),
-('Tour Đà Nẵng - Hội An', 'Tour tham quan phố cổ Hội An và bãi biển Đà Nẵng', 3000000, 4, 3, 'Đà Nẵng', 'Hội An', 15),
-('Tour Phú Quốc', 'Tour nghỉ dưỡng tại đảo Phú Quốc', 5000000, 5, 4, 'TP.HCM', 'Phú Quốc', 30);
+-- ======================================
+-- 11. BẢNG PHẢN HỒI & ĐÁNH GIÁ
+-- ======================================
+CREATE TABLE phan_hoi_danh_gia (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  nguoi_dung_id INT,
+  loai ENUM('Tour','DichVu','NhaCungCap'),
+  diem INT CHECK (diem BETWEEN 1 AND 5),
+  noi_dung TEXT,
+  ngay_danh_gia DATE,
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id),
+  FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id)
+);
 
--- Lưu ý: 
--- - Password mặc định cho tất cả tài khoản: "password"
--- - Để đổi password, sử dụng: UPDATE nguoi_dung SET password = password_hash('password_moi', PASSWORD_DEFAULT) WHERE id = ?;
--- - Hoặc chạy script: php generate_password.php để tạo hash mới
+-- ======================================
+-- 12. BẢNG GIAO DỊCH TÀI CHÍNH
+-- ======================================
+CREATE TABLE giao_dich_tai_chinh (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  tour_id INT,
+  loai ENUM('Thu','Chi'),
+  so_tien DECIMAL(15,2),
+  mo_ta TEXT,
+  ngay_giao_dich DATE,
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id)
+);
 
+-- ======================================
+-- 13. BẢNG YÊU CẦU ĐẶC BIỆT CỦA KHÁCH
+-- ======================================
+CREATE TABLE yeu_cau_dac_biet (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  khach_hang_id INT,
+  tour_id INT,
+  noi_dung TEXT,
+  FOREIGN KEY (khach_hang_id) REFERENCES khach_hang(khach_hang_id),
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id)
+);
+
+-- ======================================
+-- 14. DỮ LIỆU MẪU (ADMIN QUYỀN CAO NHẤT)
+-- ======================================
+INSERT INTO nguoi_dung (ten_dang_nhap, mat_khau, ho_ten, email, vai_tro, quyen_cap_cao)
+VALUES 
+('admin', 'admin123', 'Quản trị viên hệ thống', 'admin@tour.com', 'Admin', TRUE),
+('hdv01', 'hdv123', 'Nguyễn Văn Hướng', 'hdv@tour.com', 'HDV', FALSE),
+('khach01', 'khach123', 'Trần Thị Khách', 'khach@tour.com', 'KhachHang', FALSE),
+('ncc01', 'ncc123', 'Công ty ABC Travel', 'ncc@tour.com', 'NhaCungCap', FALSE);

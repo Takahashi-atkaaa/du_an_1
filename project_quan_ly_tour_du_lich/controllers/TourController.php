@@ -3,16 +3,16 @@ require_once 'models/Tour.php';
 
 class TourController {
     private $model;
-
+    
     public function __construct() {
         $this->model = new Tour();
     }
-
+    
     public function index() {
         $tours = $this->model->getAll();
         require 'views/khach_hang/danh_sach_tour.php';
     }
-
+    
     public function show() {
         $id = $_GET['id'] ?? null;
         if (!$id) {
@@ -26,7 +26,7 @@ class TourController {
         }
         require 'views/khach_hang/chi_tiet_tour.php';
     }
-
+    
     public function create() {
         requireRole('admin');
         
@@ -47,7 +47,7 @@ class TourController {
             require 'views/admin/quan_ly_tour.php';
         }
     }
-
+    
     public function update() {
         requireRole('admin');
         $id = $_POST['id'] ?? $_GET['id'] ?? null;
@@ -66,7 +66,7 @@ class TourController {
             redirect('index.php?act=admin/quanLyTour');
         }
     }
-
+    
     public function delete() {
         requireRole('admin');
         $id = $_GET['id'] ?? null;
