@@ -16,14 +16,13 @@ if (file_exists(__DIR__ . '/../.env')) {
 }
 
 // Base URL
-define('BASE_URL', $_ENV['APP_URL'] ?? 'http://localhost/project_quan_ly_tour_du_lich/');
+define('BASE_URL'       , 'http://localhost/tunganh/du_an_1/project_quan_ly_tour_du_lich/');
 
-// Database Configuration
-define('DB_HOST', $_ENV['DB_HOST'] ?? '127.0.0.1');
-define('DB_PORT', $_ENV['DB_PORT'] ?? 3306);
-define('DB_USERNAME', $_ENV['DB_USER'] ?? 'root');
-define('DB_PASSWORD', $_ENV['DB_PASS'] ?? '');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'quan_ly_tour_du_lich');
+define('DB_HOST'    , 'localhost');
+define('DB_PORT'    , 3306);
+define('DB_USERNAME', 'root');
+define('DB_PASSWORD', '');
+define('DB_NAME'    , 'quan_ly_tour_du_lich');  // Tên database
 
 // Path Configuration
 define('PATH_ROOT', __DIR__ . '/../');

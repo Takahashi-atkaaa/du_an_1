@@ -20,8 +20,8 @@
                         <div class="tour-item">
                             <h3><?php echo htmlspecialchars($tour['ten_tour']); ?></h3>
                             <p><?php echo htmlspecialchars($tour['mo_ta']); ?></p>
-                            <p><strong>Giá:</strong> <?php echo number_format($tour['gia']); ?> VNĐ</p>
-                            <a href="index.php?act=tour/show&id=<?php echo $tour['id']; ?>">Xem chi tiết</a>
+                            <p><strong>Giá cơ bản:</strong> <?php echo number_format((float)($tour['gia_co_ban'] ?? 0)); ?> VNĐ</p>
+                            <a href="index.php?act=tour/show&id=<?php echo $tour['tour_id']; ?>">Xem chi tiết</a>
                         </div>
                     <?php endforeach; ?>
                 </div>

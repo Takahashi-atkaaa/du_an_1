@@ -12,7 +12,7 @@
         <form method="POST" action="index.php?act=auth/register">
             <div class="form-group">
                 <label>Họ và tên:</label>
-                <input type="text" name="ten" required>
+                <input type="text" name="ho_ten" required>
             </div>
             <div class="form-group">
                 <label>Email:</label>

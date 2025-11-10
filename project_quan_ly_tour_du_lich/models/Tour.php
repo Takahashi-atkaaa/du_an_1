@@ -11,7 +11,7 @@ class Tour
 
     // Lấy tất cả tour
     public function getAll() {
-        $sql = "SELECT * FROM tours ORDER BY created_at DESC";
+        $sql = "SELECT * FROM tour ORDER BY tour_id DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -19,7 +19,7 @@ class Tour
 
     // Lấy tour theo ID
     public function findById($id) {
-        $sql = "SELECT * FROM tours WHERE id = ?";
+        $sql = "SELECT * FROM tour WHERE tour_id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch();
@@ -27,7 +27,7 @@ class Tour
 
     // Tìm tour theo điều kiện
     public function find($conditions = []) {
-        $sql = "SELECT * FROM tours";
+        $sql = "SELECT * FROM tour";
         $params = [];
         
         if (!empty($conditions)) {
@@ -46,41 +46,41 @@ class Tour
 
     // Thêm tour mới
     public function insert($data) {
-        $sql = "INSERT INTO tours (ten_tour, mo_ta, gia, so_ngay, so_dem, diem_khoi_hanh, diem_den, created_at) 
+        $sql = "INSERT INTO tour (ten_tour, loai_tour, mo_ta, gia_co_ban, chinh_sach, id_nha_cung_cap, tao_boi, trang_thai) 
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             $data['ten_tour'] ?? '',
+            $data['loai_tour'] ?? 'TrongNuoc',
             $data['mo_ta'] ?? '',
-            $data['gia'] ?? 0,
-            $data['so_ngay'] ?? 1,
-            $data['so_dem'] ?? 0,
-            $data['diem_khoi_hanh'] ?? '',
-            $data['diem_den'] ?? '',
-            $data['created_at'] ?? date('Y-m-d H:i:s')
+            $data['gia_co_ban'] ?? 0,
+            $data['chinh_sach'] ?? null,
+            $data['id_nha_cung_cap'] ?? null,
+            $data['tao_boi'] ?? null,
+            $data['trang_thai'] ?? 'HoatDong'
         ]);
     }
 
     // Cập nhật tour
     public function update($id, $data) {
-        $sql = "UPDATE tours SET ten_tour = ?, mo_ta = ?, gia = ?, so_ngay = ?, so_dem = ?, 
-                diem_khoi_hanh = ?, diem_den = ? WHERE id = ?";
+        $sql = "UPDATE tour SET ten_tour = ?, loai_tour = ?, mo_ta = ?, gia_co_ban = ?, chinh_sach = ?, 
+                id_nha_cung_cap = ?, trang_thai = ? WHERE tour_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             $data['ten_tour'] ?? '',
+            $data['loai_tour'] ?? 'TrongNuoc',
             $data['mo_ta'] ?? '',
-            $data['gia'] ?? 0,
-            $data['so_ngay'] ?? 1,
-            $data['so_dem'] ?? 0,
-            $data['diem_khoi_hanh'] ?? '',
-            $data['diem_den'] ?? '',
+            $data['gia_co_ban'] ?? 0,
+            $data['chinh_sach'] ?? null,
+            $data['id_nha_cung_cap'] ?? null,
+            $data['trang_thai'] ?? 'HoatDong',
             $id
         ]);
     }
 
     // Xóa tour
     public function delete($id) {
-        $sql = "DELETE FROM tours WHERE id = ?";
+        $sql = "DELETE FROM tour WHERE tour_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([$id]);
     }

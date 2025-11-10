@@ -3,7 +3,7 @@
 class AdminController {
     
     public function __construct() {
-        requireRole('admin');
+        requireRole('Admin');
     }
     
     public function dashboard() {

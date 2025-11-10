@@ -11,7 +11,7 @@ class NguoiDung
 
     // Lấy tất cả người dùng
     public function getAll() {
-        $sql = "SELECT * FROM nguoi_dung ORDER BY created_at DESC";
+        $sql = "SELECT * FROM nguoi_dung ORDER BY ngay_tao DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
@@ -54,15 +54,16 @@ class NguoiDung
 
     // Thêm người dùng mới
     public function insert($data) {
-        $sql = "INSERT INTO nguoi_dung (ten, email, password, vai_tro, created_at) 
-                VALUES (?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, ho_ten, email, mat_khau, vai_tro, ngay_tao) 
+                VALUES (?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         $result = $stmt->execute([
-            $data['ten'] ?? '',
+            $data['ten_dang_nhap'] ?? ($data['email'] ?? ''),
+            $data['ho_ten'] ?? '',
             $data['email'] ?? '',
-            $data['password'] ?? '',
-            $data['vai_tro'] ?? 'khach_hang',
-            $data['created_at'] ?? date('Y-m-d H:i:s')
+            $data['mat_khau'] ?? '',
+            $data['vai_tro'] ?? 'KhachHang',
+            $data['ngay_tao'] ?? date('Y-m-d H:i:s')
         ]);
         
         if ($result) {
@@ -73,12 +74,12 @@ class NguoiDung
 
     // Cập nhật người dùng
     public function update($id, $data) {
-        $sql = "UPDATE nguoi_dung SET ten = ?, email = ?, vai_tro = ? WHERE id = ?";
+        $sql = "UPDATE nguoi_dung SET ho_ten = ?, email = ?, vai_tro = ? WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
-            $data['ten'] ?? '',
+            $data['ho_ten'] ?? '',
             $data['email'] ?? '',
-            $data['vai_tro'] ?? 'khach_hang',
+            $data['vai_tro'] ?? 'KhachHang',
             $id
         ]);
     }

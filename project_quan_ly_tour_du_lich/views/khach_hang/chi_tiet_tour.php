@@ -13,11 +13,10 @@
             <div class="tour-detail">
                 <h1><?php echo htmlspecialchars($tour['ten_tour']); ?></h1>
                 <p><?php echo htmlspecialchars($tour['mo_ta']); ?></p>
-                <p><strong>Giá:</strong> <?php echo number_format($tour['gia']); ?> VNĐ</p>
-                <p><strong>Số ngày:</strong> <?php echo $tour['so_ngay']; ?> ngày</p>
-                <p><strong>Điểm khởi hành:</strong> <?php echo htmlspecialchars($tour['diem_khoi_hanh']); ?></p>
-                <p><strong>Điểm đến:</strong> <?php echo htmlspecialchars($tour['diem_den']); ?></p>
-                <a href="index.php?act=booking/create&tour_id=<?php echo $tour['id']; ?>">Đặt tour</a>
+                <p><strong>Loại tour:</strong> <?php echo htmlspecialchars($tour['loai_tour'] ?? ''); ?></p>
+                <p><strong>Giá cơ bản:</strong> <?php echo number_format((float)$tour['gia_co_ban']); ?> VNĐ</p>
+                <p><strong>Trạng thái:</strong> <?php echo htmlspecialchars($tour['trang_thai'] ?? ''); ?></p>
+                <a href="index.php?act=booking/create&tour_id=<?php echo $tour['tour_id']; ?>">Đặt tour</a>
             </div>
         <?php endif; ?>
     </div>

@@ -11,7 +11,7 @@
         <h2>Thông tin cá nhân</h2>
         <?php if (isset($user)): ?>
             <div class="profile-info">
-                <p><strong>Họ tên:</strong> <?php echo htmlspecialchars($user['ten']); ?></p>
+                <p><strong>Họ tên:</strong> <?php echo htmlspecialchars($user['ho_ten']); ?></p>
                 <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
                 <p><strong>Vai trò:</strong> <?php echo htmlspecialchars($user['vai_tro']); ?></p>
             </div>

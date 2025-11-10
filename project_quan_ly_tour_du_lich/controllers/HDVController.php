@@ -3,7 +3,7 @@
 class HDVController {
     
     public function __construct() {
-        requireRole('hdv');
+        requireRole('HDV');
     }
     
     public function lichLamViec() {

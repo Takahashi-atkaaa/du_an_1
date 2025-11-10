@@ -16,7 +16,7 @@ class NhaCungCap
     }
 
     public function findById($id) {
-        $sql = "SELECT * FROM nha_cung_cap WHERE id = ?";
+        $sql = "SELECT * FROM nha_cung_cap WHERE id_nha_cung_cap = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch();

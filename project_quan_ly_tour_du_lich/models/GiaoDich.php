@@ -9,14 +9,14 @@ class GiaoDich
     }
 
     public function getAll() {
-        $sql = "SELECT * FROM giao_dich";
+        $sql = "SELECT * FROM giao_dich_tai_chinh";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
         return $stmt->fetchAll();
     }
 
     public function findById($id) {
-        $sql = "SELECT * FROM giao_dich WHERE id = ?";
+        $sql = "SELECT * FROM giao_dich_tai_chinh WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch();
