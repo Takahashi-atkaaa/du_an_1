@@ -9,6 +9,14 @@ class Booking
         $this->conn = connectDB();
     }
 
+    // Tìm booking theo tour_id và khach_hang_id (mã tour và mã khách hàng)
+    public function findByTourAndCustomer($tourId, $khachHangId) {
+        $sql = "SELECT * FROM booking WHERE tour_id = ? AND khach_hang_id = ? ORDER BY ngay_dat DESC LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId, (int)$khachHangId]);
+        return $stmt->fetch();
+    }
+
     // Lấy tất cả booking
     public function getAll() {
         $sql = "SELECT * FROM booking ORDER BY ngay_dat DESC";

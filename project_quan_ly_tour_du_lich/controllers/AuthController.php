@@ -31,8 +31,13 @@ class AuthController {
                     }
                 }
                 
-                header('Location: index.php?act=tour/index');
-                exit();
+                if ($user['vai_tro'] === 'Admin') {
+                    header('Location: index.php?act=admin/dashboard');
+                    exit();
+                } else {
+                    header('Location: index.php?act=tour/index');
+                    exit();
+                }
             } else {
                 $error = "Email hoặc mật khẩu không đúng";
                 require 'views/auth/login.php';

@@ -31,7 +31,7 @@ require_once './models/GiaoDich.php';
 require_once './models/DanhGia.php';
 
 // Route
-$act = $_GET['act'] ?? 'tour/index';
+$act = $_GET['act'] ?? 'admin/dashboard';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
@@ -48,6 +48,7 @@ match ($act) {
     'auth/logout' => (new AuthController())->logout(),
     'auth/forgotPassword' => (new AuthController())->forgotPassword(),
     'auth/profile' => (new AuthController())->profile(),
+
     
     // Booking
     'booking/index' => (new BookingController())->index(),
@@ -79,6 +80,7 @@ match ($act) {
     'khachHang/chiTietTour' => (new KhachHangController())->chiTietTour(),
     'khachHang/datTour' => (new KhachHangController())->datTour(),
     'khachHang/danhGia' => (new KhachHangController())->danhGia(),
+    'khachHang/traCuu' => (new KhachHangController())->traCuu(),
     
     // Default
     default => die("Route không tồn tại: $act")

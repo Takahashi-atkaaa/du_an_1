@@ -197,3 +197,99 @@ VALUES
 ('hdv01', 'hdv123', 'Nguyễn Văn Hướng', 'hdv@tour.com', 'HDV', FALSE),
 ('khach01', 'khach123', 'Trần Thị Khách', 'khach@tour.com', 'KhachHang', FALSE),
 ('ncc01', 'ncc123', 'Công ty ABC Travel', 'ncc@tour.com', 'NhaCungCap', FALSE);
+
+-- Tạo dữ liệu mẫu cho bảng KHÁCH HÀNG
+INSERT INTO khach_hang (nguoi_dung_id, dia_chi, gioi_tinh, ngay_sinh) VALUES
+((SELECT id FROM nguoi_dung WHERE ten_dang_nhap = 'khach01'), '123 Đường A, Quận B, TP. HCM', 'Nữ', '1995-05-10');
+
+-- Tạo dữ liệu mẫu cho bảng NHÂN SỰ (HDV)
+INSERT INTO nhan_su (nguoi_dung_id, vai_tro, chung_chi, ngon_ngu, kinh_nghiem, suc_khoe) VALUES
+((SELECT id FROM nguoi_dung WHERE ten_dang_nhap = 'hdv01'), 'HDV', 'Chứng chỉ nghiệp vụ hướng dẫn viên', 'Tiếng Việt, Tiếng Anh', '5 năm dẫn tour nội địa', 'Tốt');
+
+-- Tạo dữ liệu mẫu cho bảng NHÀ CUNG CẤP
+INSERT INTO nha_cung_cap (nguoi_dung_id, ten_don_vi, loai_dich_vu, dia_chi, lien_he, mo_ta, danh_gia_tb) VALUES
+((SELECT id FROM nguoi_dung WHERE ten_dang_nhap = 'ncc01'), 'ABC Travel Services', 'KhachSan', '456 Đường C, Quận D, Hà Nội', '0123456789', 'Đối tác cung cấp khách sạn 3-4 sao', 4.5);
+
+-- Tạo dữ liệu mẫu cho bảng TOUR
+INSERT INTO tour (ten_tour, loai_tour, mo_ta, gia_co_ban, chinh_sach, id_nha_cung_cap, tao_boi, trang_thai) VALUES
+('Hà Nội - Hạ Long 3N2Đ', 'TrongNuoc', 'Khám phá Vịnh Hạ Long kỳ quan thiên nhiên thế giới', 3500000, 'Hủy trước 7 ngày: hoàn 80%', (SELECT id_nha_cung_cap FROM nha_cung_cap LIMIT 1), (SELECT id FROM nguoi_dung WHERE ten_dang_nhap = 'admin'), 'HoatDong');
+
+-- Tạo dữ liệu mẫu cho bảng LỊCH TRÌNH TOUR
+INSERT INTO lich_trinh_tour (tour_id, ngay_thu, dia_diem, hoat_dong) VALUES
+((SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'), 1, 'Hà Nội', 'Đón khách - Tham quan phố cổ - Ăn tối'),
+((SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'), 2, 'Hạ Long', 'Tham quan Vịnh Hạ Long - Nghỉ đêm trên du thuyền'),
+((SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'), 3, 'Hạ Long - Hà Nội', 'Tham quan hang động - Trở về Hà Nội');
+
+-- Tạo dữ liệu mẫu cho bảng HÌNH ẢNH TOUR
+INSERT INTO hinh_anh_tour (tour_id, url_anh, mo_ta) VALUES
+((SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'), 'public/images/halong1.jpg', 'Toàn cảnh Vịnh Hạ Long'),
+((SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'), 'public/images/halong2.jpg', 'Du thuyền trên Vịnh');
+
+-- Tạo dữ liệu mẫu cho bảng BOOKING
+INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi, tong_tien, trang_thai, ghi_chu) VALUES
+(
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  (SELECT khach_hang_id FROM khach_hang LIMIT 1),
+  CURDATE(),
+  DATE_ADD(CURDATE(), INTERVAL 10 DAY),
+  2,
+  7000000,
+  'ChoXacNhan',
+  'Yêu cầu phòng đôi'
+);
+
+-- Tạo dữ liệu mẫu cho bảng LỊCH KHỞI HÀNH
+INSERT INTO lich_khoi_hanh (tour_id, ngay_khoi_hanh, ngay_ket_thuc, diem_tap_trung, hdv_id, trang_thai) VALUES
+(
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  DATE_ADD(CURDATE(), INTERVAL 10 DAY),
+  DATE_ADD(CURDATE(), INTERVAL 12 DAY),
+  'Sân bay Nội Bài - Cổng A',
+  (SELECT nhan_su_id FROM nhan_su LIMIT 1),
+  'SapKhoiHanh'
+);
+
+-- Tạo dữ liệu mẫu cho bảng NHẬT KÝ TOUR
+INSERT INTO nhat_ky_tour (tour_id, nhan_su_id, noi_dung, ngay_ghi) VALUES
+(
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  (SELECT nhan_su_id FROM nhan_su LIMIT 1),
+  'Đã kiểm tra trang thiết bị an toàn trên du thuyền',
+  CURDATE()
+);
+
+-- Tạo dữ liệu mẫu cho bảng PHẢN HỒI & ĐÁNH GIÁ
+INSERT INTO phan_hoi_danh_gia (tour_id, nguoi_dung_id, loai, diem, noi_dung, ngay_danh_gia) VALUES
+(
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  (SELECT id FROM nguoi_dung WHERE ten_dang_nhap = 'khach01'),
+  'Tour',
+  5,
+  'Trải nghiệm tuyệt vời, hướng dẫn viên nhiệt tình!',
+  CURDATE()
+);
+
+-- Tạo dữ liệu mẫu cho bảng GIAO DỊCH TÀI CHÍNH
+INSERT INTO giao_dich_tai_chinh (tour_id, loai, so_tien, mo_ta, ngay_giao_dich) VALUES
+(
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  'Thu',
+  7000000,
+  'Khách đặt cọc/Thanh toán',
+  CURDATE()
+),
+(
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  'Chi',
+  2000000,
+  'Đặt cọc dịch vụ du thuyền',
+  CURDATE()
+);
+
+-- Tạo dữ liệu mẫu cho bảng YÊU CẦU ĐẶC BIỆT
+INSERT INTO yeu_cau_dac_biet (khach_hang_id, tour_id, noi_dung) VALUES
+(
+  (SELECT khach_hang_id FROM khach_hang LIMIT 1),
+  (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
+  'Chuẩn bị bánh sinh nhật bất ngờ ngày 2'
+);

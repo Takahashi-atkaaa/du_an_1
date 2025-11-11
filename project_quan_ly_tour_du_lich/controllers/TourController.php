@@ -28,7 +28,7 @@ class TourController {
     }
     
     public function create() {
-        requireRole('Admin');
+        // requireRole('Admin');
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
@@ -46,12 +46,13 @@ class TourController {
             header('Location: index.php?act=admin/quanLyTour');
             exit();
         } else {
-            require 'views/admin/quan_ly_tour.php';
+            $tour = null;
+            require 'views/admin/tour_form.php';
         }
     }
     
     public function update() {
-        requireRole('Admin');
+        // requireRole('Admin');
         $id = $_POST['id'] ?? $_GET['id'] ?? null;
         $id = $id !== null ? (int)$id : null;
         
@@ -69,6 +70,13 @@ class TourController {
             $this->model->update($id, $data);
             header('Location: index.php?act=admin/quanLyTour');
             exit();
+        } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && $id) {
+            $tour = $this->model->findById($id);
+            if (!$tour) {
+                header('Location: index.php?act=admin/quanLyTour');
+                exit();
+            }
+            require 'views/admin/tour_form.php';
         }
     }
     
