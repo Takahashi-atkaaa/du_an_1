@@ -44,13 +44,7 @@ function deleteFile($file) {
 }
 
 // Redirect
-function redirect($url) {
-    if (strpos($url, 'http') !== 0) {
-        $url = BASE_URL . ltrim($url, '/');
-    }
-    header("Location: $url");
-    exit();
-}
+
 
 // Flash message
 function setFlashMessage($key, $message) {
@@ -83,7 +77,8 @@ function isLoggedIn() {
 // Require login
 function requireLogin() {
     if (!isLoggedIn()) {
-        redirect('index.php?act=auth/login');
+        header('Location: index.php?act=auth/login');
+        exit();
     }
 }
 
@@ -91,7 +86,8 @@ function requireLogin() {
 function requireRole($role) {
     requireLogin();
     if (!isset($_SESSION['role']) || $_SESSION['role'] !== $role) {
-        redirect('index.php?act=tour/index');
+        header('Location: index.php?act=tour/index');
+        exit();
     }
 }
 

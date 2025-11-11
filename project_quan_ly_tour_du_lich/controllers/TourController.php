@@ -16,13 +16,13 @@ class TourController {
     public function show() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
         if (!$id) {
-            redirect('index.php?act=tour/index');
-            return;
+            header('Location: index.php?act=tour/index');
+            exit();
         }
         $tour = $this->model->findById($id);
         if (!$tour) {
-            redirect('index.php?act=tour/index');
-            return;
+            header('Location: index.php?act=tour/index');
+            exit();
         }
         require 'views/khach_hang/chi_tiet_tour.php';
     }
@@ -43,7 +43,8 @@ class TourController {
             ];
             
             $this->model->insert($data);
-            redirect('index.php?act=admin/quanLyTour');
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
         } else {
             require 'views/admin/quan_ly_tour.php';
         }
@@ -66,7 +67,8 @@ class TourController {
             ];
             
             $this->model->update($id, $data);
-            redirect('index.php?act=admin/quanLyTour');
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
         }
     }
     
@@ -76,6 +78,7 @@ class TourController {
         if ($id) {
             $this->model->delete($id);
         }
-        redirect('index.php?act=admin/quanLyTour');
+        header('Location: index.php?act=admin/quanLyTour');
+        exit();
     }
 }
