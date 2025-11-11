@@ -28,15 +28,15 @@ class BookingController {
             }
 
             if (!$khachHangId) {
-                redirect('index.php?act=tour/index');
-                return;
+                header('Location: index.php?act=tour/index');
+                exit();
             }
 
             $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
             $tour = $tourId > 0 ? $this->tourModel->findById($tourId) : null;
             if ($tourId <= 0 || !$tour) {
-                redirect('index.php?act=tour/index');
-                return;
+                header('Location: index.php?act=tour/index');
+                exit();
             }
 
             $data = [
@@ -52,16 +52,18 @@ class BookingController {
             
             $bookingId = $this->bookingModel->insert($data);
             if ($bookingId) {
-                redirect("index.php?act=booking/show&id=$bookingId");
+                header("Location: index.php?act=booking/show&id=$bookingId");
+                exit();
             } else {
-                redirect('index.php?act=tour/index');
+                header('Location: index.php?act=tour/index');
+                exit();
             }
         } else {
             $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
             $tour = $this->tourModel->findById($tourId);
             if (!$tour) {
-                redirect('index.php?act=tour/index');
-                return;
+                header('Location: index.php?act=tour/index');
+                exit();
             }
             require 'views/khach_hang/dat_tour.php';
         }
@@ -82,8 +84,8 @@ class BookingController {
         }
 
         if (!$booking || ($khachHangId && $booking['khach_hang_id'] != $khachHangId)) {
-            redirect('index.php?act=tour/index');
-            return;
+            header('Location: index.php?act=tour/index');
+            exit();
         }
         $tour = $this->tourModel->findById($booking['tour_id']);
         require 'views/khach_hang/hoa_don.php';

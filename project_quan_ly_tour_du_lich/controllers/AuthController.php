@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../commons/function.php';
 require_once 'models/NguoiDung.php';
 require_once 'models/KhachHang.php';
 
@@ -30,7 +31,8 @@ class AuthController {
                     }
                 }
                 
-                redirect('index.php?act=tour/index');
+                header('Location: index.php?act=tour/index');
+                exit();
             } else {
                 $error = "Email hoặc mật khẩu không đúng";
                 require 'views/auth/login.php';
@@ -43,6 +45,7 @@ class AuthController {
     public function register() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data = [
+                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? '',
                 'ho_ten' => $_POST['ho_ten'] ?? '',
                 'email' => $_POST['email'] ?? '',
                 'mat_khau' => password_hash($_POST['password'] ?? '', PASSWORD_DEFAULT),
@@ -59,7 +62,8 @@ class AuthController {
                     'nguoi_dung_id' => $userId
                 ]);
                 $_SESSION['khach_hang_id'] = $khachHangId;
-                redirect('index.php?act=tour/index');
+                header('Location: index.php?act=tour/index');
+                exit();
             }
         } else {
             require 'views/auth/register.php';
@@ -68,7 +72,8 @@ class AuthController {
     
     public function logout() {
         session_destroy();
-        redirect('index.php?act=auth/login');
+        header('Location: index.php?act=auth/login');
+        exit();
     }
     
     public function forgotPassword() {

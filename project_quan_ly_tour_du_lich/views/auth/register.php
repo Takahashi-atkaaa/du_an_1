@@ -19,6 +19,10 @@
                 <input type="email" name="email" required>
             </div>
             <div class="form-group">
+                <label>Số điện thoại:</label>
+                <input type="number" name="so_dien_thoai" required>
+            </div>
+            <div class="form-group">
                 <label>Mật khẩu:</label>
                 <input type="password" name="password" required>
             </div>
