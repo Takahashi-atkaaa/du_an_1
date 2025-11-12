@@ -84,4 +84,59 @@ class Tour
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([$id]);
     }
+
+    // Lấy danh sách lịch trình theo tour_id
+    public function getLichTrinhByTourId($tourId) {
+        $sql = "SELECT ngay_thu, dia_diem, hoat_dong 
+                FROM lich_trinh_tour 
+                WHERE tour_id = ? 
+                ORDER BY ngay_thu ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy danh sách lịch khởi hành theo tour_id
+    public function getLichKhoiHanhByTourId($tourId) {
+        $sql = "SELECT ngay_khoi_hanh, ngay_ket_thuc, diem_tap_trung, trang_thai 
+                FROM lich_khoi_hanh 
+                WHERE tour_id = ? 
+                ORDER BY ngay_khoi_hanh ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy danh sách hình ảnh theo tour_id
+    public function getHinhAnhByTourId($tourId) {
+        $sql = "SELECT url_anh, mo_ta 
+                FROM hinh_anh_tour 
+                WHERE tour_id = ? 
+                ORDER BY id ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy danh sách yêu cầu đặc biệt theo tour_id
+    public function getYeuCauDacBietByTourId($tourId) {
+        $sql = "SELECT khach_hang_id, noi_dung 
+                FROM yeu_cau_dac_biet 
+                WHERE tour_id = ? 
+                ORDER BY id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy nhật ký tour theo tour_id
+    public function getNhatKyTourByTourId($tourId) {
+        $sql = "SELECT nhan_su_id, noi_dung, ngay_ghi 
+                FROM nhat_ky_tour 
+                WHERE tour_id = ? 
+                ORDER BY ngay_ghi DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId]);
+        return $stmt->fetchAll();
+    }
 }

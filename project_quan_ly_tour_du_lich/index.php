@@ -62,7 +62,8 @@ match ($act) {
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/danhGia' => (new AdminController())->danhGia(),
-    
+    'admin/chiTietTour' => (new AdminController())->chiTietTour(),
+    'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
     // HDV
     'hdv/lichLamViec' => (new HDVController())->lichLamViec(),
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
