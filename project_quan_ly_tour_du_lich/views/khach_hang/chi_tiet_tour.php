@@ -13,6 +13,7 @@
             <div class="error"><?php echo htmlspecialchars($error); ?></div>
         <?php elseif (isset($tour) && $tour !== null) : ?>
             <div class="tour-detail">
+              
                 <h1><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h1>
                 <p><?php echo htmlspecialchars($tour['mo_ta'] ?? ''); ?></p>
                 <p><strong>Loại tour:</strong> <?php echo htmlspecialchars($tour['loai_tour'] ?? ''); ?></p>
@@ -126,20 +127,7 @@
             </div>
 
             <div class="tour-extra">
-                <h2>Nhật ký tour</h2>
-                <?php if (isset($nhatKyList) && count($nhatKyList) > 0) : ?>
-                    <ul>
-                        <?php foreach ($nhatKyList as $nhatKy) : ?>
-                            <li>
-                                <strong>Ngày ghi:</strong> <?php echo htmlspecialchars($nhatKy['ngay_ghi']); ?> |
-                                <strong>Nhân sự ID:</strong> <?php echo htmlspecialchars($nhatKy['nhan_su_id']); ?>
-                                <div><?php echo nl2br(htmlspecialchars($nhatKy['noi_dung'])); ?></div>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php else : ?>
-                    <p>Chưa có nhật ký tour.</p>
-                <?php endif; ?>
+             
             </div>
         <?php endif; ?>
     </div>

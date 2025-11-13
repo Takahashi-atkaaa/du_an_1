@@ -35,6 +35,7 @@ class AdminController {
         $yeuCauList = [];
         $nhatKyList = [];
         $hdvInfo = null;
+        $anhChinh = null;
         $error = null;
 
         if ($id <= 0) {
@@ -49,6 +50,7 @@ class AdminController {
                 $lichTrinhList = $tourModel->getLichTrinhByTourId($id);
                 $lichKhoiHanhList = $tourModel->getLichKhoiHanhByTourId($id);
                 $hinhAnhList = $tourModel->getHinhAnhByTourId($id);
+                $anhChinh = $this->chonAnhChinh($hinhAnhList);
                 $yeuCauList = $tourModel->getYeuCauDacBietByTourId($id);
                 $nhatKyList = $tourModel->getNhatKyTourByTourId($id);
                 $hdvInfo = $tourModel->getHDVByTourId($id);
@@ -73,5 +75,14 @@ class AdminController {
     }
     public function danhGia() {
         require 'views/admin/danh_gia.php';
+    }
+
+    private function chonAnhChinh(array $hinhAnhList) {
+        foreach ($hinhAnhList as $anh) {
+            if (!empty($anh['url_anh'])) {
+                return $anh;
+            }
+        }
+        return null;
     }
 }
