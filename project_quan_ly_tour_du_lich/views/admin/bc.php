@@ -8,7 +8,7 @@
 </head>
 <body>
     <div class="admin-container">
-        <h1>Báo cáo Tài chính</h1>
+        <h1>Báo cáo </h1>
         <a href="index.php?act=admin/dashboard">← Quay lại Dashboard</a>
         <div class="content">
             <h2>Thống kê Tài chính</h2>
