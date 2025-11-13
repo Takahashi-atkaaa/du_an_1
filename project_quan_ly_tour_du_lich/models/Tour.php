@@ -168,4 +168,67 @@ class Tour
         $stmt->execute([(int)$tourId]);
         return $stmt->fetchAll();
     }
+
+    // Thêm lịch trình tour
+    public function insertLichTrinh($tourId, $lichTrinh) {
+        $sql = "INSERT INTO lich_trinh_tour (tour_id, ngay_thu, dia_diem, hoat_dong) VALUES (?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            (int)$tourId,
+            (int)$lichTrinh['ngay_thu'],
+            $lichTrinh['dia_diem'] ?? '',
+            $lichTrinh['hoat_dong'] ?? ''
+        ]);
+    }
+
+    // Xóa lịch trình tour theo tour_id
+    public function deleteLichTrinhByTourId($tourId) {
+        $sql = "DELETE FROM lich_trinh_tour WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Thêm lịch khởi hành
+    public function insertLichKhoiHanh($tourId, $lichKhoiHanh) {
+        $sql = "INSERT INTO lich_khoi_hanh (tour_id, ngay_khoi_hanh, ngay_ket_thuc, diem_tap_trung, hdv_id, trang_thai) VALUES (?, ?, ?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            (int)$tourId,
+            $lichKhoiHanh['ngay_khoi_hanh'] ?? null,
+            $lichKhoiHanh['ngay_ket_thuc'] ?? null,
+            $lichKhoiHanh['diem_tap_trung'] ?? '',
+            isset($lichKhoiHanh['hdv_id']) && $lichKhoiHanh['hdv_id'] !== '' ? (int)$lichKhoiHanh['hdv_id'] : null,
+            $lichKhoiHanh['trang_thai'] ?? 'SapKhoiHanh'
+        ]);
+    }
+
+    // Xóa lịch khởi hành theo tour_id
+    public function deleteLichKhoiHanhByTourId($tourId) {
+        $sql = "DELETE FROM lich_khoi_hanh WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Thêm hình ảnh tour
+    public function insertHinhAnh($tourId, $hinhAnh) {
+        $sql = "INSERT INTO hinh_anh_tour (tour_id, url_anh, mo_ta) VALUES (?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            (int)$tourId,
+            $hinhAnh['url_anh'] ?? '',
+            $hinhAnh['mo_ta'] ?? ''
+        ]);
+    }
+
+    // Xóa hình ảnh tour theo tour_id
+    public function deleteHinhAnhByTourId($tourId) {
+        $sql = "DELETE FROM hinh_anh_tour WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Lấy tour_id vừa insert
+    public function getLastInsertId() {
+        return $this->conn->lastInsertId();
+    }
 }
