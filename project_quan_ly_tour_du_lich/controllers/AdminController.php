@@ -14,7 +14,15 @@ class AdminController {
     public function quanLyTour() {
         require_once 'models/Tour.php';
         $tourModel = new Tour();
-        $tours = $tourModel->getAll();
+        
+        // Lọc theo loại tour nếu có
+        $loaiTour = isset($_GET['loai_tour']) ? $_GET['loai_tour'] : '';
+        if (isset($loaiTour) && $loaiTour !== '') {
+            $tours = $tourModel->find(['loai_tour' => $loaiTour]);
+        } else {
+            $tours = $tourModel->getAll();
+        }
+        
         require 'views/admin/quan_ly_tour.php';
     }
     
@@ -26,6 +34,7 @@ class AdminController {
         $hinhAnhList = [];
         $yeuCauList = [];
         $nhatKyList = [];
+        $hdvInfo = null;
         $error = null;
 
         if ($id <= 0) {
@@ -42,6 +51,7 @@ class AdminController {
                 $hinhAnhList = $tourModel->getHinhAnhByTourId($id);
                 $yeuCauList = $tourModel->getYeuCauDacBietByTourId($id);
                 $nhatKyList = $tourModel->getNhatKyTourByTourId($id);
+                $hdvInfo = $tourModel->getHDVByTourId($id);
             }
         }
 

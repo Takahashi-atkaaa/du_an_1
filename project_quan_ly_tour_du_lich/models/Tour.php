@@ -30,7 +30,7 @@ class Tour
         $sql = "SELECT * FROM tour";
         $params = [];
         
-        if (!empty($conditions)) {
+        if (isset($conditions) && count($conditions) > 0) {
             $where = [];
             foreach ($conditions as $key => $value) {
                 $where[] = "$key = ?";
@@ -105,6 +105,35 @@ class Tour
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId]);
         return $stmt->fetchAll();
+    }
+
+    // Lấy thông tin hướng dẫn viên từ lịch khởi hành theo tour_id
+    public function getHDVByTourId($tourId) {
+        $sql = "SELECT 
+                    lk.id as lich_khoi_hanh_id,
+                    lk.ngay_khoi_hanh,
+                    lk.ngay_ket_thuc,
+                    lk.diem_tap_trung,
+                    lk.trang_thai as lich_trang_thai,
+                    ns.nhan_su_id,
+                    ns.vai_tro as ns_vai_tro,
+                    ns.chung_chi,
+                    ns.ngon_ngu,
+                    ns.kinh_nghiem,
+                    ns.suc_khoe,
+                    nd.id as nguoi_dung_id,
+                    nd.ho_ten,
+                    nd.email,
+                    nd.so_dien_thoai
+                FROM lich_khoi_hanh lk
+                LEFT JOIN nhan_su ns ON lk.hdv_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE lk.tour_id = ? 
+                ORDER BY lk.ngay_khoi_hanh ASC
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId]);
+        return $stmt->fetch();
     }
 
     // Lấy danh sách hình ảnh theo tour_id

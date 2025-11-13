@@ -14,6 +14,7 @@ CREATE TABLE nguoi_dung (
   ten_dang_nhap VARCHAR(100) UNIQUE,
   mat_khau VARCHAR(255),
   ho_ten VARCHAR(255),
+    avatar varchar(255),
   email VARCHAR(255),
   so_dien_thoai VARCHAR(20),
   vai_tro ENUM('Admin','HDV','KhachHang','NhaCungCap'),
@@ -45,6 +46,7 @@ CREATE TABLE nhan_su (
   ngon_ngu TEXT,
   kinh_nghiem TEXT,
   suc_khoe TEXT,
+
   FOREIGN KEY (nguoi_dung_id) REFERENCES nguoi_dung(id)
 );
 

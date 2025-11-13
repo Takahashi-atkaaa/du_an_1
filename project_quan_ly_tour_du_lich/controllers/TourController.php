@@ -81,7 +81,7 @@ class TourController {
     }
     
     public function delete() {
-        requireRole('Admin');
+        // requireRole('Admin');
         $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
         if ($id) {
             $this->model->delete($id);

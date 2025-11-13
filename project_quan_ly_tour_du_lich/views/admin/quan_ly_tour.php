@@ -15,7 +15,17 @@
             <p>
                 <a href="<?php echo BASE_URL; ?>index.php?act=tour/create">+ Thêm tour</a>
             </p>
-            <?php if (!empty($tours)) : ?>
+            <form method="GET" action="<?php echo BASE_URL; ?>index.php" style="margin-bottom: 20px;">
+                <input type="hidden" name="act" value="admin/quanLyTour">
+                <label for="loai_tour">Lọc theo loại tour:</label>
+                <select name="loai_tour" id="loai_tour" onchange="this.form.submit()">
+                    <option value="">Tất cả</option>
+                    <option value="TrongNuoc" <?php echo (isset($_GET['loai_tour']) && $_GET['loai_tour'] === 'TrongNuoc') ? 'selected' : ''; ?>>Trong nước</option>
+                    <option value="QuocTe" <?php echo (isset($_GET['loai_tour']) && $_GET['loai_tour'] === 'QuocTe') ? 'selected' : ''; ?>>Quốc tế</option>
+                    <option value="TheoYeuCau" <?php echo (isset($_GET['loai_tour']) && $_GET['loai_tour'] === 'TheoYeuCau') ? 'selected' : ''; ?>>Theo yêu cầu</option>
+                </select>
+            </form>
+            <?php if (isset($tours) && count($tours) > 0) : ?>
             <table border="1" cellpadding="8" cellspacing="0" width="100%">
                 <thead>
                     <tr>
