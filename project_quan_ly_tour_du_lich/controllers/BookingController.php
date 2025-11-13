@@ -15,7 +15,7 @@ class BookingController {
     }
     
     public function create() {
-        requireLogin();
+        // requireLogin();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $khachHangId = $_SESSION['khach_hang_id'] ?? null;
@@ -70,7 +70,7 @@ class BookingController {
     }
     
     public function show() {
-        requireLogin();
+        // requireLogin();
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $booking = $this->bookingModel->findById($id);
         
@@ -92,7 +92,7 @@ class BookingController {
     }
     
     public function index() {
-        requireLogin();
+        // requireLogin();
         $conditions = [];
         
         if ($_SESSION['role'] === 'KhachHang') {
