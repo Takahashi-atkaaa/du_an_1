@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Quản lý Tour Du lịch</title>
+    <!--  -->
     <link rel="stylesheet" href="public/css/admin.css">
+     <!-- <link rel="stylesheet" href="public/css/trangchu.css   "> -->
 </head>
 <body>
     <div class="admin-container">
