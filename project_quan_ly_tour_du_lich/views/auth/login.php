@@ -14,8 +14,8 @@
         <?php endif; ?>
         <form method="POST" action="index.php?act=auth/login">
             <div class="form-group">
-                <label>Email:</label>
-                <input type="email" name="email" required>
+                <label>Tên đăng nhập / Email:</label>
+                <input type="text" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
             </div>
             <div class="form-group">
                 <label>Mật khẩu:</label>

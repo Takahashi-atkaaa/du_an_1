@@ -16,7 +16,7 @@ if (file_exists(__DIR__ . '/../.env')) {
 }
 
 // Base URL
-define('BASE_URL'       , 'http://localhost/tunganh/du_an_1/project_quan_ly_tour_du_lich/');
+define('BASE_URL'       , 'http://localhost/trtrtrt/project_quan_ly_tour_du_lich/');
 
 define('DB_HOST'    , 'localhost');
 define('DB_PORT'    , 3306);

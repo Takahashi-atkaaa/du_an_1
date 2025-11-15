@@ -19,6 +19,7 @@ require_once './controllers/BookingController.php';
 require_once './controllers/HDVController.php';
 require_once './controllers/KhachHangController.php';
 require_once './controllers/NhaCungCapController.php';
+require_once './controllers/NhanSuController.php';
 
 // Require toàn bộ file Models
 require_once './models/NguoiDung.php';
@@ -29,6 +30,7 @@ require_once './models/HDV.php';
 require_once './models/NhaCungCap.php';
 require_once './models/GiaoDich.php';
 require_once './models/DanhGia.php';
+require_once './models/NhanSu.php';
 
 // Route
 $act = $_GET['act'] ?? 'admin/dashboard';
@@ -69,6 +71,20 @@ match ($act) {
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
     'hdv/danhSachKhach' => (new HDVController())->danhSachKhach(),
     'hdv/phanHoi' => (new HDVController())->phanHoi(),
+    // Admin - quản lý HDV
+    'admin/quanLyHDV' => (new AdminController())->quanLyHDV(),
+    'admin/quanLyHDV_create' => (new AdminController())->quanLyHDVCreate(),
+    'admin/quanLyHDV_update' => (new AdminController())->quanLyHDVUpdate(),
+    'admin/quanLyHDV_delete' => (new AdminController())->quanLyHDVDelete(),
+    // Admin - HDV schedule & profile
+    'admin/hdv_schedule' => (new AdminController())->hdvSchedule(),
+    'admin/hdv_profile' => (new AdminController())->hdvProfile(),
+    // API endpoints for AJAX
+    'admin/hdv_api_get_schedule' => (new AdminController())->hdvApiGetSchedule(),
+    'admin/hdv_api_check' => (new AdminController())->hdvApiCheck(),
+    'admin/hdv_api_assign' => (new AdminController())->hdvApiAssign(),
+    'admin/hdv_api_suggest' => (new AdminController())->hdvApiSuggest(),
+    'admin/nhanSu_get_users' => (new AdminController())->nhanSu_get_users(),
     
     // Nhà cung cấp
     'nhaCungCap/baoGia' => (new NhaCungCapController())->baoGia(),
@@ -82,6 +98,14 @@ match ($act) {
     'khachHang/datTour' => (new KhachHangController())->datTour(),
     'khachHang/danhGia' => (new KhachHangController())->danhGia(),
     'khachHang/traCuu' => (new KhachHangController())->traCuu(),
+
+    // Nhân sự
+    'admin/nhanSu' => (new AdminController())->nhanSu(),
+    'admin/nhanSuController' => (new AdminController())->nhanSu(),
+    'admin/nhanSu_create' => (new AdminController())->nhanSuCreate(),
+    'admin/nhanSu_update' => (new AdminController())->nhanSuUpdate(),
+    'admin/nhanSu_delete' => (new AdminController())->nhanSuDelete(),
+
     
     // Default
     default => die("Route không tồn tại: $act")
