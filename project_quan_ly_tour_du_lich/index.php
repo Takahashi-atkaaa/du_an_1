@@ -24,6 +24,7 @@ require_once './controllers/NhaCungCapController.php';
 require_once './models/NguoiDung.php';
 require_once './models/Tour.php';
 require_once './models/Booking.php';
+require_once './models/BookingHistory.php';
 require_once './models/KhachHang.php';
 require_once './models/HDV.php';
 require_once './models/NhaCungCap.php';
@@ -54,6 +55,12 @@ match ($act) {
     'booking/index' => (new BookingController())->index(),
     'booking/create' => (new BookingController())->create(),
     'booking/show' => (new BookingController())->show(),
+    'booking/chiTiet' => (new BookingController())->chiTiet(),
+    'booking/update' => (new BookingController())->update(),
+    'booking/updateTrangThai' => (new BookingController())->updateTrangThai(),
+    'booking/delete' => (new BookingController())->delete(),
+    'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
+    'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
     
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),

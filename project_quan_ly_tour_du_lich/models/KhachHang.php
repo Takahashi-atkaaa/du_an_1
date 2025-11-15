@@ -40,4 +40,34 @@ class KhachHang
         ]);
         return $this->conn->lastInsertId();
     }
+
+    // Tìm hoặc tạo khách hàng từ thông tin người dùng
+    public function findOrCreateByNguoiDungInfo($nguoiDungId, $diaChi = null, $gioiTinh = null, $ngaySinh = null) {
+        // Tìm khách hàng hiện có
+        $khachHang = $this->findByNguoiDungId($nguoiDungId);
+        if ($khachHang) {
+            return $khachHang;
+        }
+        
+        // Tạo mới nếu chưa có
+        $khachHangId = $this->insert([
+            'nguoi_dung_id' => $nguoiDungId,
+            'dia_chi' => $diaChi,
+            'gioi_tinh' => $gioiTinh,
+            'ngay_sinh' => $ngaySinh
+        ]);
+        
+        return $this->findById($khachHangId);
+    }
+
+    // Lấy thông tin khách hàng với thông tin người dùng
+    public function getKhachHangWithNguoiDung($khachHangId) {
+        $sql = "SELECT kh.*, nd.ho_ten, nd.email, nd.so_dien_thoai, nd.vai_tro
+                FROM khach_hang kh
+                LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                WHERE kh.khach_hang_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$khachHangId]);
+        return $stmt->fetch();
+    }
 }

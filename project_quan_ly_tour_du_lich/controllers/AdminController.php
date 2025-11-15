@@ -64,6 +64,24 @@ class AdminController {
     }
     
     public function quanLyBooking() {
+        require_once 'models/Booking.php';
+        require_once 'models/Tour.php';
+        require_once 'models/KhachHang.php';
+        
+        $bookingModel = new Booking();
+        $conditions = [];
+        
+        // Lọc theo trạng thái nếu có
+        if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])) {
+            $conditions['trang_thai'] = $_GET['trang_thai'];
+        }
+        
+        if (!empty($conditions)) {
+            $bookings = $bookingModel->find($conditions);
+        } else {
+            $bookings = $bookingModel->getAllWithDetails();
+        }
+        
         require 'views/admin/quan_ly_booking.php';
     }
     
