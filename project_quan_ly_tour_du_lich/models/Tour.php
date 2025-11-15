@@ -80,9 +80,41 @@ class Tour
 
     // Xóa tour
     public function delete($id) {
-        $sql = "DELETE FROM tour WHERE tour_id = ?";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([$id]);
+      
+            // Xóa tất cả các bản ghi liên quan trước khi xóa tour
+            // Thứ tự xóa: từ bảng con đến bảng cha để tránh vi phạm foreign key constraint
+            
+            // 1. Xóa hình ảnh tour
+            $this->deleteHinhAnhByTourId($id);
+            
+            // 2. Xóa lịch trình tour
+            $this->deleteLichTrinhByTourId($id);
+            
+            // 3. Xóa lịch khởi hành
+            $this->deleteLichKhoiHanhByTourId($id);
+            
+            // 4. Xóa nhật ký tour
+            $this->deleteNhatKyByTourId($id);
+            
+            // 5. Xóa phản hồi đánh giá
+            $this->deletePhanHoiDanhGiaByTourId($id);
+            
+            // 6. Xóa giao dịch tài chính
+            $this->deleteGiaoDichTaiChinhByTourId($id);
+            
+            // 7. Xóa yêu cầu đặc biệt
+            $this->deleteYeuCauDacBietByTourId($id);
+            
+            // 8. Xóa booking (nếu muốn xóa cả booking khi xóa tour)
+            $this->deleteBookingByTourId($id);
+            
+            // 9. Cuối cùng mới xóa tour
+            $sql = "DELETE FROM tour WHERE tour_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute([$id]);
+            
+           
+       
     }
 
     // Lấy danh sách lịch trình theo tour_id
@@ -223,6 +255,41 @@ class Tour
     // Xóa hình ảnh tour theo tour_id
     public function deleteHinhAnhByTourId($tourId) {
         $sql = "DELETE FROM hinh_anh_tour WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Xóa nhật ký tour theo tour_id
+    public function deleteNhatKyByTourId($tourId) {
+        $sql = "DELETE FROM nhat_ky_tour WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Xóa phản hồi đánh giá theo tour_id
+    public function deletePhanHoiDanhGiaByTourId($tourId) {
+        $sql = "DELETE FROM phan_hoi_danh_gia WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Xóa giao dịch tài chính theo tour_id
+    public function deleteGiaoDichTaiChinhByTourId($tourId) {
+        $sql = "DELETE FROM giao_dich_tai_chinh WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Xóa yêu cầu đặc biệt theo tour_id
+    public function deleteYeuCauDacBietByTourId($tourId) {
+        $sql = "DELETE FROM yeu_cau_dac_biet WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$tourId]);
+    }
+
+    // Xóa booking theo tour_id
+    public function deleteBookingByTourId($tourId) {
+        $sql = "DELETE FROM booking WHERE tour_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([(int)$tourId]);
     }
