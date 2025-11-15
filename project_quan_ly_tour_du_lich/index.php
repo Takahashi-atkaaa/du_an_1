@@ -49,7 +49,7 @@ match ($act) {
     'auth/login' => (new AuthController())->login(),
     'auth/register' => (new AuthController())->register(),
     'auth/logout' => (new AuthController())->logout(),
-    'auth/forgotPassword' => (new AuthController())->forgotPassword(),
+
     'auth/profile' => (new AuthController())->profile(),
 
     

@@ -3,7 +3,7 @@
 class AdminController {
     
     public function __construct() {
-        // requireRole('Admin');
+        requireRole('Admin');
         // khi vào gốc dự án sẽ gọi new AdminController(). Trong AdminController::__construct() có requireRole('Admin') → requireLogin() → nếu chưa đăng nhập thì chuyển hướng sang auth/login. Nên luôn thấy trang đăng nhập trước khi có session.
     }
     

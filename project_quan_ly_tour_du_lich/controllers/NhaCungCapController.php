@@ -3,7 +3,7 @@
 class NhaCungCapController {
     
     public function __construct() {
-        // requireRole('NhaCungCap');
+        requireRole('NhaCungCap');
     }
     
     public function baoGia() {

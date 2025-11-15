@@ -3,7 +3,7 @@
 class KhachHangController {
     
     public function __construct() {
-        // requireLogin();
+        requireLogin();
     }
     
     // Tra cứu bằng mã tour và mã khách hàng (ID)

@@ -50,12 +50,23 @@ class AuthController {
                         }
                     }
 
-                    if ($user['vai_tro'] === 'Admin') {
-                        header('Location: index.php?act=admin/dashboard');
-                        exit();
-                    } else {
-                        header('Location: index.php?act=tour/index');
-                        exit();
+                    // Redirect theo vai trò
+                    switch ($user['vai_tro']) {
+                        case 'Admin':
+                            header('Location: index.php?act=admin/dashboard');
+                            exit();
+                        case 'HDV':
+                            header('Location: index.php?act=hdv/lichLamViec');
+                            exit();
+                        case 'KhachHang':
+                            header('Location: index.php?act=khachHang/danhSachTour');
+                            exit();
+                        case 'NhaCungCap':
+                            header('Location: index.php?act=nhaCungCap/dichVu');
+                            exit();
+                        default:
+                            header('Location: index.php?act=tour/index');
+                            exit();
                     }
                 }
             }
@@ -125,10 +136,7 @@ class AuthController {
         exit();
     }
     
-    public function forgotPassword() {
-        require 'views/auth/forgot_password.php';
-    }
-    
+
     public function profile() {
         requireLogin();
         $user = $this->model->findById($_SESSION['user_id']);
