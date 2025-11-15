@@ -54,18 +54,23 @@ class NguoiDung
 
     // Thêm người dùng mới
     public function insert($data) {
-        $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, ho_ten, email, mat_khau, vai_tro, ngay_tao) 
-                VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, ho_ten, email, so_dien_thoai, mat_khau, vai_tro, ngay_tao) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $result = $stmt->execute([
-            $data['ten_dang_nhap'] ?? ($data['email'] ?? ''),
-            $data['ho_ten'] ?? '',
-            $data['email'] ?? '',
-            $data['mat_khau'] ?? '',
-            $data['vai_tro'] ?? 'KhachHang',
-            $data['ngay_tao'] ?? date('Y-m-d H:i:s')
-        ]);
-        
+        try {
+            $result = $stmt->execute([
+                $data['ten_dang_nhap'] ?? ($data['email'] ?? ''),
+                $data['ho_ten'] ?? '',
+                $data['email'] ?? '',
+                $data['so_dien_thoai'] ?? '',
+                $data['mat_khau'] ?? '',
+                $data['vai_tro'] ?? 'KhachHang',
+                $data['ngay_tao'] ?? date('Y-m-d H:i:s')
+            ]);
+        } catch (PDOException $e) {
+            return false;
+        }
+
         if ($result) {
             return $this->conn->lastInsertId();
         }
@@ -82,6 +87,13 @@ class NguoiDung
             $data['vai_tro'] ?? 'KhachHang',
             $id
         ]);
+    }
+
+    // Cập nhật mật khẩu (hash)
+    public function updatePassword($id, $hashedPassword) {
+        $sql = "UPDATE nguoi_dung SET mat_khau = ? WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$hashedPassword, $id]);
     }
 
     // Xóa người dùng
