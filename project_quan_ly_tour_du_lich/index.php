@@ -20,6 +20,7 @@ require_once './controllers/HDVController.php';
 require_once './controllers/KhachHangController.php';
 require_once './controllers/NhaCungCapController.php';
 require_once './controllers/NhanSuController.php';
+require_once './controllers/LichKhoiHanhController.php';
 
 // Require toàn bộ file Models
 require_once './models/NguoiDung.php';
@@ -32,6 +33,9 @@ require_once './models/NhaCungCap.php';
 require_once './models/GiaoDich.php';
 require_once './models/DanhGia.php';
 require_once './models/NhanSu.php';
+require_once './models/LichKhoiHanh.php';
+require_once './models/PhanBoNhanSu.php';
+require_once './models/PhanBoDichVu.php';
 
 // Route
 $act = $_GET['act'] ?? 'auth/login';
@@ -44,6 +48,15 @@ match ($act) {
     'tour/create' => (new TourController())->create(),
     'tour/update' => (new TourController())->update(),
     'tour/delete' => (new TourController())->delete(),
+    // Lịch khởi hành trong tour
+    'tour/taoLichKhoiHanh' => (new TourController())->taoLichKhoiHanh(),
+    'tour/chiTietLichKhoiHanh' => (new TourController())->chiTietLichKhoiHanh(),
+    'tour/phanBoNhanSuLichKhoiHanh' => (new TourController())->phanBoNhanSuLichKhoiHanh(),
+    'tour/updateTrangThaiNhanSuLichKhoiHanh' => (new TourController())->updateTrangThaiNhanSuLichKhoiHanh(),
+    'tour/phanBoDichVuLichKhoiHanh' => (new TourController())->phanBoDichVuLichKhoiHanh(),
+    'tour/updateTrangThaiDichVuLichKhoiHanh' => (new TourController())->updateTrangThaiDichVuLichKhoiHanh(),
+    'tour/deleteNhanSuLichKhoiHanh' => (new TourController())->deleteNhanSuLichKhoiHanh(),
+    'tour/deleteDichVuLichKhoiHanh' => (new TourController())->deleteDichVuLichKhoiHanh(),
     
     // Auth
     'auth/login' => (new AuthController())->login(),
@@ -63,6 +76,18 @@ match ($act) {
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
+    
+    // Lịch khởi hành
+    'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),
+    'lichKhoiHanh/create' => (new LichKhoiHanhController())->create(),
+    'lichKhoiHanh/chiTiet' => (new LichKhoiHanhController())->chiTiet(),
+    'lichKhoiHanh/update' => (new LichKhoiHanhController())->update(),
+    'lichKhoiHanh/phanBoNhanSu' => (new LichKhoiHanhController())->phanBoNhanSu(),
+    'lichKhoiHanh/updateTrangThaiNhanSu' => (new LichKhoiHanhController())->updateTrangThaiNhanSu(),
+    'lichKhoiHanh/phanBoDichVu' => (new LichKhoiHanhController())->phanBoDichVu(),
+    'lichKhoiHanh/updateTrangThaiDichVu' => (new LichKhoiHanhController())->updateTrangThaiDichVu(),
+    'lichKhoiHanh/deleteNhanSu' => (new LichKhoiHanhController())->deleteNhanSu(),
+    'lichKhoiHanh/deleteDichVu' => (new LichKhoiHanhController())->deleteDichVu(),
     
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),

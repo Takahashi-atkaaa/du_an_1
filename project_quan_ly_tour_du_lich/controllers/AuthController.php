@@ -53,8 +53,8 @@ class AuthController {
                     // Redirect theo vai trò
                     switch ($user['vai_tro']) {
                         case 'Admin':
-                            header('Location: index.php?act=admin/dashboard');
-                            exit();
+                        header('Location: index.php?act=admin/dashboard');
+                        exit();
                         case 'HDV':
                             header('Location: index.php?act=hdv/lichLamViec');
                             exit();
@@ -66,7 +66,7 @@ class AuthController {
                             exit();
                         default:
                             header('Location: index.php?act=tour/index');
-                            exit();
+                        exit();
                     }
                 }
             }

@@ -305,4 +305,263 @@ class TourController {
         }
         return null;
     }
+
+    // Tạo lịch khởi hành cho tour
+    public function taoLichKhoiHanh() {
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'ID tour không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+        
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/LichKhoiHanh.php';
+            $lichKhoiHanhModel = new LichKhoiHanh();
+            
+            $data = [
+                'tour_id' => $tourId,
+                'ngay_khoi_hanh' => $_POST['ngay_khoi_hanh'] ?? null,
+                'gio_xuat_phat' => $_POST['gio_xuat_phat'] ?? null,
+                'ngay_ket_thuc' => $_POST['ngay_ket_thuc'] ?? null,
+                'gio_ket_thuc' => $_POST['gio_ket_thuc'] ?? null,
+                'diem_tap_trung' => $_POST['diem_tap_trung'] ?? '',
+                'so_cho' => isset($_POST['so_cho']) ? (int)$_POST['so_cho'] : 50,
+                'hdv_id' => isset($_POST['hdv_id']) && $_POST['hdv_id'] !== '' ? (int)$_POST['hdv_id'] : null,
+                'trang_thai' => $_POST['trang_thai'] ?? 'SapKhoiHanh',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            $id = $lichKhoiHanhModel->insert($data);
+            if ($id) {
+                $_SESSION['success'] = 'Tạo lịch khởi hành thành công.';
+                header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $id . '&tour_id=' . $tourId);
+                exit();
+            } else {
+                $_SESSION['error'] = 'Không thể tạo lịch khởi hành.';
+            }
+        }
+        
+        require_once 'models/NhanSu.php';
+        $nhanSuModel = new NhanSu();
+        $hdvList = $nhanSuModel->getByRole('HDV');
+        
+        require 'views/admin/tao_lich_khoi_hanh_tour.php';
+    }
+
+    // Chi tiết lịch khởi hành với phân bổ
+    public function chiTietLichKhoiHanh() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($id <= 0 || $tourId <= 0) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            header('Location: index.php?act=admin/chiTietTour&id=' . $tourId);
+            exit();
+        }
+        
+        require_once 'models/LichKhoiHanh.php';
+        require_once 'models/PhanBoNhanSu.php';
+        require_once 'models/PhanBoDichVu.php';
+        require_once 'models/NhanSu.php';
+        require_once 'models/NhaCungCap.php';
+        
+        $lichKhoiHanhModel = new LichKhoiHanh();
+        $phanBoNhanSuModel = new PhanBoNhanSu();
+        $phanBoDichVuModel = new PhanBoDichVu();
+        $nhanSuModel = new NhanSu();
+        $nhaCungCapModel = new NhaCungCap();
+        
+        $lichKhoiHanh = $lichKhoiHanhModel->getWithDetails($id);
+        if (!$lichKhoiHanh || $lichKhoiHanh['tour_id'] != $tourId) {
+            $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+            header('Location: index.php?act=admin/chiTietTour&id=' . $tourId);
+            exit();
+        }
+        
+        $tour = $this->model->findById($tourId);
+        $phanBoNhanSu = $phanBoNhanSuModel->getByLichKhoiHanh($id);
+        $phanBoDichVu = $phanBoDichVuModel->getByLichKhoiHanh($id);
+        $nhanSuList = $nhanSuModel->getAll();
+        $nhaCungCapList = $nhaCungCapModel->getAll();
+        $tongChiPhi = $phanBoDichVuModel->getTongChiPhi($id);
+        
+        require 'views/admin/chi_tiet_lich_khoi_hanh_tour.php';
+    }
+
+    // Phân bổ nhân sự cho lịch khởi hành
+    public function phanBoNhanSuLichKhoiHanh() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/PhanBoNhanSu.php';
+            $phanBoNhanSuModel = new PhanBoNhanSu();
+            
+            $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+            $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
+            $nhanSuId = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
+            $vaiTro = $_POST['vai_tro'] ?? 'Khac';
+            $ghiChu = $_POST['ghi_chu'] ?? null;
+            
+            if ($lichKhoiHanhId > 0 && $nhanSuId > 0) {
+                $data = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'nhan_su_id' => $nhanSuId,
+                    'vai_tro' => $vaiTro,
+                    'ghi_chu' => $ghiChu
+                ];
+                
+                $result = $phanBoNhanSuModel->insert($data);
+                if ($result) {
+                    $_SESSION['success'] = 'Phân bổ nhân sự thành công.';
+                } else {
+                    $_SESSION['error'] = 'Không thể phân bổ nhân sự.';
+                }
+            } else {
+                $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            }
+            
+            header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+            exit();
+        }
+    }
+
+    // Cập nhật trạng thái phân bổ nhân sự
+    public function updateTrangThaiNhanSuLichKhoiHanh() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/PhanBoNhanSu.php';
+            $phanBoNhanSuModel = new PhanBoNhanSu();
+            
+            $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $trangThai = $_POST['trang_thai'] ?? 'ChoXacNhan';
+            $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+            $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
+            
+            if ($id > 0) {
+                $result = $phanBoNhanSuModel->updateTrangThai($id, $trangThai);
+                if ($result) {
+                    $_SESSION['success'] = 'Cập nhật trạng thái thành công.';
+                } else {
+                    $_SESSION['error'] = 'Không thể cập nhật trạng thái.';
+                }
+            }
+            
+            header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+            exit();
+        }
+    }
+
+    // Phân bổ dịch vụ cho lịch khởi hành
+    public function phanBoDichVuLichKhoiHanh() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/PhanBoDichVu.php';
+            $phanBoDichVuModel = new PhanBoDichVu();
+            
+            $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+            $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
+            
+            $data = [
+                'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                'nha_cung_cap_id' => isset($_POST['nha_cung_cap_id']) && $_POST['nha_cung_cap_id'] !== '' ? (int)$_POST['nha_cung_cap_id'] : null,
+                'loai_dich_vu' => $_POST['loai_dich_vu'] ?? 'Khac',
+                'ten_dich_vu' => $_POST['ten_dich_vu'] ?? '',
+                'so_luong' => isset($_POST['so_luong']) ? (int)$_POST['so_luong'] : 1,
+                'don_vi' => $_POST['don_vi'] ?? null,
+                'ngay_bat_dau' => $_POST['ngay_bat_dau'] ?? null,
+                'ngay_ket_thuc' => $_POST['ngay_ket_thuc'] ?? null,
+                'gio_bat_dau' => $_POST['gio_bat_dau'] ?? null,
+                'gio_ket_thuc' => $_POST['gio_ket_thuc'] ?? null,
+                'dia_diem' => $_POST['dia_diem'] ?? null,
+                'gia_tien' => isset($_POST['gia_tien']) ? (float)$_POST['gia_tien'] : null,
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            if ($lichKhoiHanhId > 0) {
+                $result = $phanBoDichVuModel->insert($data);
+                if ($result) {
+                    $_SESSION['success'] = 'Phân bổ dịch vụ thành công.';
+                } else {
+                    $_SESSION['error'] = 'Không thể phân bổ dịch vụ.';
+                }
+            } else {
+                $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            }
+            
+            header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+            exit();
+        }
+    }
+
+    // Cập nhật trạng thái phân bổ dịch vụ
+    public function updateTrangThaiDichVuLichKhoiHanh() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/PhanBoDichVu.php';
+            $phanBoDichVuModel = new PhanBoDichVu();
+            
+            $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+            $trangThai = $_POST['trang_thai'] ?? 'ChoXacNhan';
+            $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+            $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
+            
+            if ($id > 0) {
+                $result = $phanBoDichVuModel->updateTrangThai($id, $trangThai);
+                if ($result) {
+                    $_SESSION['success'] = 'Cập nhật trạng thái thành công.';
+                } else {
+                    $_SESSION['error'] = 'Không thể cập nhật trạng thái.';
+                }
+            }
+            
+            header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+            exit();
+        }
+    }
+
+    // Xóa phân bổ nhân sự
+    public function deleteNhanSuLichKhoiHanh() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($id > 0) {
+            require_once 'models/PhanBoNhanSu.php';
+            $phanBoNhanSuModel = new PhanBoNhanSu();
+            $result = $phanBoNhanSuModel->delete($id);
+            if ($result) {
+                $_SESSION['success'] = 'Xóa phân bổ nhân sự thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể xóa phân bổ nhân sự.';
+            }
+        }
+        
+        header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+        exit();
+    }
+
+    // Xóa phân bổ dịch vụ
+    public function deleteDichVuLichKhoiHanh() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($id > 0) {
+            require_once 'models/PhanBoDichVu.php';
+            $phanBoDichVuModel = new PhanBoDichVu();
+            $result = $phanBoDichVuModel->delete($id);
+            if ($result) {
+                $_SESSION['success'] = 'Xóa phân bổ dịch vụ thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể xóa phân bổ dịch vụ.';
+            }
+        }
+        
+        header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+        exit();
+    }
 }
