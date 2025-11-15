@@ -88,12 +88,105 @@ class Booking
             $data['ghi_chu'] ?? null,
             $id
         ]);
-}
+    }
+
+    // Cập nhật trạng thái booking và lưu lịch sử
+    public function updateTrangThai($id, $trangThaiMoi, $nguoiThayDoiId, $ghiChu = null) {
+        // Lấy trạng thái cũ
+        $booking = $this->findById($id);
+        if (!$booking) {
+            return false;
+        }
+        
+        $trangThaiCu = $booking['trang_thai'];
+        
+        // Nếu trạng thái không thay đổi, không cần cập nhật
+        if ($trangThaiCu === $trangThaiMoi) {
+            return true;
+        }
+        
+        // Cập nhật trạng thái
+        $sql = "UPDATE booking SET trang_thai = ? WHERE booking_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $result = $stmt->execute([$trangThaiMoi, $id]);
+        
+        if ($result) {
+            // Lưu lịch sử thay đổi
+            require_once 'BookingHistory.php';
+            $historyModel = new BookingHistory();
+            $historyModel->insert([
+                'booking_id' => $id,
+                'trang_thai_cu' => $trangThaiCu,
+                'trang_thai_moi' => $trangThaiMoi,
+                'nguoi_thay_doi_id' => $nguoiThayDoiId,
+                'ghi_chu' => $ghiChu
+            ]);
+        }
+        
+        return $result;
+    }
+
+    // Lấy booking với đầy đủ thông tin để hiển thị
+    public function getAllWithDetails() {
+        $sql = "SELECT b.*, 
+                t.ten_tour, t.gia_co_ban, t.loai_tour,
+                kh.khach_hang_id, kh.dia_chi,
+                nd.ho_ten, nd.email, nd.so_dien_thoai
+                FROM booking b
+                LEFT JOIN tour t ON b.tour_id = t.tour_id
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                ORDER BY b.ngay_dat DESC, b.booking_id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
 
     // Xóa booking
     public function delete($id) {
         $sql = "DELETE FROM booking WHERE booking_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([$id]);
+    }
+
+    // Lấy tổng số người đã đặt cho một tour và ngày khởi hành cụ thể
+    public function getSoNguoiDaDat($tourId, $ngayKhoiHanh) {
+        $sql = "SELECT COALESCE(SUM(so_nguoi), 0) as tong_nguoi 
+                FROM booking 
+                WHERE tour_id = ? 
+                AND ngay_khoi_hanh = ? 
+                AND trang_thai IN ('ChoXacNhan', 'DaCoc', 'HoanTat')";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        $result = $stmt->fetch();
+        return (int)($result['tong_nguoi'] ?? 0);
+    }
+
+    // Kiểm tra chỗ trống cho tour và ngày khởi hành
+    public function kiemTraChoTrong($tourId, $ngayKhoiHanh, $soNguoiCanDat, $soChoToiDa = 50) {
+        $soNguoiDaDat = $this->getSoNguoiDaDat($tourId, $ngayKhoiHanh);
+        $choTrong = $soChoToiDa - $soNguoiDaDat;
+        return [
+            'co_cho' => $choTrong >= $soNguoiCanDat,
+            'cho_trong' => $choTrong,
+            'da_dat' => $soNguoiDaDat,
+            'toi_da' => $soChoToiDa
+        ];
+    }
+
+    // Lấy booking với thông tin tour và khách hàng
+    public function getBookingWithDetails($bookingId) {
+        $sql = "SELECT b.*, 
+                t.ten_tour, t.gia_co_ban,
+                kh.khach_hang_id, kh.dia_chi,
+                nd.ho_ten, nd.email, nd.so_dien_thoai
+                FROM booking b
+                LEFT JOIN tour t ON b.tour_id = t.tour_id
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                WHERE b.booking_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$bookingId]);
+        return $stmt->fetch();
     }
 }

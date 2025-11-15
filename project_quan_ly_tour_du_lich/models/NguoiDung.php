@@ -33,6 +33,48 @@ class NguoiDung
         return $stmt->fetch();
     }
 
+    // Tìm người dùng theo số điện thoại
+    public function findByPhone($soDienThoai) {
+        $sql = "SELECT * FROM nguoi_dung WHERE so_dien_thoai = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$soDienThoai]);
+        return $stmt->fetch();
+    }
+
+    // Tìm hoặc tạo người dùng mới (cho nhân viên đặt tour)
+    public function findOrCreate($hoTen, $email, $soDienThoai, $vaiTro = 'KhachHang') {
+        // Tìm theo email trước (nếu có)
+        if (!empty($email)) {
+            $nguoiDung = $this->findByEmail($email);
+            if ($nguoiDung) {
+                return $nguoiDung;
+            }
+        }
+        
+        // Tìm theo số điện thoại (nếu có)
+        if (!empty($soDienThoai)) {
+            $nguoiDung = $this->findByPhone($soDienThoai);
+            if ($nguoiDung) {
+                return $nguoiDung;
+            }
+        }
+        
+        // Tạo mới nếu chưa có
+        $tenDangNhap = !empty($email) ? $email : (!empty($soDienThoai) ? 'user_' . $soDienThoai : 'user_' . time());
+        $matKhau = password_hash('123456', PASSWORD_DEFAULT); // Mật khẩu mặc định
+        
+        $nguoiDungId = $this->insert([
+            'ten_dang_nhap' => $tenDangNhap,
+            'ho_ten' => $hoTen,
+            'email' => $email ?? '',
+            'so_dien_thoai' => $soDienThoai ?? '',
+            'mat_khau' => $matKhau,
+            'vai_tro' => $vaiTro
+        ]);
+        
+        return $this->findById($nguoiDungId);
+    }
+
     // Tìm người dùng theo điều kiện
     public function find($conditions = []) {
         $sql = "SELECT * FROM nguoi_dung";

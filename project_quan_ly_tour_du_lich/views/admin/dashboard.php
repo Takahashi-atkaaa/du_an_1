@@ -14,6 +14,7 @@
             <a href="index.php?act=admin/nhanSu">Quản lý Nhân sự</a>                   
             <a href="index.php?act=admin/quanLyNguoiDung">Quản lý Người dùng</a>
             <a href="index.php?act=admin/quanLyBooking">Quản lý Booking</a>
+            <a href="index.php?act=booking/datTourChoKhach">Đặt tour cho khách</a>
             <a href="index.php?act=admin/baoCaoTaiChinh">Báo cáo Tài chính</a>
             <a href="index.php?act=admin/nhaCungCap">Nhà cung cấp</a>
             <a href="index.php?act=admin/danhGia">Đánh giá</a>

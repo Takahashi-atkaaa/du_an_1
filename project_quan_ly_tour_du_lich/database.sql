@@ -295,3 +295,18 @@ INSERT INTO yeu_cau_dac_biet (khach_hang_id, tour_id, noi_dung) VALUES
   (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
   'Chuẩn bị bánh sinh nhật bất ngờ ngày 2'
 );
+
+-- ======================================
+-- 15. BẢNG LỊCH SỬ THAY ĐỔI BOOKING
+-- ======================================
+CREATE TABLE booking_history (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  booking_id INT,
+  trang_thai_cu ENUM('ChoXacNhan','DaCoc','HoanTat','Huy'),
+  trang_thai_moi ENUM('ChoXacNhan','DaCoc','HoanTat','Huy'),
+  nguoi_thay_doi_id INT,
+  ghi_chu TEXT,
+  thoi_gian TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (booking_id) REFERENCES booking(booking_id),
+  FOREIGN KEY (nguoi_thay_doi_id) REFERENCES nguoi_dung(id)
+);
