@@ -26,11 +26,8 @@ class AdminController {
         $hinhAnhList = [];
         $yeuCauList = [];
         $nhatKyList = [];
-<<<<<<< HEAD
-=======
         $hdvInfo = null;
         $anhChinh = null;
->>>>>>> main
         $error = null;
 
         if ($id <= 0) {
@@ -70,7 +67,6 @@ class AdminController {
     public function danhGia() {
         require 'views/admin/danh_gia.php';
     }
-<<<<<<< HEAD
     public function nhanSu() {
         require_once 'controllers/NhanSuController.php';
         require_once 'models/NhanSu.php';
@@ -393,8 +389,8 @@ class AdminController {
         }
         header('Location: index.php?act=admin/nhanSu');
         exit;
-=======
-
+    }
+    
     private function chonAnhChinh(array $hinhAnhList) {
         foreach ($hinhAnhList as $anh) {
             if (!empty($anh['url_anh'])) {
@@ -402,6 +398,5 @@ class AdminController {
             }
         }
         return null;
->>>>>>> main
     }
 }
