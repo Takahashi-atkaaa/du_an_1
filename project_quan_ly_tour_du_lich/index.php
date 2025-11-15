@@ -34,7 +34,7 @@ require_once './models/DanhGia.php';
 require_once './models/NhanSu.php';
 
 // Route
-$act = $_GET['act'] ?? 'admin/dashboard';
+$act = $_GET['act'] ?? 'auth/login';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
