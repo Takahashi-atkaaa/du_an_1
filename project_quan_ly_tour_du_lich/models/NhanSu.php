@@ -111,7 +111,7 @@ class NhanSu
         return $stmt->execute([$id]);
     }
 
-    // Xóa nhân sự và tài khoản người dùng
+    // Xóa nhân sự và tài khoản người dùng (cascade delete khach_hang và nha_cung_cap)
     public function deleteWithUser($nhan_su_id) {
         $nhanSu = $this->findById($nhan_su_id);
         if (!$nhanSu || !$nhanSu['nguoi_dung_id']) {
@@ -120,10 +120,26 @@ class NhanSu
         
         $nguoi_dung_id = $nhanSu['nguoi_dung_id'];
 
-        // Kiểm tra ràng buộc trước khi xóa tài khoản
-        $blockers = $this->getDeleteBlockers($nguoi_dung_id);
-        if (!empty($blockers)) {
+        // Kiểm tra chỉ các ràng buộc quan trọng (tour.tao_boi)
+        $criticalBlockers = $this->getCriticalDeleteBlockers($nguoi_dung_id);
+        if (!empty($criticalBlockers)) {
             return false;
+        }
+        
+        // Cascade delete: xóa các bản ghi liên quan trong khach_hang
+        try {
+            $stmt = $this->conn->prepare("DELETE FROM khach_hang WHERE nguoi_dung_id = ?");
+            $stmt->execute([$nguoi_dung_id]);
+        } catch (Exception $e) {
+            // Log error nếu cần
+        }
+        
+        // Cascade delete: xóa các bản ghi liên quan trong nha_cung_cap
+        try {
+            $stmt = $this->conn->prepare("DELETE FROM nha_cung_cap WHERE nguoi_dung_id = ?");
+            $stmt->execute([$nguoi_dung_id]);
+        } catch (Exception $e) {
+            // Log error nếu cần
         }
         
         // Xóa bản ghi nhan_su
@@ -139,7 +155,22 @@ class NhanSu
         return $result1 && $result2;
     }
 
-    // Trả về danh sách lý do không thể xóa tài khoản người dùng
+    // Trả về danh sách lý do quan trọng không thể xóa (chỉ tour.tao_boi)
+    public function getCriticalDeleteBlockers($nguoi_dung_id) {
+        $reasons = [];
+        // Bị tham chiếu bởi tour (trường tao_boi) - KHÔNG THỂ CASCADE
+        try {
+            $stmt = $this->conn->prepare("SELECT COUNT(*) AS c FROM tour WHERE tao_boi = ?");
+            $stmt->execute([$nguoi_dung_id]);
+            $row = $stmt->fetch();
+            if (!empty($row['c']) && (int)$row['c'] > 0) {
+                $reasons[] = 'Tài khoản đang là người tạo một hoặc nhiều Tour.';
+            }
+        } catch (Exception $e) {}
+        return $reasons;
+    }
+
+    // Trả về danh sách lý do không thể xóa tài khoản người dùng (tất cả các ràng buộc)
     public function getDeleteBlockers($nguoi_dung_id) {
         $reasons = [];
         // Bị tham chiếu bởi khach_hang

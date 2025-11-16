@@ -19,7 +19,6 @@ require_once './controllers/BookingController.php';
 require_once './controllers/HDVController.php';
 require_once './controllers/KhachHangController.php';
 require_once './controllers/NhaCungCapController.php';
-require_once './controllers/NhanSuController.php';
 
 // Require toàn bộ file Models
 require_once './models/NguoiDung.php';
@@ -112,7 +111,14 @@ match ($act) {
     'admin/nhanSu_create' => (new AdminController())->nhanSuCreate(),
     'admin/nhanSu_update' => (new AdminController())->nhanSuUpdate(),
     'admin/nhanSu_delete' => (new AdminController())->nhanSuDelete(),
+    'admin/nhanSu_chi_tiet' => (new AdminController())->nhanSuChiTiet(),
 
+    // Quản lý HDV nâng cao
+    'admin/hdv_advanced' => (new AdminController())->hdvAdvanced(),
+    'admin/hdv_add_schedule' => (new AdminController())->hdvAddSchedule(),
+    'admin/hdv_get_schedule' => (new AdminController())->hdvGetSchedule(),
+    'admin/hdv_send_notification' => (new AdminController())->hdvSendNotification(),
+    'admin/hdv_detail' => (new AdminController())->hdvDetail(),
     
     // Default
     default => die("Route không tồn tại: $act")
