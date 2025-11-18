@@ -120,6 +120,11 @@ match ($act) {
     'admin/hdv_api_assign' => (new AdminController())->hdvApiAssign(),
     'admin/hdv_api_suggest' => (new AdminController())->hdvApiSuggest(),
     'admin/nhanSu_get_users' => (new AdminController())->nhanSu_get_users(),
+    // Admin - Quản lý khách theo tour
+    'admin/danhSachKhachTheoTour' => (new AdminController())->danhSachKhachTheoTour(),
+    'admin/checkInKhach' => (new AdminController())->checkInKhach(),
+    'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
+    'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     
     // Nhà cung cấp
     'nhaCungCap/baoGia' => (new NhaCungCapController())->baoGia(),

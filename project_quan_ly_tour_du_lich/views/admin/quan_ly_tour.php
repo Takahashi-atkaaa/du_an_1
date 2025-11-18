@@ -88,6 +88,8 @@ Nếu bạn hiển thị dữ liệu người dùng nhập mà không dùng html
                             <!-- urlencode() là hàm PHP dùng để mã hoá chuỗi trước khi đưa lên URL. Nó thay thế các ký tự có thể gây lỗi (dấu cách, dấu tiếng Việt, ký tự đặc biệt như &, ?, =…) bằng dạng an toàn theo chuẩn percent-encoding (%xx) -->
                             <a href="<?php echo BASE_URL; ?>index.php?act=admin/chiTietTour&id=<?php echo urlencode($tour['tour_id']); ?>">Chi tiết</a>
                             |
+                            <a href="<?php echo BASE_URL; ?>index.php?act=admin/danhSachKhachTheoTour&tour_id=<?php echo urlencode($tour['tour_id']); ?>">Danh sách khách</a>
+                            |
                             <a href="<?php echo BASE_URL; ?>index.php?act=tour/delete&id=<?php echo urlencode($tour['tour_id']); ?>" onclick="return confirm('Xóa tour này?');">Xóa</a>
                         </td>
                     </tr>
