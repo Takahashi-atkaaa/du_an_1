@@ -56,6 +56,9 @@ match ($act) {
     'tour/updateTrangThaiDichVuLichKhoiHanh' => (new TourController())->updateTrangThaiDichVuLichKhoiHanh(),
     'tour/deleteNhanSuLichKhoiHanh' => (new TourController())->deleteNhanSuLichKhoiHanh(),
     'tour/deleteDichVuLichKhoiHanh' => (new TourController())->deleteDichVuLichKhoiHanh(),
+    // QR Code và đặt tour online
+    'tour/bookOnline' => (new TourController())->bookOnline(),
+    'tour/generateQR' => (new TourController())->generateQR(),
     
     // Auth
     'auth/login' => (new AuthController())->login(),
@@ -75,6 +78,7 @@ match ($act) {
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
+    'booking/createOnline' => (new BookingController())->createOnline(),
     
     // Lịch khởi hành
     'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),

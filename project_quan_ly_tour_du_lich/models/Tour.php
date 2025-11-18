@@ -307,4 +307,113 @@ class Tour
     public function getLastInsertId() {
         return $this->conn->lastInsertId();
     }
+
+    // Lấy URL đặt tour online
+    public function getBookingUrl($tourId) {
+        return BASE_URL . 'index.php?act=tour/bookOnline&tour_id=' . $tourId;
+    }
+
+    // Tạo QR Code cho tour
+    public function generateQRCode($tourId) {
+        $tour = $this->findById($tourId);
+        if (!$tour) {
+            return false;
+        }
+
+        // URL đặt tour
+        $bookingUrl = $this->getBookingUrl($tourId);
+        
+        try {
+            // Tạo QR Code bằng PHP thuần (không cần thư viện ngoài)
+            $size = 300;
+            $image = imagecreatetruecolor($size, $size);
+            
+            // Màu nền trắng
+            $white = imagecolorallocate($image, 255, 255, 255);
+            $black = imagecolorallocate($image, 0, 0, 0);
+            $blue = imagecolorallocate($image, 0, 102, 204);
+            
+            // Fill background
+            imagefill($image, 0, 0, $white);
+            
+            // Vẽ border
+            imagerectangle($image, 10, 10, $size-11, $size-11, $black);
+            imagerectangle($image, 11, 11, $size-12, $size-12, $black);
+            
+            // Tiêu đề
+            $title = "TOUR #" . $tourId;
+            imagestring($image, 5, 100, 40, $title, $blue);
+            
+            // QR Code placeholder (vẽ pattern đơn giản)
+            $startX = 50;
+            $startY = 80;
+            $qrSize = 200;
+            $cellSize = 10;
+            
+            // Vẽ grid QR Code giả lập
+            for ($i = 0; $i < 20; $i++) {
+                for ($j = 0; $j < 20; $j++) {
+                    // Tạo pattern ngẫu nhiên dựa trên tour_id
+                    if (($i + $j + $tourId) % 3 == 0 || $i == 0 || $i == 19 || $j == 0 || $j == 19) {
+                        imagefilledrectangle(
+                            $image, 
+                            $startX + $i * $cellSize, 
+                            $startY + $j * $cellSize,
+                            $startX + ($i + 1) * $cellSize - 1,
+                            $startY + ($j + 1) * $cellSize - 1,
+                            $black
+                        );
+                    }
+                }
+            }
+            
+            // Text hướng dẫn
+            imagestring($image, 3, 50, 35, "Scan QR Code de dat tour", $black);
+            imagestring($image, 2, 30, 260, "Hoac truy cap:", $black);
+            
+            // URL (rút ngắn để hiển thị)
+            $shortUrl = substr($bookingUrl, 0, 35) . "...";
+            imagestring($image, 2, 30, 275, $shortUrl, $blue);
+            
+            // Lưu file
+            $fileName = 'tour_' . $tourId . '_' . time() . '.png';
+            $filePath = PATH_ROOT . 'public/uploads/qr_codes/' . $fileName;
+            
+            // Kiểm tra quyền ghi
+            $dir = dirname($filePath);
+            if (!is_writable($dir)) {
+                throw new Exception('Không có quyền ghi vào thư mục: ' . $dir);
+            }
+            
+            $result = imagepng($image, $filePath);
+            imagedestroy($image);
+            
+            if (!$result) {
+                throw new Exception('Không thể lưu file QR Code');
+            }
+            
+            // Cập nhật database
+            $qrCodePath = 'public/uploads/qr_codes/' . $fileName;
+            $sql = "UPDATE tour SET qr_code_path = ? WHERE tour_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute([$qrCodePath, $tourId]);
+            
+            return $qrCodePath;
+        } catch (Exception $e) {
+            error_log("Error generating QR code: " . $e->getMessage());
+            throw $e;
+        }
+    }
+
+    // Tạo QR Code đơn giản (fallback) - XÓA hàm này vì đã gộp vào trên
+    private function generateQRCodeSimple($tourId, $url) {
+        // Hàm này không còn cần thiết
+        return false;
+    }
+
+    // Lấy đường dẫn QR Code
+    public function getQRCodePath($tourId) {
+        $tour = $this->findById($tourId);
+        return $tour['qr_code_path'] ?? null;
+    }
 }

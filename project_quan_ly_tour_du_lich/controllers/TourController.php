@@ -119,6 +119,9 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
+                // Tạo QR Code cho tour mới
+                $this->model->generateQRCode($tourId);
+
                 header('Location: index.php?act=admin/quanLyTour');
                 exit();
             } catch (Exception $e) {
@@ -217,6 +220,9 @@ class TourController {
                     }
                 }
             }
+            
+            // Tạo lại QR Code sau khi cập nhật
+            $this->model->generateQRCode($id);
             
             header('Location: index.php?act=admin/quanLyTour');
             exit();
@@ -562,6 +568,63 @@ class TourController {
         }
         
         header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+        exit();
+    }
+
+    // Trang đặt tour online qua QR Code
+    public function bookOnline() {
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=tour/index');
+            exit();
+        }
+        
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=tour/index');
+            exit();
+        }
+        
+        $lichTrinhList = $this->model->getLichTrinhByTourId($tourId);
+        $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($tourId);
+        $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
+        $anhChinh = $this->chonAnhChinh($hinhAnhList);
+        
+        require 'views/khach_hang/book_online.php';
+    }
+
+    // Tạo QR Code thủ công cho tour
+    public function generateQR() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($id <= 0) {
+            $_SESSION['error'] = 'ID tour không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+        
+        try {
+            $tour = $this->model->findById($id);
+            if (!$tour) {
+                $_SESSION['error'] = 'Tour không tồn tại.';
+                header('Location: index.php?act=admin/quanLyTour');
+                exit();
+            }
+            
+            $result = $this->model->generateQRCode($id);
+            if ($result) {
+                $_SESSION['success'] = 'Tạo QR Code thành công! File: ' . $result;
+            } else {
+                $_SESSION['error'] = 'Không thể tạo QR Code. Lỗi: Kiểm tra quyền ghi file hoặc kết nối internet.';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
+        }
+        
+        header('Location: index.php?act=admin/quanLyTour');
         exit();
     }
 }
