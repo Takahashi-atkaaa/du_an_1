@@ -19,7 +19,6 @@ require_once './controllers/BookingController.php';
 require_once './controllers/HDVController.php';
 require_once './controllers/KhachHangController.php';
 require_once './controllers/NhaCungCapController.php';
-require_once './controllers/NhanSuController.php';
 require_once './controllers/LichKhoiHanhController.php';
 
 // Require toàn bộ file Models
