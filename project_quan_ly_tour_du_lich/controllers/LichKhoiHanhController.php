@@ -161,7 +161,7 @@ class LichKhoiHanhController {
         }
     }
 
-    // Cập nhật trạng thái phân bổ nhân sự
+    // Cập nhật trạng thái phân bổ nhân sự (HDV)
     public function updateTrangThaiNhanSu() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
@@ -171,10 +171,12 @@ class LichKhoiHanhController {
             if ($id > 0) {
                 $result = $this->phanBoNhanSuModel->updateTrangThai($id, $trangThai);
                 if ($result) {
-                    $_SESSION['success'] = 'Cập nhật trạng thái thành công.';
+                    $_SESSION['success'] = 'Cập nhật trạng thái nhân sự thành công.';
                 } else {
-                    $_SESSION['error'] = 'Không thể cập nhật trạng thái.';
+                    $_SESSION['error'] = 'Không thể cập nhật trạng thái nhân sự.';
                 }
+            } else {
+                $_SESSION['error'] = 'Thông tin không hợp lệ.';
             }
             
             header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
