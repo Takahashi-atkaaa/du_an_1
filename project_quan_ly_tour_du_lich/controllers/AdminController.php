@@ -81,7 +81,6 @@ class AdminController {
         require 'views/admin/danh_gia.php';
     }
     public function nhanSu() {
-        require_once 'controllers/NhanSuController.php';
         require_once 'models/NhanSu.php';
         $nhanSuModel = new NhanSu();
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
@@ -377,10 +376,10 @@ class AdminController {
             require_once 'models/NhanSu.php';
             $model = new NhanSu();
             if ($delete_user) {
-                // kiểm tra blocker trước khi xóa
+                // kiểm tra blocker quan trọng trước khi xóa (chỉ tour.tao_boi)
                 $nhanSu = $model->findById($id);
                 if ($nhanSu && !empty($nhanSu['nguoi_dung_id'])) {
-                    $blockers = $model->getDeleteBlockers($nhanSu['nguoi_dung_id']);
+                    $blockers = $model->getCriticalDeleteBlockers($nhanSu['nguoi_dung_id']);
                     if (!empty($blockers)) {
                         $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Không thể xóa tài khoản do: ' . implode(' ', $blockers)];
                         header('Location: index.php?act=admin/nhanSu');
@@ -388,7 +387,7 @@ class AdminController {
                     }
                 }
                 $ok = $model->deleteWithUser($id);
-                $msg = $ok ? 'Xóa nhân sự và tài khoản thành công.' : 'Xóa nhân sự và tài khoản thất bại.';
+                $msg = $ok ? 'Xóa nhân sự, tài khoản và dữ liệu liên quan thành công.' : 'Xóa nhân sú và tài khoản thất bại.';
             } else {
                 $ok = $model->delete($id);
                 $msg = $ok ? 'Xóa nhân sự thành công. Tài khoản vẫn được giữ.' : 'Xóa nhân sự thất bại.';
@@ -402,6 +401,126 @@ class AdminController {
         }
         header('Location: index.php?act=admin/nhanSu');
         exit;
+    }
+
+    // Xem chi tiết sơ yếu lý lịch nhân sự
+    public function nhanSuChiTiet() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $nhanSu = null;
+        $error = null;
+
+        if ($id <= 0) {
+            $error = 'Thiếu mã nhân sự cần xem.';
+        } else {
+            require_once 'models/NhanSu.php';
+            $model = new NhanSu();
+            $nhanSu = $model->findById($id);
+            
+            if (!$nhanSu) {
+                $error = 'Nhân sự không tồn tại hoặc đã bị xóa.';
+            } else {
+                // Lấy thêm thông tin vai trò người dùng
+                if (!empty($nhanSu['nguoi_dung_id'])) {
+                    require_once 'models/NguoiDung.php';
+                    $nguoiDungModel = new NguoiDung();
+                    $nguoiDung = $nguoiDungModel->findById($nhanSu['nguoi_dung_id']);
+                    if ($nguoiDung) {
+                        $nhanSu['vai_tro_nguoi_dung'] = $nguoiDung['vai_tro'];
+                        $nhanSu['quyen_cap_cao'] = $nguoiDung['quyen_cap_cao'];
+                        $nhanSu['trang_thai'] = $nguoiDung['trang_thai'];
+                        $nhanSu['ngay_tao'] = $nguoiDung['ngay_tao'];
+                        $nhanSu['avatar'] = $nguoiDung['avatar'];
+                    }
+                }
+            }
+        }
+
+        require 'views/admin/nhan_su_chi_tiet.php';
+    }
+
+    // ==================== QUẢN LÝ HDV NÂNG CAO (SỬ DỤNG DATABASE HIỆN CÓ) ====================
+    
+    public function hdvAdvanced() {
+        require_once 'models/HDVManagement.php';
+        $hdvMgmt = new HDVManagement();
+        
+        $hdv_list = $hdvMgmt->getAllHDV();
+        $stats = $hdvMgmt->getThongKeTongQuan();
+        $hieu_suat_list = $hdvMgmt->getBaoCaoHieuSuat();
+        $thong_bao_list = []; // Tạm thời empty vì chưa có bảng thông báo
+        
+        require 'views/admin/hdv_quan_ly_nang_cao.php';
+    }
+
+    public function hdvAddSchedule() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/HDVManagement.php';
+            $hdvMgmt = new HDVManagement();
+            
+            $data = [
+                'tour_id' => $_POST['tour_id'],
+                'hdv_id' => $_POST['hdv_id'],
+                'ngay_khoi_hanh' => $_POST['ngay_khoi_hanh'],
+                'ngay_ket_thuc' => $_POST['ngay_ket_thuc'],
+                'diem_tap_trung' => $_POST['diem_tap_trung'] ?? '',
+                'trang_thai' => $_POST['trang_thai'] ?? 'DaXacNhan'
+            ];
+            
+            $result = $hdvMgmt->phanCongHDV($data);
+            $_SESSION['flash'] = [
+                'type' => $result['success'] ? 'success' : 'danger',
+                'message' => $result['message']
+            ];
+        }
+        
+        header('Location: index.php?act=admin/hdv_advanced');
+        exit;
+    }
+
+    public function hdvGetSchedule() {
+        require_once 'models/HDVManagement.php';
+        $hdvMgmt = new HDVManagement();
+        
+        $hdv_id = $_GET['hdv_id'] ?? null;
+        $start = $_GET['start'] ?? null;
+        $end = $_GET['end'] ?? null;
+        
+        $events = $hdvMgmt->getLichLamViec($hdv_id, $start, $end);
+        
+        header('Content-Type: application/json');
+        echo json_encode($events);
+        exit;
+    }
+
+    public function hdvSendNotification() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Tạm thời lưu vào session vì không có bảng thông báo
+            $_SESSION['flash'] = [
+                'type' => 'success',
+                'message' => 'Gửi thông báo thành công! (Chức năng demo - chưa lưu database)'
+            ];
+        }
+        
+        header('Location: index.php?act=admin/hdv_advanced');
+        exit;
+    }
+
+    public function hdvDetail() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        require_once 'models/HDVManagement.php';
+        require_once 'models/NhanSu.php';
+        
+        $hdvMgmt = new HDVManagement();
+        $nhanSuModel = new NhanSu();
+        
+        $hdv = $nhanSuModel->findById($id);
+        $hieu_suat = $hdvMgmt->getHieuSuatTheoThang($id);
+        $danh_gia_list = $hdvMgmt->getDanhGiaByHDV($id);
+        $lich_lam_viec = $hdvMgmt->getLichLamViec($id);
+        $nhat_ky_list = $hdvMgmt->getNhatKyByHDV($id);
+        
+        require 'views/admin/hdv_chi_tiet.php';
     }
     
     private function chonAnhChinh(array $hinhAnhList) {

@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý nhân sự</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        .table-actions button { margin-right: 4px; }
+        .table-actions button, .table-actions a { margin-right: 4px; }
     </style>
 </head>
 <body class="bg-light">
@@ -30,6 +31,9 @@
                     <input class="form-control form-control-sm me-2" type="search" placeholder="Tìm kiếm tên, email..." aria-label="Search" name="q" value="<?php echo htmlspecialchars($_GET['q'] ?? '') ?>">
                     <button class="btn btn-sm btn-outline-secondary me-2" type="submit">Tìm</button>
                 </form>
+                <a href="index.php?act=admin/hdv_advanced" class="btn btn-sm btn-primary me-2">
+                    <i class="bi bi-person-badge"></i> Quản lý HDV nâng cao
+                </a>
                 <button id="btnAdd" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#nhanSuModal">Thêm nhân sự</button>
             </div>
         </div>
@@ -86,6 +90,14 @@
                                     <td><?php echo htmlspecialchars($nhan_su['ngon_ngu'] ?? ''); ?></td>
                                     <td><?php echo htmlspecialchars($nhan_su['kinh_nghiem'] ?? ''); ?></td>
                                     <td class="table-actions">
+                                        <a href="index.php?act=admin/nhanSu_chi_tiet&id=<?php echo $nhan_su['nhan_su_id']; ?>" class="btn btn-sm btn-info" title="Xem sơ yếu lý lịch">
+                                            <i class="bi bi-eye"></i> Xem
+                                        </a>
+                                        <?php if ($nhan_su['vai_tro'] === 'HDV'): ?>
+                                        <a href="index.php?act=admin/hdv_detail&id=<?php echo $nhan_su['nhan_su_id']; ?>" class="btn btn-sm btn-success" title="Quản lý HDV nâng cao">
+                                            <i class="bi bi-calendar-check"></i> HDV
+                                        </a>
+                                        <?php endif; ?>
                                         <button class="btn btn-sm btn-primary btn-edit" 
                                             data-id="<?php echo $nhan_su['nhan_su_id']; ?>"
                                             data-vai_tro="<?php echo htmlspecialchars($nhan_su['vai_tro'] ?? ''); ?>"
