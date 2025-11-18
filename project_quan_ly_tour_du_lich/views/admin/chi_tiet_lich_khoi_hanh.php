@@ -159,16 +159,7 @@
                                 </td>
                                 <td><?php echo $pb['thoi_gian_xac_nhan'] ? date('d/m/Y H:i', strtotime($pb['thoi_gian_xac_nhan'])) : 'N/A'; ?></td>
                                 <td>
-                                    <form method="POST" action="index.php?act=lichKhoiHanh/updateTrangThaiNhanSu" style="display: inline;">
-                                        <input type="hidden" name="id" value="<?php echo $pb['id']; ?>">
-                                        <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
-                                        <select name="trang_thai" onchange="this.form.submit()">
-                                            <option value="ChoXacNhan" <?php echo $pb['trang_thai'] == 'ChoXacNhan' ? 'selected' : ''; ?>>Chờ xác nhận</option>
-                                            <option value="DaXacNhan" <?php echo $pb['trang_thai'] == 'DaXacNhan' ? 'selected' : ''; ?>>Đã xác nhận</option>
-                                            <option value="TuChoi" <?php echo $pb['trang_thai'] == 'TuChoi' ? 'selected' : ''; ?>>Từ chối</option>
-                                            <option value="Huy" <?php echo $pb['trang_thai'] == 'Huy' ? 'selected' : ''; ?>>Hủy</option>
-                                        </select>
-                                    </form>
+
                                     <a href="index.php?act=lichKhoiHanh/deleteNhanSu&id=<?php echo $pb['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
                                        onclick="return confirm('Xóa phân bổ này?');">Xóa</a>
                                 </td>
