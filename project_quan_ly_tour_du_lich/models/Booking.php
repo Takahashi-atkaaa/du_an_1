@@ -88,7 +88,7 @@ class Booking
             $data['ghi_chu'] ?? null,
             $id
         ]);
-    }
+}
 
     // Cập nhật trạng thái booking và lưu lịch sử
     public function updateTrangThai($id, $trangThaiMoi, $nguoiThayDoiId, $ghiChu = null) {

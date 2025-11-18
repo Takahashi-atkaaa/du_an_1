@@ -3,7 +3,7 @@
 class AdminController {
     
     public function __construct() {
-        // requireRole('Admin');
+        requireRole('Admin');
         // khi vào gốc dự án sẽ gọi new AdminController(). Trong AdminController::__construct() có requireRole('Admin') → requireLogin() → nếu chưa đăng nhập thì chuyển hướng sang auth/login. Nên luôn thấy trang đăng nhập trước khi có session.
     }
     
@@ -24,31 +24,26 @@ class AdminController {
         $lichTrinhList = [];
         $lichKhoiHanhList = [];
         $hinhAnhList = [];
-        $yeuCauList = [];
-        $nhatKyList = [];
-        $hdvInfo = null;
-        $anhChinh = null;
         $error = null;
 
         if ($id <= 0) {
             $error = 'Thiếu mã tour cần xem chi tiết.';
         } else {
             require_once 'models/Tour.php';
+            require_once 'models/LichKhoiHanh.php';
             $tourModel = new Tour();
+            $lichKhoiHanhModel = new LichKhoiHanh();
             $tour = $tourModel->findById($id);
             if (!$tour) {
                 $error = 'Tour không tồn tại hoặc đã bị xóa.';
             } else {
                 $lichTrinhList = $tourModel->getLichTrinhByTourId($id);
-                $lichKhoiHanhList = $tourModel->getLichKhoiHanhByTourId($id);
+                $lichKhoiHanhList = $lichKhoiHanhModel->getByTourId($id);
                 $hinhAnhList = $tourModel->getHinhAnhByTourId($id);
-                $anhChinh = $this->chonAnhChinh($hinhAnhList);
-                $yeuCauList = $tourModel->getYeuCauDacBietByTourId($id);
-                $nhatKyList = $tourModel->getNhatKyTourByTourId($id);
             }
         }
 
-        require 'views/khach_hang/chi_tiet_tour.php';
+        require 'views/admin/chi_tiet_tour_admin.php';
     }
     public function quanLyNguoiDung() {
         require 'views/admin/quan_ly_nguoi_dung.php';

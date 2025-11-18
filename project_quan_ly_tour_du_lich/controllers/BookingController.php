@@ -121,7 +121,7 @@ class BookingController {
         }
         
         if (!empty($conditions)) {
-            $bookings = $this->bookingModel->find($conditions);
+        $bookings = $this->bookingModel->find($conditions);
         } else {
             $bookings = $this->bookingModel->getAllWithDetails();
         }

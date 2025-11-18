@@ -129,10 +129,15 @@ CREATE TABLE lich_khoi_hanh (
   id INT PRIMARY KEY AUTO_INCREMENT,
   tour_id INT,
   ngay_khoi_hanh DATE,
+  gio_xuat_phat TIME NULL,
   ngay_ket_thuc DATE,
+  gio_ket_thuc TIME NULL,
   diem_tap_trung VARCHAR(255),
+  so_cho INT DEFAULT 50,
   hdv_id INT,
   trang_thai ENUM('SapKhoiHanh','DangChay','HoanThanh','DaXacNhan','ChoXacNhan','Huy') DEFAULT 'ChoXacNhan',
+  trang_thai ENUM('SapKhoiHanh','DangChay','HoanThanh'),
+  ghi_chu TEXT NULL,
   FOREIGN KEY (tour_id) REFERENCES tour(tour_id),
   FOREIGN KEY (hdv_id) REFERENCES nhan_su(nhan_su_id)
 );
@@ -259,14 +264,18 @@ INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi,
 );
 
 -- Tạo dữ liệu mẫu cho bảng LỊCH KHỞI HÀNH
-INSERT INTO lich_khoi_hanh (tour_id, ngay_khoi_hanh, ngay_ket_thuc, diem_tap_trung, hdv_id, trang_thai) VALUES
+INSERT INTO lich_khoi_hanh (tour_id, ngay_khoi_hanh, gio_xuat_phat, ngay_ket_thuc, gio_ket_thuc, diem_tap_trung, so_cho, hdv_id, trang_thai, ghi_chu) VALUES
 (
   (SELECT tour_id FROM tour WHERE ten_tour = 'Hà Nội - Hạ Long 3N2Đ'),
   DATE_ADD(CURDATE(), INTERVAL 10 DAY),
+  '06:00:00',
   DATE_ADD(CURDATE(), INTERVAL 12 DAY),
+  '18:00:00',
   'Sân bay Nội Bài - Cổng A',
+  50,
   (SELECT nhan_su_id FROM nhan_su LIMIT 1),
-  'SapKhoiHanh'
+  'SapKhoiHanh',
+  'Lịch khởi hành mẫu cho tour Hạ Long'
 );
 
 -- Tạo dữ liệu mẫu cho bảng NHẬT KÝ TOUR
@@ -317,8 +326,78 @@ INSERT INTO yeu_cau_dac_biet (khach_hang_id, tour_id, noi_dung) VALUES
 -- ======================================
 -- CHANGELOG
 -- ======================================
--- v2.0:
--- - Thêm trường avatar vào bảng nguoi_dung
--- - Mở rộng ENUM trang_thai của lich_khoi_hanh (thêm DaXacNhan, ChoXacNhan, Huy)
--- - Thêm bảng booking_history với indexes và ON DELETE CASCADE
--- - Tất cả thay đổi tương thích ngược với code hiện có
+CREATE TABLE booking_history (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  booking_id INT NOT NULL,
+  trang_thai_cu ENUM('ChoXacNhan','DaCoc','HoanTat','Huy') NULL,
+  trang_thai_moi ENUM('ChoXacNhan','DaCoc','HoanTat','Huy') NOT NULL,
+  nguoi_thay_doi_id INT NULL,
+  ghi_chu TEXT NULL,
+  thoi_gian TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE,
+  FOREIGN KEY (nguoi_thay_doi_id) REFERENCES nguoi_dung(id) ON DELETE SET NULL,
+  INDEX idx_booking_id (booking_id),
+  INDEX idx_thoi_gian (thoi_gian)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 16. BẢNG PHÂN BỔ NHÂN SỰ CHO LỊCH KHỞI HÀNH
+-- ======================================
+CREATE TABLE phan_bo_nhan_su (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  lich_khoi_hanh_id INT NOT NULL,
+  nhan_su_id INT NOT NULL,
+  vai_tro ENUM('HDV','TaiXe','HauCan','DieuHanh','Khac') NOT NULL,
+  ghi_chu TEXT NULL,
+  trang_thai ENUM('ChoXacNhan','DaXacNhan','TuChoi','Huy') DEFAULT 'ChoXacNhan',
+  thoi_gian_xac_nhan DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (lich_khoi_hanh_id) REFERENCES lich_khoi_hanh(id) ON DELETE CASCADE,
+  FOREIGN KEY (nhan_su_id) REFERENCES nhan_su(nhan_su_id) ON DELETE CASCADE,
+  INDEX idx_lich_khoi_hanh (lich_khoi_hanh_id),
+  INDEX idx_nhan_su (nhan_su_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 17. BẢNG PHÂN BỔ DỊCH VỤ CHO LỊCH KHỞI HÀNH
+-- ======================================
+CREATE TABLE phan_bo_dich_vu (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  lich_khoi_hanh_id INT NOT NULL,
+  nha_cung_cap_id INT NULL,
+  loai_dich_vu ENUM('Xe','KhachSan','VeMayBay','NhaHang','DiemThamQuan','Visa','BaoHiem','Khac') NOT NULL,
+  ten_dich_vu VARCHAR(255) NOT NULL,
+  so_luong INT DEFAULT 1,
+  don_vi VARCHAR(50) NULL,
+  ngay_bat_dau DATE NULL,
+  ngay_ket_thuc DATE NULL,
+  gio_bat_dau TIME NULL,
+  gio_ket_thuc TIME NULL,
+  dia_diem VARCHAR(255) NULL,
+  gia_tien DECIMAL(15,2) NULL,
+  ghi_chu TEXT NULL,
+  trang_thai ENUM('ChoXacNhan','DaXacNhan','TuChoi','Huy','HoanTat') DEFAULT 'ChoXacNhan',
+  thoi_gian_xac_nhan DATETIME NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (lich_khoi_hanh_id) REFERENCES lich_khoi_hanh(id) ON DELETE CASCADE,
+  FOREIGN KEY (nha_cung_cap_id) REFERENCES nha_cung_cap(id_nha_cung_cap) ON DELETE SET NULL,
+  INDEX idx_lich_khoi_hanh (lich_khoi_hanh_id),
+  INDEX idx_nha_cung_cap (nha_cung_cap_id),
+  INDEX idx_loai_dich_vu (loai_dich_vu)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 18. BẢNG LỊCH SỬ THAY ĐỔI PHÂN BỔ (AUDIT LOG)
+-- ======================================
+CREATE TABLE phan_bo_history (
+  id INT PRIMARY KEY AUTO_INCREMENT,
+  phan_bo_id INT NOT NULL,
+  loai_phan_bo ENUM('NhanSu','DichVu') NOT NULL,
+  thay_doi TEXT NOT NULL,
+  nguoi_thay_doi_id INT NULL,
+  thoi_gian TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (nguoi_thay_doi_id) REFERENCES nguoi_dung(id) ON DELETE SET NULL,
+  INDEX idx_phan_bo (phan_bo_id, loai_phan_bo),
+  INDEX idx_thoi_gian (thoi_gian)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
