@@ -179,7 +179,15 @@ class LichKhoiHanhController {
                 $_SESSION['error'] = 'Thông tin không hợp lệ.';
             }
             
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            // Redirect về trang phù hợp với vai trò
+            $role = $_SESSION['role'] ?? '';
+            if ($role === 'HDV') {
+                // HDV quay về trang lịch làm việc của mình
+                header('Location: index.php?act=hdv/lichLamViec');
+            } else {
+                // Admin quay về trang chi tiết lịch khởi hành
+                header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            }
             exit();
         }
     }
