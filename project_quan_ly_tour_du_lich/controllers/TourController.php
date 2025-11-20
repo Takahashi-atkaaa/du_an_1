@@ -217,8 +217,7 @@ class TourController {
                 }
             }
             
-            // Tạo lại QR Code sau khi cập nhật
-            $this->model->generateQRCode($id);
+       
             
             header('Location: index.php?act=admin/quanLyTour');
             exit();
