@@ -119,11 +119,7 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
-                // Tạo QR Code cho tour mới
-                $this->model->generateQRCode($tourId);
-
-                header('Location: index.php?act=admin/quanLyTour');
-                exit();
+            
             } catch (Exception $e) {
                 if (method_exists($this->model->conn, 'rollBack') && $this->model->conn->inTransaction()) {
                     $this->model->conn->rollBack();
