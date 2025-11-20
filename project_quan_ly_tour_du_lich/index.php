@@ -56,6 +56,9 @@ match ($act) {
     'tour/updateTrangThaiDichVuLichKhoiHanh' => (new TourController())->updateTrangThaiDichVuLichKhoiHanh(),
     'tour/deleteNhanSuLichKhoiHanh' => (new TourController())->deleteNhanSuLichKhoiHanh(),
     'tour/deleteDichVuLichKhoiHanh' => (new TourController())->deleteDichVuLichKhoiHanh(),
+    // QR Code và đặt tour online
+    'tour/bookOnline' => (new TourController())->bookOnline(),
+    'tour/generateQR' => (new TourController())->generateQR(),
     
     // Auth
     'auth/login' => (new AuthController())->login(),
@@ -75,6 +78,7 @@ match ($act) {
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
+    'booking/createOnline' => (new BookingController())->createOnline(),
     
     // Lịch khởi hành
     'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),
@@ -116,6 +120,11 @@ match ($act) {
     'admin/hdv_api_assign' => (new AdminController())->hdvApiAssign(),
     'admin/hdv_api_suggest' => (new AdminController())->hdvApiSuggest(),
     'admin/nhanSu_get_users' => (new AdminController())->nhanSu_get_users(),
+    // Admin - Quản lý khách theo tour
+    'admin/danhSachKhachTheoTour' => (new AdminController())->danhSachKhachTheoTour(),
+    'admin/checkInKhach' => (new AdminController())->checkInKhach(),
+    'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
+    'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     
     // Nhà cung cấp
     'nhaCungCap/baoGia' => (new NhaCungCapController())->baoGia(),
