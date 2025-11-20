@@ -307,5 +307,4 @@ class Tour
     public function getLastInsertId() {
         return $this->conn->lastInsertId();
     }
-
-    
+}
