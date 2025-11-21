@@ -75,6 +75,9 @@ match ($act) {
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
+    'booking/xuatTaiLieu' => (new BookingController())->xuatTaiLieu(),
+    'booking/exportPDF' => (new BookingController())->exportPDF(),
+    'booking/sendEmail' => (new BookingController())->sendEmail(),
 
     
     // Lịch khởi hành

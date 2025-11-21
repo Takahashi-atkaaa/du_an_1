@@ -148,6 +148,9 @@
                         </p>
                     </div>
                     <div>
+                        <a href="index.php?act=booking/xuatTaiLieu&id=<?php echo $booking['booking_id']; ?>" class="btn btn-success btn-lg me-2">
+                            <i class="bi bi-file-earmark-pdf"></i> Xuất tài liệu
+                        </a>
                         <a href="index.php?act=admin/quanLyBooking" class="btn btn-light btn-lg">
                             <i class="bi bi-arrow-left"></i> Quay lại danh sách
                         </a>
