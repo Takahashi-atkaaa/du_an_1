@@ -1,7 +1,7 @@
-<!-- Print-friendly CSS is already included in danh_sach_khach.php via @media print -->
-<!-- This file provides enhanced print styles for customer lists -->
-<style>
-    @media print {
+/* Print-friendly CSS is already included in danh_sach_khach.php via @media print */
+/* This file provides enhanced print styles for customer lists */
+
+@media print {
         /* Hide navigation, buttons, and forms */
         .no-print,
         nav,
@@ -142,37 +142,9 @@
             margin: 2mm 0;
         }
         
-        .signature-line {
-            margin-top: 15mm;
-            font-style: italic;
-            font-size: 10pt;
-        }
+    .signature-line {
+        margin-top: 15mm;
+        font-style: italic;
+        font-size: 10pt;
     }
-</style>
-
-<!-- Add signature section to print view (add to danh_sach_khach.php after table) -->
-<div class="signature-section no-print" style="display: none;">
-    <div class="signature-box">
-        <p><strong>Người lập danh sách</strong></p>
-        <p class="signature-line">(Ký và ghi rõ họ tên)</p>
-    </div>
-    <div class="signature-box">
-        <p><strong>Trưởng đoàn</strong></p>
-        <p class="signature-line">(Ký và ghi rõ họ tên)</p>
-    </div>
-</div>
-
-<script>
-    // Show signature section when printing
-    window.addEventListener('beforeprint', function() {
-        document.querySelectorAll('.signature-section').forEach(function(el) {
-            el.style.display = 'grid';
-        });
-    });
-    
-    window.addEventListener('afterprint', function() {
-        document.querySelectorAll('.signature-section').forEach(function(el) {
-            el.style.display = 'none';
-        });
-    });
-</script>
+}
