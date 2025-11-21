@@ -168,7 +168,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
                 <h3>Thông tin booking</h3>
                 <p><strong>Mã booking:</strong> <?php echo htmlspecialchars($booking['booking_id'] ?? 'N/A'); ?></p>
                 <p><strong>Khách hàng:</strong> <?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?></p>
-                <p><strong>Số người:</strong> <?php echo ($booking['so_nguoi_lon'] ?? 0); ?> người lớn, <?php echo ($booking['so_tre_em'] ?? 0); ?> trẻ em</p>
+                <p><strong>Số người:</strong> <?php echo ($booking['so_nguoi'] ?? 0); ?> người</p>
                 <?php if ($checkin): ?>
                     <p><strong>Trạng thái check-in:</strong> 
                         <span class="status-badge status-checkedin">✅ Đã check-in</span>

@@ -243,7 +243,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
                                     <td><?php echo htmlspecialchars($booking['khach_ho_ten'] ?? 'N/A'); ?></td>
                                     <td><?php echo htmlspecialchars($booking['email'] ?? 'N/A'); ?></td>
                                     <td><?php echo htmlspecialchars($booking['so_dien_thoai'] ?? 'N/A'); ?></td>
-                                    <td><?php echo ($booking['so_nguoi_lon'] ?? 0) + ($booking['so_tre_em'] ?? 0); ?> người</td>
+                                    <td><?php echo ($booking['so_nguoi'] ?? 0); ?> người</td>
                                     <td>
                                         <?php if ($booking['checkin_id']): ?>
                                             <span class="status-badge status-checked-in">

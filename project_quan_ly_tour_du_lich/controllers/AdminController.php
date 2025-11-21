@@ -746,7 +746,19 @@ class AdminController {
         $checkin = null;
         
         if ($bookingId > 0) {
-            $booking = $bookingModel->findById($bookingId);
+            // Lấy thông tin booking với thông tin khách hàng
+            $sql = "SELECT b.*, 
+                           nd.ho_ten, 
+                           nd.email, 
+                           nd.so_dien_thoai
+                    FROM booking b
+                    LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id
+                    LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id
+                    WHERE b.booking_id = ?";
+            $stmt = $bookingModel->conn->prepare($sql);
+            $stmt->execute([$bookingId]);
+            $booking = $stmt->fetch();
+            
             $roomList = $roomModel->getByBookingId($bookingId);
             $checkin = $checkinModel->getByBookingId($bookingId);
         }
