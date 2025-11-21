@@ -235,8 +235,7 @@
                                     'Tau' => 'Tàu hỏa',
                                     'Khac' => 'Khác'
                                 ];
-                                $ptValue = $tour['phuong_tien'] ?? '';
-                                echo !empty($ptValue) ? ($phuongTien[$ptValue] ?? $ptValue) : 'Chưa xác định';
+                                echo $phuongTien[$tour['phuong_tien']] ?? ($tour['phuong_tien'] ?: 'Chưa xác định');
                                 ?>
                             </div>
                         </div>
