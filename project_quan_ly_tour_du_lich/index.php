@@ -149,6 +149,7 @@ match ($act) {
 
     // Quản lý HDV nâng cao
     'admin/hdv_advanced' => (new AdminController())->hdvAdvanced(),
+    'admin/hdv_lich_table' => (new AdminController())->hdvLichTable(),
     'admin/hdv_add_schedule' => (new AdminController())->hdvAddSchedule(),
     'admin/hdv_get_schedule' => (new AdminController())->hdvGetSchedule(),
     'admin/hdv_send_notification' => (new AdminController())->hdvSendNotification(),

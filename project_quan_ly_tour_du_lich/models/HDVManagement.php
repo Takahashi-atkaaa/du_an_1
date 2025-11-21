@@ -441,18 +441,43 @@ class HDVManagement
      */
     public function getThongBao($nhan_su_id = null, $limit = 50)
     {
-        // Trả về mảng rỗng vì chưa có bảng thông báo trong database
-        // Có thể lưu trong session nếu cần
-        return [];
+        $sql = "SELECT tb.*, nd.ho_ten
+                FROM thong_bao_hdv tb
+                LEFT JOIN nhan_su ns ON tb.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE 1=1";
+        
+        $params = [];
+        
+        if ($nhan_su_id) {
+            $sql .= " AND (tb.nhan_su_id = ? OR tb.nhan_su_id IS NULL)";
+            $params[] = $nhan_su_id;
+        }
+        
+        $sql .= " ORDER BY tb.ngay_gui DESC LIMIT ?";
+        $params[] = $limit;
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
     }
 
     /**
-     * Gửi thông báo (lưu vào session)
+     * Gửi thông báo (lưu vào database)
      */
     public function guiThongBao($data)
     {
-        // Có thể lưu vào $_SESSION['thong_bao'] nếu cần
-        return true;
+        $sql = "INSERT INTO thong_bao_hdv (nhan_su_id, loai_thong_bao, tieu_de, noi_dung, uu_tien, ngay_gui)
+                VALUES (?, ?, ?, ?, ?, NOW())";
+        
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            $data['nhan_su_id'], // NULL nếu gửi cho tất cả
+            $data['loai_thong_bao'],
+            $data['tieu_de'],
+            $data['noi_dung'],
+            $data['uu_tien']
+        ]);
     }
 
     // ==================== NHẬT KÝ TOUR ====================
@@ -497,6 +522,25 @@ class HDVManagement
         
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$hdv_id, $so_thang]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Lấy tất cả lịch làm việc dạng bảng
+     */
+    public function getAllLichLamViec()
+    {
+        $sql = "SELECT lkh.*, t.ten_tour, ns.nhan_su_id, nd.ho_ten
+                FROM lich_khoi_hanh lkh
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON lkh.hdv_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE lkh.hdv_id IS NOT NULL
+                ORDER BY lkh.ngay_khoi_hanh DESC
+                LIMIT 100";
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
         return $stmt->fetchAll();
     }
 }

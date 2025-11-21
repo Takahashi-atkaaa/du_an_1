@@ -287,10 +287,17 @@
             <!-- Tab 2: Lịch làm việc -->
             <div class="tab-pane fade" id="tab-lich">
                 <div class="card">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-calendar3"></i> Lịch làm việc HDV</h5>
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addScheduleModal">
+                            <i class="bi bi-plus-circle"></i> Thêm lịch
+                        </button>
+                    </div>
                     <div class="card-body">
+                        <!-- Bộ lọc -->
                         <div class="row mb-3">
                             <div class="col-md-4">
-                                <select class="form-select" id="calendarHDVFilter">
+                                <select class="form-select" id="filterHDV" onchange="filterScheduleTable()">
                                     <option value="">Tất cả HDV</option>
                                     <?php if (!empty($hdv_list)): foreach($hdv_list as $hdv): ?>
                                     <option value="<?php echo $hdv['nhan_su_id']; ?>">
@@ -299,8 +306,65 @@
                                     <?php endforeach; endif; ?>
                                 </select>
                             </div>
+                            <div class="col-md-4">
+                                <select class="form-select" id="filterTrangThai" onchange="filterScheduleTable()">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="SapKhoiHanh">Sắp khởi hành</option>
+                                    <option value="DangChay">Đang chạy</option>
+                                    <option value="HoanThanh">Hoàn thành</option>
+                                </select>
+                            </div>
                         </div>
-                        <div id="calendar"></div>
+
+                        <!-- Bảng lịch làm việc -->
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="scheduleTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>HDV</th>
+                                        <th>Tour</th>
+                                        <th>Ngày khởi hành</th>
+                                        <th>Ngày kết thúc</th>
+                                        <th>Điểm tập trung</th>
+                                        <th>Trạng thái</th>
+                                        <th>Ghi chú</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (!empty($lich_lam_viec)): foreach($lich_lam_viec as $lich): ?>
+                                    <tr data-hdv="<?php echo $lich['nhan_su_id']; ?>" data-status="<?php echo $lich['trang_thai']; ?>">
+                                        <td><?php echo htmlspecialchars($lich['ho_ten'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($lich['ten_tour'] ?? 'N/A'); ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($lich['ngay_khoi_hanh'])); ?></td>
+                                        <td><?php echo date('d/m/Y', strtotime($lich['ngay_ket_thuc'])); ?></td>
+                                        <td><?php echo htmlspecialchars($lich['diem_tap_trung'] ?? '-'); ?></td>
+                                        <td>
+                                            <?php
+                                            $statusClass = [
+                                                'SapKhoiHanh' => 'bg-info',
+                                                'DangChay' => 'bg-warning',
+                                                'HoanThanh' => 'bg-success'
+                                            ];
+                                            $statusLabel = [
+                                                'SapKhoiHanh' => 'Sắp khởi hành',
+                                                'DangChay' => 'Đang chạy',
+                                                'HoanThanh' => 'Hoàn thành'
+                                            ];
+                                            ?>
+                                            <span class="badge <?php echo $statusClass[$lich['trang_thai']] ?? 'bg-secondary'; ?>">
+                                                <?php echo $statusLabel[$lich['trang_thai']] ?? $lich['trang_thai']; ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($lich['ghi_chu'] ?? '-'); ?></td>
+                                    </tr>
+                                    <?php endforeach; else: ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center text-muted">Chưa có lịch làm việc nào</td>
+                                    </tr>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -631,6 +695,23 @@
 
         function viewPerformance(hdvId) {
             window.location.href = `index.php?act=admin/hdv_detail&id=${hdvId}#performance`;
+        }
+
+        // Filter schedule table
+        function filterScheduleTable() {
+            const hdvFilter = document.getElementById('filterHDV').value;
+            const statusFilter = document.getElementById('filterTrangThai').value;
+            
+            document.querySelectorAll('#scheduleTable tbody tr').forEach(row => {
+                const hdvId = row.dataset.hdv;
+                const status = row.dataset.status;
+                
+                let show = true;
+                if (hdvFilter && hdvId !== hdvFilter) show = false;
+                if (statusFilter && status !== statusFilter) show = false;
+                
+                row.style.display = show ? '' : 'none';
+            });
         }
     </script>
 </body>
