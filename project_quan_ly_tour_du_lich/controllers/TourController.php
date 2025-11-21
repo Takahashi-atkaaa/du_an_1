@@ -119,11 +119,7 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
-                // Tạo QR Code cho tour mới
-                $this->model->generateQRCode($tourId);
-
-                header('Location: index.php?act=admin/quanLyTour');
-                exit();
+            
             } catch (Exception $e) {
                 if (method_exists($this->model->conn, 'rollBack') && $this->model->conn->inTransaction()) {
                     $this->model->conn->rollBack();
@@ -221,8 +217,7 @@ class TourController {
                 }
             }
             
-            // Tạo lại QR Code sau khi cập nhật
-            $this->model->generateQRCode($id);
+       
             
             header('Location: index.php?act=admin/quanLyTour');
             exit();
@@ -596,35 +591,4 @@ class TourController {
         require 'views/khach_hang/book_online.php';
     }
 
-    // Tạo QR Code thủ công cho tour
-    public function generateQR() {
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        if ($id <= 0) {
-            $_SESSION['error'] = 'ID tour không hợp lệ.';
-            header('Location: index.php?act=admin/quanLyTour');
-            exit();
-        }
-        
-        try {
-            $tour = $this->model->findById($id);
-            if (!$tour) {
-                $_SESSION['error'] = 'Tour không tồn tại.';
-                header('Location: index.php?act=admin/quanLyTour');
-                exit();
-            }
-            
-            $result = $this->model->generateQRCode($id);
-            if ($result) {
-                $_SESSION['success'] = 'Tạo QR Code thành công! File: ' . $result;
-            } else {
-                $_SESSION['error'] = 'Không thể tạo QR Code. Lỗi: Kiểm tra quyền ghi file hoặc kết nối internet.';
-            }
-        } catch (Exception $e) {
-            $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
-        }
-        
-        header('Location: index.php?act=admin/quanLyTour');
-        exit();
-    }
 }
