@@ -11,6 +11,7 @@
         <h1>Quản lý Tour</h1>
         <a href="<?php echo BASE_URL; ?>index.php?act=admin/dashboard">← Quay lại Dashboard</a>
         <div class="content">
+            
             <h2>Danh sách Tour</h2>
             <p>
                 <a href="<?php echo BASE_URL; ?>index.php?act=tour/create">+ Thêm tour</a>
@@ -34,6 +35,7 @@
                         <th>Loại tour</th>
                         <th>Giá cơ bản</th>
                         <th>Trạng thái</th>
+ 
                         <th>Hành động</th>
                     </tr>
                 </thead>
@@ -54,10 +56,13 @@ Nếu bạn hiển thị dữ liệu người dùng nhập mà không dùng html
                         <td><?php echo htmlspecialchars($tour['loai_tour']); ?></td>
                         <td><?php echo number_format((float)$tour['gia_co_ban'], 0, ',', '.'); ?> đ</td>
                         <td><?php echo htmlspecialchars($tour['trang_thai']); ?></td>
+ 
                         <td>
                             <a href="<?php echo BASE_URL; ?>index.php?act=tour/update&id=<?php echo urlencode($tour['tour_id']); ?>">Sửa</a>
                             <!-- urlencode() là hàm PHP dùng để mã hoá chuỗi trước khi đưa lên URL. Nó thay thế các ký tự có thể gây lỗi (dấu cách, dấu tiếng Việt, ký tự đặc biệt như &, ?, =…) bằng dạng an toàn theo chuẩn percent-encoding (%xx) -->
                             <a href="<?php echo BASE_URL; ?>index.php?act=admin/chiTietTour&id=<?php echo urlencode($tour['tour_id']); ?>">Chi tiết</a>
+                            |
+                            <a href="<?php echo BASE_URL; ?>index.php?act=admin/danhSachKhachTheoTour&tour_id=<?php echo urlencode($tour['tour_id']); ?>">Danh sách khách</a>
                             |
                             <a href="<?php echo BASE_URL; ?>index.php?act=tour/delete&id=<?php echo urlencode($tour['tour_id']); ?>" onclick="return confirm('Xóa tour này?');">Xóa</a>
                         </td>

@@ -469,4 +469,5 @@ class BookingController {
         echo json_encode($result);
         exit();
     }
+
 }

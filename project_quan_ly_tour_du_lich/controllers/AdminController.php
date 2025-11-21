@@ -531,4 +531,230 @@ class AdminController {
         }
         return null;
     }
+
+    // ========== QUẢN LÝ KHÁCH THEO TOUR ==========
+    
+    // Danh sách khách theo tour
+    public function danhSachKhachTheoTour() {
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        require_once 'models/Tour.php';
+        require_once 'models/LichKhoiHanh.php';
+        require_once 'models/Booking.php';
+        require_once 'models/TourCheckin.php';
+        require_once 'models/HotelRoomAssignment.php';
+        
+        $tourModel = new Tour();
+        $lichKhoiHanhModel = new LichKhoiHanh();
+        $bookingModel = new Booking();
+        $checkinModel = new TourCheckin();
+        $roomModel = new HotelRoomAssignment();
+        
+        $tour = null;
+        $lichKhoiHanh = null;
+        $bookingList = [];
+        $lichKhoiHanhList = [];
+        $checkinStats = null;
+        $roomStats = null;
+        
+        if ($lichKhoiHanhId > 0) {
+            $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+            if ($lichKhoiHanh) {
+                $tourId = $lichKhoiHanh['tour_id'];
+                $tour = $tourModel->findById($tourId);
+                
+                // Lấy danh sách booking theo lịch khởi hành
+                $sql = "SELECT b.*, 
+                               nd.ho_ten as khach_ho_ten, 
+                               nd.email, 
+                               nd.so_dien_thoai,
+                               tc.id as checkin_id, 
+                               tc.trang_thai as checkin_status
+                        FROM booking b
+                        LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id
+                        LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id
+                        LEFT JOIN tour_checkin tc ON b.booking_id = tc.booking_id
+                        WHERE b.tour_id = ? 
+                        AND b.ngay_khoi_hanh = (SELECT ngay_khoi_hanh FROM lich_khoi_hanh WHERE id = ?)
+                        ORDER BY b.ngay_dat DESC";
+                $stmt = $bookingModel->conn->prepare($sql);
+                $stmt->execute([$tourId, $lichKhoiHanhId]);
+                $bookingList = $stmt->fetchAll();
+                
+                // Lấy thống kê
+                $checkinStats = $checkinModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
+                $roomStats = $roomModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
+            }
+        } else if ($tourId > 0) {
+            $tour = $tourModel->findById($tourId);
+            $lichKhoiHanhList = $lichKhoiHanhModel->getByTourId($tourId);
+        }
+        
+        require 'views/admin/danh_sach_khach.php';
+    }
+    
+    // Check-in khách
+    public function checkInKhach() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/TourCheckin.php';
+            $checkinModel = new TourCheckin();
+            
+            $data = [
+                'lich_khoi_hanh_id' => $_POST['lich_khoi_hanh_id'] ?? 0,
+                'booking_id' => $_POST['booking_id'] ?? 0,
+                'ho_ten' => $_POST['ho_ten'] ?? '',
+                'so_cmnd' => $_POST['so_cmnd'] ?? null,
+                'so_passport' => $_POST['so_passport'] ?? null,
+                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? null,
+                'email' => $_POST['email'] ?? null,
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            if ($checkinModel->insert($data)) {
+                $_SESSION['success'] = 'Check-in khách thành công!';
+            } else {
+                $_SESSION['error'] = 'Có lỗi xảy ra khi check-in!';
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $data['lich_khoi_hanh_id']);
+            exit;
+        }
+        
+        // GET: hiển thị form check-in
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        require_once 'models/Booking.php';
+        require_once 'models/TourCheckin.php';
+        
+        $bookingModel = new Booking();
+        $checkinModel = new TourCheckin();
+        
+        $booking = $bookingModel->findById($bookingId);
+        $checkin = $checkinModel->getByBookingId($bookingId);
+        
+        require 'views/admin/check_in.php';
+    }
+    
+    // Cập nhật check-in
+    public function updateCheckIn() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/TourCheckin.php';
+            $checkinModel = new TourCheckin();
+            
+            $id = $_POST['id'] ?? 0;
+            $data = [
+                'ho_ten' => $_POST['ho_ten'] ?? '',
+                'so_cmnd' => $_POST['so_cmnd'] ?? null,
+                'so_passport' => $_POST['so_passport'] ?? null,
+                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? null,
+                'email' => $_POST['email'] ?? null,
+                'trang_thai' => $_POST['trang_thai'] ?? 'DaCheckIn',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            if ($checkinModel->update($id, $data)) {
+                $_SESSION['success'] = 'Cập nhật check-in thành công!';
+            } else {
+                $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật!';
+            }
+            
+            $lichKhoiHanhId = $_POST['lich_khoi_hanh_id'] ?? 0;
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit;
+        }
+    }
+    
+    // Phân phòng khách sạn
+    public function phanPhongKhachSan() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/HotelRoomAssignment.php';
+            $roomModel = new HotelRoomAssignment();
+            
+            $action = $_POST['action'] ?? 'add';
+            $lichKhoiHanhId = $_POST['lich_khoi_hanh_id'] ?? 0;
+            
+            if ($action === 'add') {
+                $data = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'booking_id' => $_POST['booking_id'] ?? 0,
+                    'checkin_id' => $_POST['checkin_id'] ?? null,
+                    'ten_khach_san' => $_POST['ten_khach_san'] ?? '',
+                    'so_phong' => $_POST['so_phong'] ?? '',
+                    'loai_phong' => $_POST['loai_phong'] ?? 'Standard',
+                    'so_giuong' => $_POST['so_giuong'] ?? 1,
+                    'ngay_nhan_phong' => $_POST['ngay_nhan_phong'] ?? null,
+                    'ngay_tra_phong' => $_POST['ngay_tra_phong'] ?? null,
+                    'gia_phong' => $_POST['gia_phong'] ?? 0,
+                    'trang_thai' => $_POST['trang_thai'] ?? 'DaDatPhong',
+                    'ghi_chu' => $_POST['ghi_chu'] ?? null
+                ];
+                
+                if ($roomModel->insert($data)) {
+                    $_SESSION['success'] = 'Phân phòng thành công!';
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi phân phòng!';
+                }
+            } else if ($action === 'update') {
+                $id = $_POST['id'] ?? 0;
+                $data = [
+                    'ten_khach_san' => $_POST['ten_khach_san'] ?? '',
+                    'so_phong' => $_POST['so_phong'] ?? '',
+                    'loai_phong' => $_POST['loai_phong'] ?? 'Standard',
+                    'so_giuong' => $_POST['so_giuong'] ?? 1,
+                    'ngay_nhan_phong' => $_POST['ngay_nhan_phong'] ?? null,
+                    'ngay_tra_phong' => $_POST['ngay_tra_phong'] ?? null,
+                    'gia_phong' => $_POST['gia_phong'] ?? 0,
+                    'trang_thai' => $_POST['trang_thai'] ?? 'DaDatPhong',
+                    'ghi_chu' => $_POST['ghi_chu'] ?? null
+                ];
+                
+                if ($roomModel->update($id, $data)) {
+                    $_SESSION['success'] = 'Cập nhật phòng thành công!';
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật!';
+                }
+            } else if ($action === 'delete') {
+                $id = $_POST['id'] ?? 0;
+                if ($roomModel->delete($id)) {
+                    $_SESSION['success'] = 'Xóa phân phòng thành công!';
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi xóa!';
+                }
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit;
+        }
+        
+        // GET: hiển thị form phân phòng
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        
+        require_once 'models/Booking.php';
+        require_once 'models/HotelRoomAssignment.php';
+        require_once 'models/TourCheckin.php';
+        
+        $bookingModel = new Booking();
+        $roomModel = new HotelRoomAssignment();
+        $checkinModel = new TourCheckin();
+        
+        $booking = null;
+        $roomList = [];
+        $hotelList = [];
+        $checkin = null;
+        
+        if ($bookingId > 0) {
+            $booking = $bookingModel->findById($bookingId);
+            $roomList = $roomModel->getByBookingId($bookingId);
+            $checkin = $checkinModel->getByBookingId($bookingId);
+        }
+        
+        if ($lichKhoiHanhId > 0) {
+            $hotelList = $roomModel->getHotelList();
+        }
+        
+        require 'views/admin/phan_phong.php';
+    }
 }

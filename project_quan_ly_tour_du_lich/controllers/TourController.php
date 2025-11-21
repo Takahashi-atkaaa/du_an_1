@@ -119,8 +119,7 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
-                header('Location: index.php?act=admin/quanLyTour');
-                exit();
+            
             } catch (Exception $e) {
                 if (method_exists($this->model->conn, 'rollBack') && $this->model->conn->inTransaction()) {
                     $this->model->conn->rollBack();
@@ -217,6 +216,8 @@ class TourController {
                     }
                 }
             }
+            
+       
             
             header('Location: index.php?act=admin/quanLyTour');
             exit();
@@ -564,4 +565,30 @@ class TourController {
         header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
         exit();
     }
+
+    // Trang đặt tour online qua QR Code
+    public function bookOnline() {
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=tour/index');
+            exit();
+        }
+        
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=tour/index');
+            exit();
+        }
+        
+        $lichTrinhList = $this->model->getLichTrinhByTourId($tourId);
+        $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($tourId);
+        $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
+        $anhChinh = $this->chonAnhChinh($hinhAnhList);
+        
+        require 'views/khach_hang/book_online.php';
+    }
+
 }
