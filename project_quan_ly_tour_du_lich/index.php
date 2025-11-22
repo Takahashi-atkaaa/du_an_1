@@ -75,6 +75,9 @@ match ($act) {
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
+    'booking/xuatTaiLieu' => (new BookingController())->xuatTaiLieu(),
+    'booking/exportPDF' => (new BookingController())->exportPDF(),
+    'booking/sendEmail' => (new BookingController())->sendEmail(),
 
     
     // Lịch khởi hành
@@ -99,6 +102,27 @@ match ($act) {
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
     // HDV
+    'hdv/dashboard' => (new HDVController())->dashboard(),
+    'hdv/tours' => (new HDVController())->tours(),
+    'hdv/tour_detail' => (new HDVController())->tourDetail(),
+    'hdv/khach' => (new HDVController())->khach(),
+    'hdv/nhat_ky' => (new HDVController())->nhatKy(),
+    'hdv/save_nhat_ky' => (new HDVController())->saveNhatKy(),
+    'hdv/delete_nhat_ky' => (new HDVController())->deleteNhatKy(),
+    'hdv/checkin' => (new HDVController())->checkin(),
+    'hdv/save_diem_checkin' => (new HDVController())->saveDiemCheckin(),
+    'hdv/delete_diem_checkin' => (new HDVController())->deleteDiemCheckin(),
+    'hdv/save_checkin_khach' => (new HDVController())->saveCheckinKhach(),
+    'hdv/yeu_cau_dac_biet' => (new HDVController())->yeuCauDacBiet(),
+    'hdv/save_yeu_cau' => (new HDVController())->saveYeuCauDacBiet(),
+    'hdv/delete_yeu_cau' => (new HDVController())->deleteYeuCauDacBiet(),
+    'hdv/phan_hoi' => (new HDVController())->phanHoi(),
+    'hdv/save_phan_hoi' => (new HDVController())->savePhanHoi(),
+    'hdv/delete_phan_hoi' => (new HDVController())->deletePhanHoi(),
+    'hdv/profile' => (new HDVController())->profile(),
+    'hdv/update_profile' => (new HDVController())->updateProfile(),
+    'hdv/danh_gia' => (new HDVController())->danhGia(),
+    'hdv/notifications' => (new HDVController())->notifications(),
     'hdv/lichLamViec' => (new HDVController())->lichLamViec(),
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
     'hdv/danhSachKhach' => (new HDVController())->danhSachKhach(),
@@ -146,6 +170,7 @@ match ($act) {
 
     // Quản lý HDV nâng cao
     'admin/hdv_advanced' => (new AdminController())->hdvAdvanced(),
+    'admin/hdv_lich_table' => (new AdminController())->hdvLichTable(),
     'admin/hdv_add_schedule' => (new AdminController())->hdvAddSchedule(),
     'admin/hdv_get_schedule' => (new AdminController())->hdvGetSchedule(),
     'admin/hdv_send_notification' => (new AdminController())->hdvSendNotification(),

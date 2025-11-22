@@ -163,6 +163,40 @@ CREATE TABLE nhat_ky_tour (
   FOREIGN KEY (nhan_su_id) REFERENCES nhan_su(nhan_su_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- CẬP NHẬT BẢNG NHẬT KÝ TOUR
+-- Thêm cột loai_nhat_ky
+ALTER TABLE nhat_ky_tour 
+ADD COLUMN loai_nhat_ky ENUM('hanh_trinh', 'su_co', 'phan_hoi', 'hoat_dong') 
+DEFAULT 'hanh_trinh' 
+COMMENT 'Loại nhật ký: hành trình, sự cố, phản hồi khách, hoạt động'
+AFTER nhan_su_id;
+
+-- Thêm cột tieu_de
+ALTER TABLE nhat_ky_tour 
+ADD COLUMN tieu_de VARCHAR(255) 
+COMMENT 'Tiêu đề nhật ký'
+AFTER loai_nhat_ky;
+
+-- Thêm cột cach_xu_ly
+ALTER TABLE nhat_ky_tour 
+ADD COLUMN cach_xu_ly TEXT 
+COMMENT 'Cách xử lý sự cố'
+AFTER noi_dung;
+
+-- Thêm cột hinh_anh
+ALTER TABLE nhat_ky_tour 
+ADD COLUMN hinh_anh TEXT 
+COMMENT 'JSON array chứa đường dẫn hình ảnh'
+AFTER cach_xu_ly;
+
+-- Cập nhật kiểu dữ liệu cột ngay_ghi
+ALTER TABLE nhat_ky_tour 
+MODIFY COLUMN ngay_ghi DATETIME DEFAULT CURRENT_TIMESTAMP;
+
+-- Hiển thị cấu trúc bảng sau khi cập nhật
+DESCRIBE nhat_ky_tour;
+
+
 -- ======================================
 -- 11. BẢNG PHẢN HỒI & ĐÁNH GIÁ
 -- ======================================
@@ -192,16 +226,9 @@ CREATE TABLE giao_dich_tai_chinh (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ======================================
--- 13. BẢNG YÊU CẦU ĐẶC BIỆT CỦA KHÁCH
+-- 13. YÊU CẦU ĐẶC BIỆT (optional) - Đã di chuyển xuống dòng 466
 -- ======================================
-CREATE TABLE yeu_cau_dac_biet (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  khach_hang_id INT,
-  tour_id INT,
-  noi_dung TEXT,
-  FOREIGN KEY (khach_hang_id) REFERENCES khach_hang(khach_hang_id) ON DELETE CASCADE,
-  FOREIGN KEY (tour_id) REFERENCES tour(tour_id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+-- DROP TABLE IF EXISTS yeu_cau_dac_biet; -- Bảng cũ đã được thay thế
 
 -- ======================================
 -- 14. BẢNG LỊCH SỬ THAY ĐỔI BOOKING
@@ -387,6 +414,134 @@ CREATE TABLE chung_chi_hdv (
   INDEX idx_nhan_su (nhan_su_id),
   INDEX idx_het_han (ngay_het_han)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Quản lý chi tiết chứng chỉ HDV';
+
+-- ======================================
+-- 23. BẢNG ĐIỂM CHECK-IN TRONG TOUR
+-- ======================================
+CREATE TABLE IF NOT EXISTS `diem_checkin` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `tour_id` INT NOT NULL,
+  `ten_diem` VARCHAR(255) NOT NULL,
+  `loai_diem` ENUM('tap_trung', 'tham_quan', 'an_uong', 'nghi_ngoi', 'khac') DEFAULT 'tap_trung',
+  `thoi_gian_du_kien` DATETIME,
+  `ghi_chu` TEXT,
+  `thu_tu` INT DEFAULT 1,
+  `ngay_tao` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`tour_id`) REFERENCES `tour`(`tour_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 24. Bảng chi tiết check-in của từng khách
+-- ======================================
+CREATE TABLE IF NOT EXISTS `checkin_khach` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `diem_checkin_id` INT NOT NULL,
+  `booking_id` INT NOT NULL,
+  `trang_thai` ENUM('chua_checkin', 'da_checkin', 'vang_mat', 're_gio') DEFAULT 'chua_checkin',
+  `thoi_gian_checkin` DATETIME,
+  `ghi_chu` TEXT,
+  `nguoi_checkin_id` INT,
+  `ngay_tao` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (`diem_checkin_id`) REFERENCES `diem_checkin`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`booking_id`) REFERENCES `booking`(`booking_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`nguoi_checkin_id`) REFERENCES `nhan_su`(`nhan_su_id`),
+  UNIQUE KEY `unique_checkin` (`diem_checkin_id`, `booking_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Thêm index để tăng tốc query
+CREATE INDEX idx_diem_checkin_tour ON diem_checkin(tour_id, thu_tu);
+CREATE INDEX idx_checkin_khach_diem ON checkin_khach(diem_checkin_id, trang_thai);
+CREATE INDEX idx_checkin_khach_booking ON checkin_khach(booking_id);
+
+-- ======================================
+-- 25. Bảng yêu cầu đặc biệt của khách hàng
+-- ======================================
+CREATE TABLE `yeu_cau_dac_biet` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `booking_id` INT NOT NULL,
+  `loai_yeu_cau` ENUM('an_uong', 'suc_khoe', 'di_chuyen', 'phong_o', 'hoat_dong', 'khac') DEFAULT 'khac',
+  `tieu_de` VARCHAR(255) NOT NULL,
+  `mo_ta` TEXT,
+  `muc_do_uu_tien` ENUM('thap', 'trung_binh', 'cao', 'khan_cap') DEFAULT 'trung_binh',
+  `trang_thai` ENUM('moi', 'dang_xu_ly', 'da_giai_quyet', 'khong_the_thuc_hien') DEFAULT 'moi',
+  `ghi_chu_hdv` TEXT,
+  `nguoi_tao_id` INT,
+  `nguoi_xu_ly_id` INT,
+  `ngay_tao` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `ngay_cap_nhat` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_yeu_cau_booking` (`booking_id`, `trang_thai`),
+  INDEX `idx_yeu_cau_loai` (`loai_yeu_cau`, `muc_do_uu_tien`),
+  FOREIGN KEY (`booking_id`) REFERENCES `booking`(`booking_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`nguoi_tao_id`) REFERENCES `nguoi_dung`(`id`),
+  FOREIGN KEY (`nguoi_xu_ly_id`) REFERENCES `nhan_su`(`nhan_su_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 26.Bảng lịch sử cập nhật yêu cầu đặc biệt
+-- ======================================
+CREATE TABLE `lich_su_yeu_cau` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `yeu_cau_id` INT NOT NULL,
+  `hanh_dong` VARCHAR(100) NOT NULL,
+  `noi_dung` TEXT,
+  `nguoi_thuc_hien_id` INT,
+  `ngay_thuc_hien` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_lich_su_yeu_cau` (`yeu_cau_id`, `ngay_thuc_hien`),
+  FOREIGN KEY (`yeu_cau_id`) REFERENCES `yeu_cau_dac_biet`(`id`) ON DELETE CASCADE,
+  FOREIGN KEY (`nguoi_thuc_hien_id`) REFERENCES `nguoi_dung`(`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 27.Bảng phản hồi đánh giá của HDV
+-- ======================================
+CREATE TABLE IF NOT EXISTS `phan_hoi_hdv` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `tour_id` INT NOT NULL,
+  `hdv_id` INT NOT NULL,
+  `loai_danh_gia` ENUM('tour', 'khach_san', 'nha_hang', 'van_chuyen', 'nha_cung_cap', 'khac') NOT NULL,
+  `ten_doi_tuong` VARCHAR(255) NOT NULL COMMENT 'Tên khách sạn, nhà hàng, xe, nhà cung cấp...',
+  `doi_tuong_id` INT NULL COMMENT 'ID của đối tượng nếu có trong hệ thống',
+  `diem_danh_gia` TINYINT NOT NULL CHECK (`diem_danh_gia` BETWEEN 1 AND 5),
+  `tieu_de` VARCHAR(255) NOT NULL,
+  `noi_dung` TEXT NOT NULL,
+  `diem_manh` TEXT COMMENT 'Những điểm tốt, ưu điểm',
+  `diem_yeu` TEXT COMMENT 'Những điểm cần cải thiện',
+  `de_xuat` TEXT COMMENT 'Đề xuất, kiến nghị',
+  `hinh_anh` TEXT COMMENT 'JSON array chứa đường dẫn các ảnh minh chứng',
+  `trang_thai` ENUM('moi', 'da_xem', 'dang_xu_ly', 'da_xu_ly') DEFAULT 'moi',
+  `nguoi_xu_ly_id` INT NULL COMMENT 'Quản lý xử lý phản hồi',
+  `ghi_chu_xu_ly` TEXT COMMENT 'Ghi chú từ quản lý khi xử lý',
+  `ngay_tao` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `ngay_cap_nhat` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX `idx_phan_hoi_tour` (`tour_id`, `loai_danh_gia`),
+  INDEX `idx_phan_hoi_hdv` (`hdv_id`, `ngay_tao`),
+  INDEX `idx_phan_hoi_trang_thai` (`trang_thai`, `ngay_tao`),
+  INDEX `idx_phan_hoi_diem` (`diem_danh_gia`, `loai_danh_gia`),
+  FOREIGN KEY (`tour_id`) REFERENCES `tour`(`tour_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`hdv_id`) REFERENCES `nhan_su`(`nhan_su_id`) ON DELETE CASCADE,
+  FOREIGN KEY (`nguoi_xu_ly_id`) REFERENCES `nhan_su`(`nhan_su_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ======================================
+-- 28.Bảng thống kê đánh giá theo đối tượng
+-- ======================================
+CREATE TABLE IF NOT EXISTS `thong_ke_danh_gia` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `loai_doi_tuong` ENUM('tour', 'khach_san', 'nha_hang', 'van_chuyen', 'nha_cung_cap', 'khac') NOT NULL,
+  `ten_doi_tuong` VARCHAR(255) NOT NULL,
+  `doi_tuong_id` INT NULL,
+  `tong_danh_gia` INT DEFAULT 0,
+  `diem_trung_binh` DECIMAL(3,2) DEFAULT 0.00,
+  `so_sao_1` INT DEFAULT 0,
+  `so_sao_2` INT DEFAULT 0,
+  `so_sao_3` INT DEFAULT 0,
+  `so_sao_4` INT DEFAULT 0,
+  `so_sao_5` INT DEFAULT 0,
+  `lan_cap_nhat_cuoi` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY `unique_doi_tuong` (`loai_doi_tuong`, `ten_doi_tuong`),
+  INDEX `idx_thong_ke_loai` (`loai_doi_tuong`, `diem_trung_binh`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 
 -- ============================================
 -- PHẦN 3: INDEX TỐI ƯU TÌM KIẾM

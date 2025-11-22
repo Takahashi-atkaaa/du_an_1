@@ -447,7 +447,8 @@ class AdminController {
         $hdv_list = $hdvMgmt->getAllHDV();
         $stats = $hdvMgmt->getThongKeTongQuan();
         $hieu_suat_list = $hdvMgmt->getBaoCaoHieuSuat();
-        $thong_bao_list = []; // Tạm thời empty vì chưa có bảng thông báo
+        $thong_bao_list = $hdvMgmt->getThongBao(null, 20);
+        $lich_lam_viec = $hdvMgmt->getAllLichLamViec(); // Lấy tất cả lịch làm việc
         
         require 'views/admin/hdv_quan_ly_nang_cao.php';
     }
@@ -494,15 +495,37 @@ class AdminController {
 
     public function hdvSendNotification() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Tạm thời lưu vào session vì không có bảng thông báo
+            require_once 'models/HDVManagement.php';
+            $hdvMgmt = new HDVManagement();
+            
+            $data = [
+                'nhan_su_id' => !empty($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : null,
+                'loai_thong_bao' => $_POST['loai_thong_bao'] ?? 'ThongBao',
+                'tieu_de' => $_POST['tieu_de'] ?? '',
+                'noi_dung' => $_POST['noi_dung'] ?? '',
+                'uu_tien' => $_POST['uu_tien'] ?? 'TrungBinh'
+            ];
+            
+            $result = $hdvMgmt->guiThongBao($data);
+            
             $_SESSION['flash'] = [
-                'type' => 'success',
-                'message' => 'Gửi thông báo thành công! (Chức năng demo - chưa lưu database)'
+                'type' => $result ? 'success' : 'danger',
+                'message' => $result ? 'Gửi thông báo thành công!' : 'Lỗi khi gửi thông báo!'
             ];
         }
         
         header('Location: index.php?act=admin/hdv_advanced');
         exit;
+    }
+
+    public function hdvLichTable() {
+        require_once 'models/HDVManagement.php';
+        $hdvMgmt = new HDVManagement();
+        
+        $hdv_list = $hdvMgmt->getAllHDV();
+        $lich_lam_viec = $hdvMgmt->getLichLamViec(); // Lấy tất cả lịch
+        
+        require 'views/admin/hdv_lich_lam_viec_table.php';
     }
 
     public function hdvDetail() {
@@ -746,7 +769,19 @@ class AdminController {
         $checkin = null;
         
         if ($bookingId > 0) {
-            $booking = $bookingModel->findById($bookingId);
+            // Lấy thông tin booking với thông tin khách hàng
+            $sql = "SELECT b.*, 
+                           nd.ho_ten, 
+                           nd.email, 
+                           nd.so_dien_thoai
+                    FROM booking b
+                    LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id
+                    LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id
+                    WHERE b.booking_id = ?";
+            $stmt = $bookingModel->conn->prepare($sql);
+            $stmt->execute([$bookingId]);
+            $booking = $stmt->fetch();
+            
             $roomList = $roomModel->getByBookingId($bookingId);
             $checkin = $checkinModel->getByBookingId($bookingId);
         }
