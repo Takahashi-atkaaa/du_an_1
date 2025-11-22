@@ -35,6 +35,8 @@ require_once './models/NhanSu.php';
 require_once './models/LichKhoiHanh.php';
 require_once './models/PhanBoNhanSu.php';
 require_once './models/PhanBoDichVu.php';
+require_once './models/CheckinKhach.php';
+require_once './models/YeuCauDacBiet.php';
 
 // Route
 $act = $_GET['act'] ?? 'auth/login';
@@ -102,6 +104,10 @@ match ($act) {
     'hdv/lichLamViec' => (new HDVController())->lichLamViec(),
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
     'hdv/danhSachKhach' => (new HDVController())->danhSachKhach(),
+    'hdv/checkInKhach' => (new HDVController())->checkInKhach(),
+    'hdv/updateCheckInKhach' => (new HDVController())->updateCheckInKhach(),
+    'hdv/quanLyYeuCauDacBiet' => (new HDVController())->quanLyYeuCauDacBiet(),
+    'hdv/updateYeuCauDacBiet' => (new HDVController())->updateYeuCauDacBiet(),
     'hdv/phanHoi' => (new HDVController())->phanHoi(),
     // Admin - quản lý HDV
     'admin/quanLyHDV' => (new AdminController())->quanLyHDV(),

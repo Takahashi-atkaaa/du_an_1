@@ -80,6 +80,44 @@
                 </tr>
             </table>
 
+            <!-- Yêu cầu đặc biệt -->
+            <h2>Yêu cầu đặc biệt của khách</h2>
+            <?php if (!empty($yeuCauDacBietList)): ?>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Khách hàng</th>
+                            <th>Liên hệ</th>
+                            <th>Booking</th>
+                            <th>Nội dung yêu cầu</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($yeuCauDacBietList as $yc): ?>
+                            <tr>
+                                <td>
+                                    <?php echo htmlspecialchars($yc['ho_ten'] ?? 'N/A'); ?><br>
+                                    <small>SL khách: <?php echo (int)($yc['so_nguoi'] ?? 0); ?></small>
+                                </td>
+                                <td>
+                                    <?php echo htmlspecialchars($yc['email'] ?? ''); ?><br>
+                                    <?php echo htmlspecialchars($yc['so_dien_thoai'] ?? ''); ?>
+                                </td>
+                                <td>
+                                    #<?php echo $yc['booking_id']; ?><br>
+                                    <small>Đặt ngày: 
+                                        <?php echo $yc['ngay_dat'] ? date('d/m/Y', strtotime($yc['ngay_dat'])) : 'N/A'; ?>
+                                    </small>
+                                </td>
+                                <td><?php echo nl2br(htmlspecialchars($yc['noi_dung'] ?? '')); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php else: ?>
+                <p>Không có yêu cầu đặc biệt nào cho lịch khởi hành này.</p>
+            <?php endif; ?>
+
             <!-- Phân bổ nhân sự -->
             <h2>Phân bổ Nhân sự</h2>
             
