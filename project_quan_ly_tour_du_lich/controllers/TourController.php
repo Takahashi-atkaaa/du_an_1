@@ -587,8 +587,6 @@ class TourController {
         $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($tourId);
         $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
         $anhChinh = $this->chonAnhChinh($hinhAnhList);
-        
-        require 'views/khach_hang/book_online.php';
     }
 
 }
