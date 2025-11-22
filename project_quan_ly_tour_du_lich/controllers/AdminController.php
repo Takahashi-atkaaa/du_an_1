@@ -18,6 +18,24 @@ class AdminController {
         require 'views/admin/quan_ly_tour.php';
     }
     
+    public function quanLyLichKhoiHanh() {
+        require_once 'models/LichKhoiHanh.php';
+        $lichKhoiHanhModel = new LichKhoiHanh();
+        
+        // Lấy các tham số lọc từ GET
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'trang_thai' => $_GET['trang_thai'] ?? '',
+            'tu_ngay' => $_GET['tu_ngay'] ?? '',
+            'den_ngay' => $_GET['den_ngay'] ?? ''
+        ];
+        
+        // Lọc dữ liệu
+        $lichKhoiHanhList = $lichKhoiHanhModel->filter($filters);
+        
+        require 'views/admin/quan_ly_lich_khoi_hanh.php';
+    }
+    
     public function chiTietTour() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         $tour = null;

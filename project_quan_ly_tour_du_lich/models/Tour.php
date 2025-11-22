@@ -83,36 +83,43 @@ class Tour
         // Xóa tất cả các bản ghi liên quan trước khi xóa tour
         // Thứ tự xóa: từ bảng con đến bảng cha để tránh vi phạm foreign key constraint
         
-        // 1. Xóa hình ảnh tour
-        $this->deleteHinhAnhByTourId($id);
-        
-        // 2. Xóa lịch trình tour
-        $this->deleteLichTrinhByTourId($id);
-        
-        // 3. Xóa lịch khởi hành
-        $this->deleteLichKhoiHanhByTourId($id);
-        
-        // 4. Xóa nhật ký tour
-        $this->deleteNhatKyByTourId($id);
-        
-        // 5. Xóa phản hồi đánh giá
-        $this->deletePhanHoiDanhGiaByTourId($id);
-        
-        // 6. Xóa giao dịch tài chính
-        $this->deleteGiaoDichTaiChinhByTourId($id);
-        
-        // 7. Xóa yêu cầu đặc biệt
-        $this->deleteYeuCauDacBietByTourId($id);
-        
-        // 8. Xóa booking (nếu muốn xóa cả booking khi xóa tour)
-        $this->deleteBookingByTourId($id);
-        
-        // 9. Cuối cùng mới xóa tour
-        $sql = "DELETE FROM tour WHERE tour_id = ?";
-        $stmt = $this->conn->prepare($sql);
-        $result = $stmt->execute([$id]);
-        
-        return $result;
+        try {
+            // 1. Xóa hình ảnh tour
+            $this->deleteHinhAnhByTourId($id);
+            
+            // 2. Xóa lịch trình tour
+            $this->deleteLichTrinhByTourId($id);
+            
+            // 3. Xóa lịch khởi hành
+            $this->deleteLichKhoiHanhByTourId($id);
+            
+            // 4. Xóa nhật ký tour
+            $this->deleteNhatKyByTourId($id);
+            
+            // 5. Xóa phản hồi đánh giá
+            $this->deletePhanHoiDanhGiaByTourId($id);
+            
+            // 6. Xóa giao dịch tài chính
+            $this->deleteGiaoDichTaiChinhByTourId($id);
+            
+            // 7. Xóa yêu cầu đặc biệt
+            $this->deleteYeuCauDacBietByTourId($id);
+            
+            // 8. Xóa booking (nếu muốn xóa cả booking khi xóa tour)
+            // Skip vì có thể cần giữ lịch sử booking
+            // $this->deleteBookingByTourId($id);
+            
+            // 9. Cuối cùng mới xóa tour
+            $sql = "DELETE FROM tour WHERE tour_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute([$id]);
+            
+            return $result;
+        } catch (PDOException $e) {
+            // Log error để debug
+            error_log("Error deleting tour: " . $e->getMessage());
+            throw $e;
+        }
     }
 
     // Lấy danh sách lịch trình theo tour_id
@@ -280,7 +287,11 @@ class Tour
 
     // Xóa yêu cầu đặc biệt theo tour_id
     public function deleteYeuCauDacBietByTourId($tourId) {
-        $sql = "DELETE FROM yeu_cau_dac_biet WHERE tour_id = ?";
+        // Bảng yeu_cau_dac_biet không có tour_id, chỉ có booking_id
+        // Nên ta phải xóa qua bảng booking trước
+        $sql = "DELETE ycdb FROM yeu_cau_dac_biet ycdb 
+                INNER JOIN booking b ON ycdb.booking_id = b.booking_id 
+                WHERE b.tour_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([(int)$tourId]);
     }

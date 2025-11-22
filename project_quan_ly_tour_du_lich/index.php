@@ -97,6 +97,7 @@ match ($act) {
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
     'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
+    'admin/quanLyLichKhoiHanh' => (new AdminController())->quanLyLichKhoiHanh(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/danhGia' => (new AdminController())->danhGia(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),

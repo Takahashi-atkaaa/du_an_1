@@ -88,7 +88,7 @@
                         <select name="trang_thai" class="form-select form-select-sm">
                             <option value="">Tất cả</option>
                             <option value="HoatDong">Hoạt động</option>
-                            <option value="NgungHoatDong">Ngừng hoạt động</option>
+                            <option value="TamDung">Ngừng hoạt động</option>
                         </select>
                     </div>
                     <div class="col-md-4">
