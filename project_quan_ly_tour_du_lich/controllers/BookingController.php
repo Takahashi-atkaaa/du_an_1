@@ -419,7 +419,7 @@ class BookingController {
 
                 // Lưu yêu cầu đặc biệt nếu có
                 if (!empty($yeuCauDacBiet)) {
-                    $this->tourModel->insertYeuCauDacBiet($khachHang['khach_hang_id'], $tourId, $yeuCauDacBiet);
+                    $this->tourModel->insertYeuCauDacBiet($bookingId, $yeuCauDacBiet);
                 }
 
                 $_SESSION['success'] = "Đặt tour thành công! Mã booking: #{$bookingId}";
