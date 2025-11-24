@@ -12,7 +12,6 @@ class AdminController {
     }
     
     public function quanLyTour() {
-        require_once 'models/Tour.php';
         $tourModel = new Tour();
         $tours = $tourModel->getAll();
         require 'views/admin/quan_ly_tour.php';
@@ -29,8 +28,6 @@ class AdminController {
         if ($id <= 0) {
             $error = 'Thiếu mã tour cần xem chi tiết.';
         } else {
-            require_once 'models/Tour.php';
-            require_once 'models/LichKhoiHanh.php';
             $tourModel = new Tour();
             $lichKhoiHanhModel = new LichKhoiHanh();
             $tour = $tourModel->findById($id);
@@ -50,10 +47,6 @@ class AdminController {
     }
     
     public function quanLyBooking() {
-        require_once 'models/Booking.php';
-        require_once 'models/Tour.php';
-        require_once 'models/KhachHang.php';
-        
         $bookingModel = new Booking();
         $conditions = [];
         
@@ -81,7 +74,6 @@ class AdminController {
         require 'views/admin/danh_gia.php';
     }
     public function nhanSu() {
-        require_once 'models/NhanSu.php';
         $nhanSuModel = new NhanSu();
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         $role = isset($_GET['role']) ? trim($_GET['role']) : '';
@@ -113,13 +105,11 @@ class AdminController {
 
     // Admin: quản lý HDV (danh sách + CRUD cơ bản)
     public function quanLyHDV() {
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         if ($q !== '') {
             // sử dụng search trên nhan_su (tạm gọi chung)
-            require_once 'models/NhanSu.php';
             $ns = new NhanSu();
             $hdv_list = $ns->search($q);
         } else {
@@ -139,7 +129,6 @@ class AdminController {
 
     public function quanLyHDVCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDV.php';
             $model = new HDV();
             $data = [
                 'ho_ten' => $_POST['ho_ten'] ?? '',
@@ -163,7 +152,6 @@ class AdminController {
 
     public function quanLyHDVUpdate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDV.php';
             $model = new HDV();
             $id = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
             if ($id > 0) {
@@ -192,7 +180,6 @@ class AdminController {
     public function quanLyHDVDelete() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id > 0) {
-            require_once 'models/HDV.php';
             $model = new HDV();
             $ok = $model->delete($id);
             $_SESSION['flash'] = $ok ? ['type'=>'success','message'=>'Xóa HDV thành công'] : ['type'=>'danger','message'=>'Xóa HDV thất bại'];
@@ -202,7 +189,6 @@ class AdminController {
 
     // Hiển thị lịch phân công HDV (calendar)
     public function hdvSchedule() {
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         // load hdv list
         $hdv_list = $hdvModel->getAll();
@@ -212,7 +198,6 @@ class AdminController {
     // Trang hồ sơ HDV
     public function hdvProfile() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $hdv = $hdvModel->findById($id);
         $history = [];
@@ -226,7 +211,6 @@ class AdminController {
     public function hdvApiGetSchedule() {
         header('Content-Type: application/json');
         $hdvId = isset($_GET['hdv_id']) ? (int)$_GET['hdv_id'] : 0;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $from = $_GET['from'] ?? null;
         $to = $_GET['to'] ?? null;
@@ -253,7 +237,6 @@ class AdminController {
         $hdvId = isset($_GET['hdv_id']) ? (int)$_GET['hdv_id'] : 0;
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $ok = false;
         if ($hdvId && $start && $end) {
@@ -273,7 +256,6 @@ class AdminController {
         $start = $payload['start'] ?? null;
         $end = $payload['end'] ?? null;
         $note = $payload['note'] ?? null;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         if (!$hdvId || !$start || !$end) { echo json_encode(['ok'=>false,'msg'=>'Thiếu dữ liệu']); exit; }
         if (!$hdvModel->isAvailable($hdvId, $start, $end)) {
@@ -289,7 +271,6 @@ class AdminController {
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
         $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $candidates = $hdvModel->getAll($groupId, true);
         $available = [];
@@ -303,7 +284,6 @@ class AdminController {
 
     public function nhanSuCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             $data = [
                     'nguoi_dung_id' => $_POST['nguoi_dung_id'] ?? null,
@@ -332,7 +312,6 @@ class AdminController {
 
     // API: trả về danh sách người dùng chưa có nhân sự (JSON)
     public function nhanSu_get_users() {
-        require_once 'models/NhanSu.php';
         $model = new NhanSu();
         $users = $model->getAvailableUsers();
         header('Content-Type: application/json');
@@ -342,7 +321,6 @@ class AdminController {
 
     public function nhanSuUpdate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             $id = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
             if ($id <= 0) {
@@ -373,7 +351,6 @@ class AdminController {
         $delete_user = isset($_GET['delete_user']) && $_GET['delete_user'] === '1' ? true : false;
         
         if ($id > 0) {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             if ($delete_user) {
                 // kiểm tra blocker quan trọng trước khi xóa (chỉ tour.tao_boi)
@@ -412,7 +389,6 @@ class AdminController {
         if ($id <= 0) {
             $error = 'Thiếu mã nhân sự cần xem.';
         } else {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             $nhanSu = $model->findById($id);
             
@@ -421,7 +397,6 @@ class AdminController {
             } else {
                 // Lấy thêm thông tin vai trò người dùng
                 if (!empty($nhanSu['nguoi_dung_id'])) {
-                    require_once 'models/NguoiDung.php';
                     $nguoiDungModel = new NguoiDung();
                     $nguoiDung = $nguoiDungModel->findById($nhanSu['nguoi_dung_id']);
                     if ($nguoiDung) {
@@ -441,7 +416,6 @@ class AdminController {
     // ==================== QUẢN LÝ HDV NÂNG CAO (SỬ DỤNG DATABASE HIỆN CÓ) ====================
     
     public function hdvAdvanced() {
-        require_once 'models/HDVManagement.php';
         $hdvMgmt = new HDVManagement();
         
         $hdv_list = $hdvMgmt->getAllHDV();
@@ -455,7 +429,6 @@ class AdminController {
 
     public function hdvAddSchedule() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDVManagement.php';
             $hdvMgmt = new HDVManagement();
             
             $data = [
@@ -479,7 +452,6 @@ class AdminController {
     }
 
     public function hdvGetSchedule() {
-        require_once 'models/HDVManagement.php';
         $hdvMgmt = new HDVManagement();
         
         $hdv_id = $_GET['hdv_id'] ?? null;
@@ -495,7 +467,6 @@ class AdminController {
 
     public function hdvSendNotification() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDVManagement.php';
             $hdvMgmt = new HDVManagement();
             
             $data = [
@@ -519,7 +490,6 @@ class AdminController {
     }
 
     public function hdvLichTable() {
-        require_once 'models/HDVManagement.php';
         $hdvMgmt = new HDVManagement();
         
         $hdv_list = $hdvMgmt->getAllHDV();
@@ -530,9 +500,6 @@ class AdminController {
 
     public function hdvDetail() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        require_once 'models/HDVManagement.php';
-        require_once 'models/NhanSu.php';
         
         $hdvMgmt = new HDVManagement();
         $nhanSuModel = new NhanSu();
@@ -561,12 +528,6 @@ class AdminController {
     public function danhSachKhachTheoTour() {
         $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
         $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
-        
-        require_once 'models/Tour.php';
-        require_once 'models/LichKhoiHanh.php';
-        require_once 'models/Booking.php';
-        require_once 'models/TourCheckin.php';
-        require_once 'models/HotelRoomAssignment.php';
         
         $tourModel = new Tour();
         $lichKhoiHanhModel = new LichKhoiHanh();
@@ -620,7 +581,6 @@ class AdminController {
     // Check-in khách
     public function checkInKhach() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/TourCheckin.php';
             $checkinModel = new TourCheckin();
             
             $data = [
@@ -648,9 +608,6 @@ class AdminController {
         $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
         $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
         
-        require_once 'models/Booking.php';
-        require_once 'models/TourCheckin.php';
-        
         $bookingModel = new Booking();
         $checkinModel = new TourCheckin();
         
@@ -663,7 +620,6 @@ class AdminController {
     // Cập nhật check-in
     public function updateCheckIn() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/TourCheckin.php';
             $checkinModel = new TourCheckin();
             
             $id = $_POST['id'] ?? 0;
@@ -692,7 +648,6 @@ class AdminController {
     // Phân phòng khách sạn
     public function phanPhongKhachSan() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HotelRoomAssignment.php';
             $roomModel = new HotelRoomAssignment();
             
             $action = $_POST['action'] ?? 'add';
@@ -754,10 +709,6 @@ class AdminController {
         // GET: hiển thị form phân phòng
         $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
         $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-        
-        require_once 'models/Booking.php';
-        require_once 'models/HotelRoomAssignment.php';
-        require_once 'models/TourCheckin.php';
         
         $bookingModel = new Booking();
         $roomModel = new HotelRoomAssignment();
