@@ -224,25 +224,25 @@
                         <label class="form-label small fw-semibold text-muted">Tìm kiếm</label>
                         <div class="input-group">
                             <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" name="search" class="form-control" placeholder="Tên tour, điểm tập trung...">
+                            <input type="text" name="search" class="form-control" placeholder="Tên tour, điểm tập trung..." value="<?php echo htmlspecialchars($filters['search'] ?? ''); ?>">
                         </div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small fw-semibold text-muted">Trạng thái</label>
                         <select name="trang_thai" class="form-select">
                             <option value="">Tất cả</option>
-                            <option value="SapKhoiHanh">Sắp khởi hành</option>
-                            <option value="DangChay">Đang chạy</option>
-                            <option value="HoanThanh">Hoàn thành</option>
+                            <option value="SapKhoiHanh" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'SapKhoiHanh') ? 'selected' : ''; ?>>Sắp khởi hành</option>
+                            <option value="DangChay" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'DangChay') ? 'selected' : ''; ?>>Đang chạy</option>
+                            <option value="HoanThanh" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'HoanThanh') ? 'selected' : ''; ?>>Hoàn thành</option>
                         </select>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small fw-semibold text-muted">Từ ngày</label>
-                        <input type="date" name="tu_ngay" class="form-control">
+                        <input type="date" name="tu_ngay" class="form-control" value="<?php echo htmlspecialchars($filters['tu_ngay'] ?? ''); ?>">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label small fw-semibold text-muted">Đến ngày</label>
-                        <input type="date" name="den_ngay" class="form-control">
+                        <input type="date" name="den_ngay" class="form-control" value="<?php echo htmlspecialchars($filters['den_ngay'] ?? ''); ?>">
                     </div>
                     <div class="col-md-3">
                         <button type="submit" class="btn btn-primary w-100">

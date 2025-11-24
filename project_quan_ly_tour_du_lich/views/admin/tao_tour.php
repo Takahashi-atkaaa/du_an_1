@@ -57,6 +57,26 @@
             border-top: 1px solid #dee2e6;
             margin-top: 2rem;
         }
+        .lich-trinh-item {
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+        .lich-trinh-item:hover {
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            border-color: #0d6efd;
+        }
+        .lich-trinh-item .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+        }
+        .lich-trinh-item .card-header .btn-danger {
+            background: rgba(220, 53, 69, 0.9);
+            border: none;
+        }
+        .lich-trinh-item .card-header .btn-danger:hover {
+            background: #dc3545;
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -167,8 +187,11 @@
                                     <option value="HoatDong" <?php echo $tt === 'HoatDong' ? 'selected' : ''; ?>>
                                         <i class="bi bi-check-circle"></i> Hoạt động
                                     </option>
-                                    <option value="NgungHoatDong" <?php echo $tt === 'NgungHoatDong' ? 'selected' : ''; ?>>
-                                        Ngừng hoạt động
+                                    <option value="TamDung" <?php echo $tt === 'TamDung' ? 'selected' : ''; ?>>
+                                        Tạm dừng
+                                    </option>
+                                    <option value="HetHan" <?php echo $tt === 'HetHan' ? 'selected' : ''; ?>>
+                                        Hết hạn
                                     </option>
                                 </select>
                             </div>
@@ -236,6 +259,52 @@
                         </div>
                     </div>
 
+                    <!-- Lịch trình chi tiết -->
+                    <div class="form-section">
+                        <div class="form-section-title">
+                            <i class="bi bi-calendar-week"></i> Lịch trình chi tiết
+                        </div>
+                        
+                        <div id="lichTrinhContainer">
+                            <?php if (!empty($lichTrinhList)): ?>
+                                <?php foreach ($lichTrinhList as $idx => $lt): ?>
+                                    <div class="lich-trinh-item card mb-3" data-index="<?php echo $idx; ?>">
+                                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                                            <span class="fw-semibold">
+                                                <i class="bi bi-calendar-day text-primary"></i> 
+                                                Ngày <?php echo $lt['ngay_thu'] ?? ($idx + 1); ?>
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-danger" onclick="xoaLichTrinh(this)">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                        <div class="card-body">
+                                            <input type="hidden" name="lich_trinh[<?php echo $idx; ?>][ngay_thu]" value="<?php echo $lt['ngay_thu'] ?? ($idx + 1); ?>">
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label small">Địa điểm</label>
+                                                <input type="text" name="lich_trinh[<?php echo $idx; ?>][dia_diem]" 
+                                                       class="form-control" placeholder="VD: Vịnh Hạ Long, Đảo Titop" 
+                                                       value="<?php echo htmlspecialchars($lt['dia_diem'] ?? ''); ?>" required>
+                                            </div>
+                                            
+                                            <div class="mb-0">
+                                                <label class="form-label small">Hoạt động</label>
+                                                <textarea name="lich_trinh[<?php echo $idx; ?>][hoat_dong]" 
+                                                          class="form-control" rows="3" 
+                                                          placeholder="Mô tả hoạt động trong ngày..."><?php echo htmlspecialchars($lt['hoat_dong'] ?? ''); ?></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </div>
+                        
+                        <button type="button" class="btn btn-outline-primary w-100" onclick="themLichTrinh()">
+                            <i class="bi bi-plus-circle"></i> Thêm ngày mới
+                        </button>
+                    </div>
+
                     <!-- Chính sách & điều kiện -->
                     <div class="form-section">
                         <div class="form-section-title">
@@ -271,25 +340,41 @@
                 </div>
 
                 <div class="col-lg-4">
-                    <!-- Hình ảnh -->
-                    <div class="form-section">
-                        <div class="form-section-title">
-                            <i class="bi bi-images"></i> Hình ảnh tour
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="custom-file-upload">
-                                <i class="bi bi-cloud-upload fs-1 text-primary d-block mb-2"></i>
-                                <span class="d-block fw-semibold">Click để chọn ảnh</span>
-                                <span class="d-block small text-muted">Hỗ trợ: JPG, PNG, GIF (Max: 5MB)</span>
-                                <input type="file" name="image" accept="image/*" style="display: none;" onchange="previewImage(this)">
-                            </label>
-                        </div>
-                        
-                        <div id="imagePreview" class="text-center"></div>
+                <!-- Hình ảnh -->
+                <div class="form-section">
+                    <div class="form-section-title">
+                        <i class="bi bi-images"></i> Hình ảnh tour
                     </div>
-
-                    <!-- Thống kê (chỉ hiện khi sửa) -->
+                    
+                    <div id="hinhAnhContainer">
+                        <?php if (!empty($hinhAnhList)): ?>
+                            <?php foreach ($hinhAnhList as $idx => $anh): ?>
+                                <div class="image-item mb-3" data-index="<?php echo $idx; ?>">
+                                    <input type="hidden" name="hinh_anh[<?php echo $idx; ?>][url_anh]" value="<?php echo htmlspecialchars($anh['url_anh'] ?? ''); ?>">
+                                    <input type="hidden" name="hinh_anh[<?php echo $idx; ?>][mo_ta]" value="<?php echo htmlspecialchars($anh['mo_ta'] ?? ''); ?>">
+                                    <input type="hidden" name="hinh_anh[<?php echo $idx; ?>][la_anh_chinh]" value="<?php echo $anh['la_anh_chinh'] ?? 0; ?>">
+                                    <?php if (!empty($anh['url_anh'])): ?>
+                                        <img src="<?php echo htmlspecialchars($anh['url_anh']); ?>" class="img-thumbnail mb-2" style="max-height: 150px;">
+                                    <?php endif; ?>
+                                    <input type="file" name="hinh_anh_file[]" class="form-control form-control-sm mb-1" accept="image/*">
+                                    <input type="text" name="hinh_anh[<?php echo $idx; ?>][mo_ta]" class="form-control form-control-sm mb-1" placeholder="Mô tả ảnh" value="<?php echo htmlspecialchars($anh['mo_ta'] ?? ''); ?>">
+                                    <div class="form-check">
+                                        <input type="checkbox" name="hinh_anh[<?php echo $idx; ?>][la_anh_chinh]" value="1" class="form-check-input" <?php echo ($anh['la_anh_chinh'] ?? 0) ? 'checked' : ''; ?>>
+                                        <label class="form-check-label small">Ảnh chính</label>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-danger mt-1" onclick="xoaHinhAnh(this)">
+                                        <i class="bi bi-trash"></i> Xóa
+                                    </button>
+                                    <hr>
+                                </div>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </div>
+                    
+                    <button type="button" class="btn btn-sm btn-outline-primary w-100" onclick="themHinhAnh()">
+                        <i class="bi bi-plus-circle"></i> Thêm ảnh
+                    </button>
+                </div>                    <!-- Thống kê (chỉ hiện khi sửa) -->
                     <?php if ($isCapNhat): ?>
                     <div class="form-section">
                         <div class="form-section-title">
@@ -345,15 +430,101 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function previewImage(input) {
-            const preview = document.getElementById('imagePreview');
-            if (input.files && input.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    preview.innerHTML = '<img src="' + e.target.result + '" class="image-preview img-fluid">';
-                }
-                reader.readAsDataURL(input.files[0]);
+        let hinhAnhIndex = <?php echo !empty($hinhAnhList) ? count($hinhAnhList) : 0; ?>;
+        
+        function themHinhAnh() {
+            const container = document.getElementById('hinhAnhContainer');
+            const div = document.createElement('div');
+            div.className = 'image-item mb-3';
+            div.dataset.index = hinhAnhIndex;
+            div.innerHTML = `
+                <input type="hidden" name="hinh_anh[${hinhAnhIndex}][url_anh]" value="">
+                <input type="file" name="hinh_anh_file[]" class="form-control form-control-sm mb-1" accept="image/*" required>
+                <input type="text" name="hinh_anh[${hinhAnhIndex}][mo_ta]" class="form-control form-control-sm mb-1" placeholder="Mô tả ảnh">
+                <div class="form-check">
+                    <input type="checkbox" name="hinh_anh[${hinhAnhIndex}][la_anh_chinh]" value="1" class="form-check-input">
+                    <label class="form-check-label small">Ảnh chính</label>
+                </div>
+                <button type="button" class="btn btn-sm btn-danger mt-1" onclick="xoaHinhAnh(this)">
+                    <i class="bi bi-trash"></i> Xóa
+                </button>
+                <hr>
+            `;
+            container.appendChild(div);
+            hinhAnhIndex++;
+        }
+        
+        function xoaHinhAnh(btn) {
+            btn.closest('.image-item').remove();
+        }
+        
+        // Auto add first image input if empty
+        if (hinhAnhIndex === 0) {
+            themHinhAnh();
+        }
+        
+        // ===== LỊCH TRÌNH CHI TIẾT =====
+        let lichTrinhIndex = <?php echo !empty($lichTrinhList) ? count($lichTrinhList) : 0; ?>;
+        
+        function themLichTrinh() {
+            lichTrinhIndex++;
+            const container = document.getElementById('lichTrinhContainer');
+            const div = document.createElement('div');
+            div.className = 'lich-trinh-item card mb-3';
+            div.dataset.index = lichTrinhIndex;
+            div.innerHTML = `
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">
+                        <i class="bi bi-calendar-day text-primary"></i> 
+                        Ngày ${lichTrinhIndex + 1}
+                    </span>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="xoaLichTrinh(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <input type="hidden" name="lich_trinh[${lichTrinhIndex}][ngay_thu]" value="${lichTrinhIndex + 1}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label small">Địa điểm</label>
+                        <input type="text" name="lich_trinh[${lichTrinhIndex}][dia_diem]" 
+                               class="form-control" placeholder="VD: Vịnh Hạ Long, Đảo Titop" required>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label class="form-label small">Hoạt động</label>
+                        <textarea name="lich_trinh[${lichTrinhIndex}][hoat_dong]" 
+                                  class="form-control" rows="3" 
+                                  placeholder="Mô tả hoạt động trong ngày..."></textarea>
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+            capNhatSoNgay();
+        }
+        
+        function xoaLichTrinh(btn) {
+            if (confirm('Bạn có chắc muốn xóa ngày này?')) {
+                btn.closest('.lich-trinh-item').remove();
+                capNhatSoNgay();
             }
+        }
+        
+        function capNhatSoNgay() {
+            const items = document.querySelectorAll('.lich-trinh-item');
+            items.forEach((item, idx) => {
+                const headerText = item.querySelector('.card-header span');
+                headerText.innerHTML = `<i class="bi bi-calendar-day text-primary"></i> Ngày ${idx + 1}`;
+                const hiddenInput = item.querySelector('input[type="hidden"]');
+                if (hiddenInput) {
+                    hiddenInput.value = idx + 1;
+                }
+            });
+        }
+        
+        // Auto add first day if empty
+        if (lichTrinhIndex === 0) {
+            themLichTrinh();
         }
     </script>
 </body>

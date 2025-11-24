@@ -252,29 +252,31 @@ $soHopDong = 'HD' . str_pad($booking['booking_id'], 6, '0', STR_PAD_LEFT);
 </div>
 
 <?php
-function convertNumberToWords($number) {
-    $ones = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
-    $tens = ['', 'mười', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
-    
-    if ($number == 0) return 'không';
-    if ($number < 10) return $ones[$number];
-    if ($number < 100) {
-        $ten = floor($number / 10);
-        $one = $number % 10;
-        return $tens[$ten] . ($one > 0 ? ' ' . $ones[$one] : '');
+if (!function_exists('convertNumberToWords')) {
+    function convertNumberToWords($number) {
+        $ones = ['', 'một', 'hai', 'ba', 'bốn', 'năm', 'sáu', 'bảy', 'tám', 'chín'];
+        $tens = ['', 'mười', 'hai mươi', 'ba mươi', 'bốn mươi', 'năm mươi', 'sáu mươi', 'bảy mươi', 'tám mươi', 'chín mươi'];
+        
+        if ($number == 0) return 'không';
+        if ($number < 10) return $ones[$number];
+        if ($number < 100) {
+            $ten = floor($number / 10);
+            $one = $number % 10;
+            return $tens[$ten] . ($one > 0 ? ' ' . $ones[$one] : '');
+        }
+        
+        $billion = floor($number / 1000000000);
+        $million = floor(($number % 1000000000) / 1000000);
+        $thousand = floor(($number % 1000000) / 1000);
+        $hundred = $number % 1000;
+        
+        $result = [];
+        if ($billion > 0) $result[] = convertNumberToWords($billion) . ' tỷ';
+        if ($million > 0) $result[] = convertNumberToWords($million) . ' triệu';
+        if ($thousand > 0) $result[] = convertNumberToWords($thousand) . ' nghìn';
+        if ($hundred > 0) $result[] = convertNumberToWords($hundred);
+        
+        return implode(' ', $result);
     }
-    
-    $billion = floor($number / 1000000000);
-    $million = floor(($number % 1000000000) / 1000000);
-    $thousand = floor(($number % 1000000) / 1000);
-    $hundred = $number % 1000;
-    
-    $result = [];
-    if ($billion > 0) $result[] = convertNumberToWords($billion) . ' tỷ';
-    if ($million > 0) $result[] = convertNumberToWords($million) . ' triệu';
-    if ($thousand > 0) $result[] = convertNumberToWords($thousand) . ' nghìn';
-    if ($hundred > 0) $result[] = convertNumberToWords($hundred);
-    
-    return implode(' ', $result);
 }
 ?>

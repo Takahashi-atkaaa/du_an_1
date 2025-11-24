@@ -25,7 +25,17 @@ class LichKhoiHanhController {
 
     // Danh sách lịch khởi hành
     public function index() {
-        $lichKhoiHanhList = $this->lichKhoiHanhModel->getAll();
+        // Lấy các tham số lọc từ GET
+        $filters = [
+            'search' => $_GET['search'] ?? '',
+            'trang_thai' => $_GET['trang_thai'] ?? '',
+            'tu_ngay' => $_GET['tu_ngay'] ?? '',
+            'den_ngay' => $_GET['den_ngay'] ?? ''
+        ];
+        
+        // Lọc dữ liệu
+        $lichKhoiHanhList = $this->lichKhoiHanhModel->filter($filters);
+        
         require 'views/admin/quan_ly_lich_khoi_hanh.php';
     }
 
