@@ -542,6 +542,44 @@ CREATE TABLE IF NOT EXISTS `thong_ke_danh_gia` (
   INDEX `idx_thong_ke_loai` (`loai_doi_tuong`, `diem_trung_binh`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- ======================================
+-- 29.Bảng đánh giá và phản hồi
+-- ======================================
+CREATE TABLE IF NOT EXISTS `danh_gia` (
+  `danh_gia_id` int(11) NOT NULL AUTO_INCREMENT,
+  `khach_hang_id` int(11) NOT NULL,
+  `tour_id` int(11) DEFAULT NULL,
+  `nha_cung_cap_id` int(11) DEFAULT NULL,
+  `nhan_su_id` int(11) DEFAULT NULL,
+  `loai_danh_gia` enum('Tour','NhaCungCap','NhanSu') NOT NULL,
+  `tieu_chi` varchar(100) DEFAULT NULL COMMENT 'ChatLuongTour, DichVu, HuongDanVien, GiaCa, etc',
+  `loai_dich_vu` varchar(100) DEFAULT NULL COMMENT 'Xe, KhachSan, NhaHang, VanChuyen, etc',
+  `diem` int(1) NOT NULL CHECK (`diem` >= 1 AND `diem` <= 5),
+  `noi_dung` text NOT NULL,
+  `phan_hoi_admin` text DEFAULT NULL,
+  `ngay_danh_gia` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `ngay_phan_hoi` datetime DEFAULT NULL,
+  PRIMARY KEY (`danh_gia_id`),
+  KEY `idx_khach_hang` (`khach_hang_id`),
+  KEY `idx_tour` (`tour_id`),
+  KEY `idx_nha_cung_cap` (`nha_cung_cap_id`),
+  KEY `idx_nhan_su` (`nhan_su_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Thêm dữ liệu mẫu để test
+INSERT INTO `danh_gia` (`khach_hang_id`, `tour_id`, `loai_danh_gia`, `tieu_chi`, `diem`, `noi_dung`, `ngay_danh_gia`) 
+VALUES
+(1, 1, 'Tour', 'ChatLuongTour', 5, 'Tour rất tuyệt vời, tổ chức chu đáo, hướng dẫn viên nhiệt tình. Chuyến đi rất đáng nhớ!', '2024-01-15 10:30:00'),
+(2, 1, 'Tour', 'DichVu', 4, 'Dịch vụ tốt, khách sạn sạch sẽ. Tuy nhiên bữa ăn hơi đơn giản.', '2024-01-16 14:20:00'),
+(3, 2, 'Tour', 'HuongDanVien', 5, 'HDV rất nhiệt tình, hiểu biết, giải đáp mọi thắc mắc. Rất hài lòng!', '2024-01-17 09:15:00'),
+(1, 2, 'Tour', 'GiaCa', 3, 'Giá hơi cao so với chất lượng dịch vụ nhận được.', '2024-01-18 16:45:00'),
+(2, NULL, 'NhaCungCap', 'DichVu', 2, 'Xe đưa đón không đúng giờ, gây ảnh hưởng đến lịch trình.', '2024-01-19 11:30:00');
+
+-- Thêm indexes để tối ưu query
+CREATE INDEX idx_loai_danh_gia ON danh_gia(loai_danh_gia);
+CREATE INDEX idx_diem ON danh_gia(diem);
+CREATE INDEX idx_ngay_danh_gia ON danh_gia(ngay_danh_gia);
+
 
 -- ============================================
 -- PHẦN 3: INDEX TỐI ƯU TÌM KIẾM
