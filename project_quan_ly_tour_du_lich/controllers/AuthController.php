@@ -56,7 +56,7 @@ class AuthController {
                         header('Location: index.php?act=admin/dashboard');
                         exit();
                         case 'HDV':
-                            header('Location: index.php?act=hdv/lichLamViec');
+                            header('Location: index.php?act=hdv/dashboard');
                             exit();
                         case 'KhachHang':
                             header('Location: index.php?act=khachHang/danhSachTour');

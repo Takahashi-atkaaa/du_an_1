@@ -33,7 +33,7 @@ class LichKhoiHanh
 
     // Lấy lịch khởi hành theo tour_id
     public function getByTourId($tourId) {
-        $sql = "SELECT lk.*, t.ten_tour
+        $sql = "SELECT lk.*, t.ten_tour, t.gia_co_ban
                 FROM lich_khoi_hanh lk
                 LEFT JOIN tour t ON lk.tour_id = t.tour_id
                 WHERE lk.tour_id = ?

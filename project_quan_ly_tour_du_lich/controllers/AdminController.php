@@ -12,7 +12,6 @@ class AdminController {
     }
     
     public function quanLyTour() {
-        require_once 'models/Tour.php';
         $tourModel = new Tour();
         $tours = $tourModel->getAll();
         require 'views/admin/quan_ly_tour.php';
@@ -29,8 +28,6 @@ class AdminController {
         if ($id <= 0) {
             $error = 'Thiếu mã tour cần xem chi tiết.';
         } else {
-            require_once 'models/Tour.php';
-            require_once 'models/LichKhoiHanh.php';
             $tourModel = new Tour();
             $lichKhoiHanhModel = new LichKhoiHanh();
             $tour = $tourModel->findById($id);
@@ -50,10 +47,6 @@ class AdminController {
     }
     
     public function quanLyBooking() {
-        require_once 'models/Booking.php';
-        require_once 'models/Tour.php';
-        require_once 'models/KhachHang.php';
-        
         $bookingModel = new Booking();
         $conditions = [];
         
@@ -77,11 +70,16 @@ class AdminController {
     public function addNhacungcap() {
         require 'views/admin/nha_cung_cap.php';
     }
+    
+    public function nhaCungCap() {
+        $nhaCungCapModel = new NhaCungCap();
+        $nhaCungCapList = $nhaCungCapModel->getAll();
+        require 'views/admin/nha_cung_cap.php';
+    }
     public function danhGia() {
         require 'views/admin/danh_gia.php';
     }
     public function nhanSu() {
-        require_once 'models/NhanSu.php';
         $nhanSuModel = new NhanSu();
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         $role = isset($_GET['role']) ? trim($_GET['role']) : '';
@@ -113,13 +111,11 @@ class AdminController {
 
     // Admin: quản lý HDV (danh sách + CRUD cơ bản)
     public function quanLyHDV() {
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         if ($q !== '') {
             // sử dụng search trên nhan_su (tạm gọi chung)
-            require_once 'models/NhanSu.php';
             $ns = new NhanSu();
             $hdv_list = $ns->search($q);
         } else {
@@ -139,7 +135,6 @@ class AdminController {
 
     public function quanLyHDVCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDV.php';
             $model = new HDV();
             $data = [
                 'ho_ten' => $_POST['ho_ten'] ?? '',
@@ -163,7 +158,6 @@ class AdminController {
 
     public function quanLyHDVUpdate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDV.php';
             $model = new HDV();
             $id = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
             if ($id > 0) {
@@ -192,7 +186,6 @@ class AdminController {
     public function quanLyHDVDelete() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id > 0) {
-            require_once 'models/HDV.php';
             $model = new HDV();
             $ok = $model->delete($id);
             $_SESSION['flash'] = $ok ? ['type'=>'success','message'=>'Xóa HDV thành công'] : ['type'=>'danger','message'=>'Xóa HDV thất bại'];
@@ -202,7 +195,6 @@ class AdminController {
 
     // Hiển thị lịch phân công HDV (calendar)
     public function hdvSchedule() {
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         // load hdv list
         $hdv_list = $hdvModel->getAll();
@@ -212,7 +204,6 @@ class AdminController {
     // Trang hồ sơ HDV
     public function hdvProfile() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $hdv = $hdvModel->findById($id);
         $history = [];
@@ -226,7 +217,6 @@ class AdminController {
     public function hdvApiGetSchedule() {
         header('Content-Type: application/json');
         $hdvId = isset($_GET['hdv_id']) ? (int)$_GET['hdv_id'] : 0;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $from = $_GET['from'] ?? null;
         $to = $_GET['to'] ?? null;
@@ -253,7 +243,6 @@ class AdminController {
         $hdvId = isset($_GET['hdv_id']) ? (int)$_GET['hdv_id'] : 0;
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $ok = false;
         if ($hdvId && $start && $end) {
@@ -273,7 +262,6 @@ class AdminController {
         $start = $payload['start'] ?? null;
         $end = $payload['end'] ?? null;
         $note = $payload['note'] ?? null;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         if (!$hdvId || !$start || !$end) { echo json_encode(['ok'=>false,'msg'=>'Thiếu dữ liệu']); exit; }
         if (!$hdvModel->isAvailable($hdvId, $start, $end)) {
@@ -289,7 +277,6 @@ class AdminController {
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
         $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
-        require_once 'models/HDV.php';
         $hdvModel = new HDV();
         $candidates = $hdvModel->getAll($groupId, true);
         $available = [];
@@ -303,7 +290,6 @@ class AdminController {
 
     public function nhanSuCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             $data = [
                     'nguoi_dung_id' => $_POST['nguoi_dung_id'] ?? null,
@@ -332,7 +318,6 @@ class AdminController {
 
     // API: trả về danh sách người dùng chưa có nhân sự (JSON)
     public function nhanSu_get_users() {
-        require_once 'models/NhanSu.php';
         $model = new NhanSu();
         $users = $model->getAvailableUsers();
         header('Content-Type: application/json');
@@ -342,7 +327,6 @@ class AdminController {
 
     public function nhanSuUpdate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             $id = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
             if ($id <= 0) {
@@ -373,7 +357,6 @@ class AdminController {
         $delete_user = isset($_GET['delete_user']) && $_GET['delete_user'] === '1' ? true : false;
         
         if ($id > 0) {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             if ($delete_user) {
                 // kiểm tra blocker quan trọng trước khi xóa (chỉ tour.tao_boi)
@@ -412,7 +395,6 @@ class AdminController {
         if ($id <= 0) {
             $error = 'Thiếu mã nhân sự cần xem.';
         } else {
-            require_once 'models/NhanSu.php';
             $model = new NhanSu();
             $nhanSu = $model->findById($id);
             
@@ -421,7 +403,6 @@ class AdminController {
             } else {
                 // Lấy thêm thông tin vai trò người dùng
                 if (!empty($nhanSu['nguoi_dung_id'])) {
-                    require_once 'models/NguoiDung.php';
                     $nguoiDungModel = new NguoiDung();
                     $nguoiDung = $nguoiDungModel->findById($nhanSu['nguoi_dung_id']);
                     if ($nguoiDung) {
@@ -441,20 +422,19 @@ class AdminController {
     // ==================== QUẢN LÝ HDV NÂNG CAO (SỬ DỤNG DATABASE HIỆN CÓ) ====================
     
     public function hdvAdvanced() {
-        require_once 'models/HDVManagement.php';
         $hdvMgmt = new HDVManagement();
         
         $hdv_list = $hdvMgmt->getAllHDV();
         $stats = $hdvMgmt->getThongKeTongQuan();
         $hieu_suat_list = $hdvMgmt->getBaoCaoHieuSuat();
-        $thong_bao_list = []; // Tạm thời empty vì chưa có bảng thông báo
+        $thong_bao_list = $hdvMgmt->getThongBao(null, 20);
+        $lich_lam_viec = $hdvMgmt->getAllLichLamViec(); // Lấy tất cả lịch làm việc
         
         require 'views/admin/hdv_quan_ly_nang_cao.php';
     }
 
     public function hdvAddSchedule() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/HDVManagement.php';
             $hdvMgmt = new HDVManagement();
             
             $data = [
@@ -478,7 +458,6 @@ class AdminController {
     }
 
     public function hdvGetSchedule() {
-        require_once 'models/HDVManagement.php';
         $hdvMgmt = new HDVManagement();
         
         $hdv_id = $_GET['hdv_id'] ?? null;
@@ -494,10 +473,21 @@ class AdminController {
 
     public function hdvSendNotification() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Tạm thời lưu vào session vì không có bảng thông báo
+            $hdvMgmt = new HDVManagement();
+            
+            $data = [
+                'nhan_su_id' => !empty($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : null,
+                'loai_thong_bao' => $_POST['loai_thong_bao'] ?? 'ThongBao',
+                'tieu_de' => $_POST['tieu_de'] ?? '',
+                'noi_dung' => $_POST['noi_dung'] ?? '',
+                'uu_tien' => $_POST['uu_tien'] ?? 'TrungBinh'
+            ];
+            
+            $result = $hdvMgmt->guiThongBao($data);
+            
             $_SESSION['flash'] = [
-                'type' => 'success',
-                'message' => 'Gửi thông báo thành công! (Chức năng demo - chưa lưu database)'
+                'type' => $result ? 'success' : 'danger',
+                'message' => $result ? 'Gửi thông báo thành công!' : 'Lỗi khi gửi thông báo!'
             ];
         }
         
@@ -505,11 +495,17 @@ class AdminController {
         exit;
     }
 
+    public function hdvLichTable() {
+        $hdvMgmt = new HDVManagement();
+        
+        $hdv_list = $hdvMgmt->getAllHDV();
+        $lich_lam_viec = $hdvMgmt->getLichLamViec(); // Lấy tất cả lịch
+        
+        require 'views/admin/hdv_lich_lam_viec_table.php';
+    }
+
     public function hdvDetail() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        require_once 'models/HDVManagement.php';
-        require_once 'models/NhanSu.php';
         
         $hdvMgmt = new HDVManagement();
         $nhanSuModel = new NhanSu();
@@ -530,5 +526,502 @@ class AdminController {
             }
         }
         return null;
+    }
+
+    // ========== QUẢN LÝ KHÁCH THEO TOUR ==========
+    
+    // Danh sách khách theo tour
+    public function danhSachKhachTheoTour() {
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        $tourModel = new Tour();
+        $lichKhoiHanhModel = new LichKhoiHanh();
+        $bookingModel = new Booking();
+        $checkinModel = new TourCheckin();
+        $roomModel = new HotelRoomAssignment();
+        
+        $tour = null;
+        $lichKhoiHanh = null;
+        $bookingList = [];
+        $lichKhoiHanhList = [];
+        $checkinStats = null;
+        $roomStats = null;
+        
+        if ($lichKhoiHanhId > 0) {
+            $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+            if ($lichKhoiHanh) {
+                $tourId = $lichKhoiHanh['tour_id'];
+                $tour = $tourModel->findById($tourId);
+                
+                // Lấy danh sách booking theo lịch khởi hành
+                $sql = "SELECT b.*, 
+                               nd.ho_ten as khach_ho_ten, 
+                               nd.email, 
+                               nd.so_dien_thoai,
+                               tc.id as checkin_id, 
+                               tc.trang_thai as checkin_status
+                        FROM booking b
+                        LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id
+                        LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id
+                        LEFT JOIN tour_checkin tc ON b.booking_id = tc.booking_id
+                        WHERE b.tour_id = ? 
+                        AND b.ngay_khoi_hanh = (SELECT ngay_khoi_hanh FROM lich_khoi_hanh WHERE id = ?)
+                        ORDER BY b.ngay_dat DESC";
+                $stmt = $bookingModel->conn->prepare($sql);
+                $stmt->execute([$tourId, $lichKhoiHanhId]);
+                $bookingList = $stmt->fetchAll();
+                
+                // Lấy thống kê
+                $checkinStats = $checkinModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
+                $roomStats = $roomModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
+            }
+        } else if ($tourId > 0) {
+            $tour = $tourModel->findById($tourId);
+            $lichKhoiHanhList = $lichKhoiHanhModel->getByTourId($tourId);
+        }
+        
+        require 'views/admin/danh_sach_khach.php';
+    }
+    
+    // Check-in khách
+    public function checkInKhach() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $checkinModel = new TourCheckin();
+            
+            $data = [
+                'lich_khoi_hanh_id' => $_POST['lich_khoi_hanh_id'] ?? 0,
+                'booking_id' => $_POST['booking_id'] ?? 0,
+                'ho_ten' => $_POST['ho_ten'] ?? '',
+                'so_cmnd' => $_POST['so_cmnd'] ?? null,
+                'so_passport' => $_POST['so_passport'] ?? null,
+                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? null,
+                'email' => $_POST['email'] ?? null,
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            if ($checkinModel->insert($data)) {
+                $_SESSION['success'] = 'Check-in khách thành công!';
+            } else {
+                $_SESSION['error'] = 'Có lỗi xảy ra khi check-in!';
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $data['lich_khoi_hanh_id']);
+            exit;
+        }
+        
+        // GET: hiển thị form check-in
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        $bookingModel = new Booking();
+        $checkinModel = new TourCheckin();
+        
+        $booking = $bookingModel->findById($bookingId);
+        $checkin = $checkinModel->getByBookingId($bookingId);
+        
+        require 'views/admin/check_in.php';
+    }
+    
+    // Cập nhật check-in
+    public function updateCheckIn() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $checkinModel = new TourCheckin();
+            
+            $id = $_POST['id'] ?? 0;
+            $data = [
+                'ho_ten' => $_POST['ho_ten'] ?? '',
+                'so_cmnd' => $_POST['so_cmnd'] ?? null,
+                'so_passport' => $_POST['so_passport'] ?? null,
+                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? null,
+                'email' => $_POST['email'] ?? null,
+                'trang_thai' => $_POST['trang_thai'] ?? 'DaCheckIn',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            if ($checkinModel->update($id, $data)) {
+                $_SESSION['success'] = 'Cập nhật check-in thành công!';
+            } else {
+                $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật!';
+            }
+            
+            $lichKhoiHanhId = $_POST['lich_khoi_hanh_id'] ?? 0;
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit;
+        }
+    }
+    
+    // Phân phòng khách sạn
+    public function phanPhongKhachSan() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $roomModel = new HotelRoomAssignment();
+            
+            $action = $_POST['action'] ?? 'add';
+            $lichKhoiHanhId = $_POST['lich_khoi_hanh_id'] ?? 0;
+            
+            if ($action === 'add') {
+                $data = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'booking_id' => $_POST['booking_id'] ?? 0,
+                    'checkin_id' => $_POST['checkin_id'] ?? null,
+                    'ten_khach_san' => $_POST['ten_khach_san'] ?? '',
+                    'so_phong' => $_POST['so_phong'] ?? '',
+                    'loai_phong' => $_POST['loai_phong'] ?? 'Standard',
+                    'so_giuong' => $_POST['so_giuong'] ?? 1,
+                    'ngay_nhan_phong' => $_POST['ngay_nhan_phong'] ?? null,
+                    'ngay_tra_phong' => $_POST['ngay_tra_phong'] ?? null,
+                    'gia_phong' => $_POST['gia_phong'] ?? 0,
+                    'trang_thai' => $_POST['trang_thai'] ?? 'DaDatPhong',
+                    'ghi_chu' => $_POST['ghi_chu'] ?? null
+                ];
+                
+                if ($roomModel->insert($data)) {
+                    $_SESSION['success'] = 'Phân phòng thành công!';
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi phân phòng!';
+                }
+            } else if ($action === 'update') {
+                $id = $_POST['id'] ?? 0;
+                $data = [
+                    'ten_khach_san' => $_POST['ten_khach_san'] ?? '',
+                    'so_phong' => $_POST['so_phong'] ?? '',
+                    'loai_phong' => $_POST['loai_phong'] ?? 'Standard',
+                    'so_giuong' => $_POST['so_giuong'] ?? 1,
+                    'ngay_nhan_phong' => $_POST['ngay_nhan_phong'] ?? null,
+                    'ngay_tra_phong' => $_POST['ngay_tra_phong'] ?? null,
+                    'gia_phong' => $_POST['gia_phong'] ?? 0,
+                    'trang_thai' => $_POST['trang_thai'] ?? 'DaDatPhong',
+                    'ghi_chu' => $_POST['ghi_chu'] ?? null
+                ];
+                
+                if ($roomModel->update($id, $data)) {
+                    $_SESSION['success'] = 'Cập nhật phòng thành công!';
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật!';
+                }
+            } else if ($action === 'delete') {
+                $id = $_POST['id'] ?? 0;
+                if ($roomModel->delete($id)) {
+                    $_SESSION['success'] = 'Xóa phân phòng thành công!';
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi xóa!';
+                }
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit;
+        }
+        
+        // GET: hiển thị form phân phòng
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        
+        $bookingModel = new Booking();
+        $roomModel = new HotelRoomAssignment();
+        $checkinModel = new TourCheckin();
+        
+        $booking = null;
+        $roomList = [];
+        $hotelList = [];
+        $checkin = null;
+        
+        if ($bookingId > 0) {
+            // Lấy thông tin booking với thông tin khách hàng
+            $sql = "SELECT b.*, 
+                           nd.ho_ten, 
+                           nd.email, 
+                           nd.so_dien_thoai
+                    FROM booking b
+                    LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id
+                    LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id
+                    WHERE b.booking_id = ?";
+            $stmt = $bookingModel->conn->prepare($sql);
+            $stmt->execute([$bookingId]);
+            $booking = $stmt->fetch();
+            
+            $roomList = $roomModel->getByBookingId($bookingId);
+            $checkin = $checkinModel->getByBookingId($bookingId);
+        }
+        
+        if ($lichKhoiHanhId > 0) {
+            $hotelList = $roomModel->getHotelList();
+        }
+        
+        require 'views/admin/phan_phong.php';
+    }
+    
+    /**
+     * Quản lý nhật ký tour - Admin
+     */
+    public function quanLyNhatKyTour() {
+        $conn = connectDB();
+        
+        // Lấy filter
+        $filter_tour = $_GET['tour_id'] ?? '';
+        $filter_hdv = $_GET['hdv_id'] ?? '';
+        $filter_loai = $_GET['loai_nhat_ky'] ?? '';
+        $filter_tu_ngay = $_GET['tu_ngay'] ?? '';
+        $filter_den_ngay = $_GET['den_ngay'] ?? '';
+        
+        // Build query
+        $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
+                FROM nhat_ky_tour nkt
+                LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE 1=1";
+        $params = [];
+        
+        if ($filter_tour) {
+            $sql .= " AND nkt.tour_id = ?";
+            $params[] = $filter_tour;
+        }
+        if ($filter_hdv) {
+            $sql .= " AND nkt.nhan_su_id = ?";
+            $params[] = $filter_hdv;
+        }
+        if ($filter_loai) {
+            $sql .= " AND nkt.loai_nhat_ky = ?";
+            $params[] = $filter_loai;
+        }
+        if ($filter_tu_ngay) {
+            $sql .= " AND DATE(nkt.ngay_ghi) >= ?";
+            $params[] = $filter_tu_ngay;
+        }
+        if ($filter_den_ngay) {
+            $sql .= " AND DATE(nkt.ngay_ghi) <= ?";
+            $params[] = $filter_den_ngay;
+        }
+        
+        $sql .= " ORDER BY nkt.ngay_ghi DESC, nkt.id DESC";
+        
+        $stmt = $conn->prepare($sql);
+        $stmt->execute($params);
+        $nhatKyList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        // Thống kê
+        $stats = [
+            'tong' => 0,
+            'hanh_trinh' => 0,
+            'su_co' => 0,
+            'phan_hoi' => 0,
+            'hoat_dong' => 0
+        ];
+        
+        $sqlStats = "SELECT 
+                        COUNT(*) as tong,
+                        SUM(CASE WHEN loai_nhat_ky = 'hanh_trinh' THEN 1 ELSE 0 END) as hanh_trinh,
+                        SUM(CASE WHEN loai_nhat_ky = 'su_co' THEN 1 ELSE 0 END) as su_co,
+                        SUM(CASE WHEN loai_nhat_ky = 'phan_hoi' THEN 1 ELSE 0 END) as phan_hoi,
+                        SUM(CASE WHEN loai_nhat_ky = 'hoat_dong' THEN 1 ELSE 0 END) as hoat_dong
+                     FROM nhat_ky_tour";
+        $stmtStats = $conn->prepare($sqlStats);
+        $stmtStats->execute();
+        $statsResult = $stmtStats->fetch(PDO::FETCH_ASSOC);
+        if ($statsResult) {
+            $stats = array_merge($stats, $statsResult);
+        }
+        
+        // Lấy danh sách tour cho filter
+        $tourModel = new Tour();
+        $tours = $tourModel->getAll();
+        
+        // Lấy danh sách HDV cho filter
+        $hdvModel = new HDV();
+        $hdvList = $hdvModel->getAll();
+        
+        require 'views/admin/quan_ly_nhat_ky_tour.php';
+    }
+    
+    /**
+     * Form thêm/sửa nhật ký tour - Admin
+     */
+    public function formNhatKyTour() {
+        $conn = connectDB();
+        $id = $_GET['id'] ?? 0;
+        $entry = null;
+        
+        if ($id > 0) {
+            $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
+                    FROM nhat_ky_tour nkt
+                    LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                    LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                    LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                    WHERE nkt.id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$id]);
+            $entry = $stmt->fetch(PDO::FETCH_ASSOC);
+        }
+        
+        // Lấy danh sách tour
+        $tourModel = new Tour();
+        $tours = $tourModel->getAll();
+        
+        // Lấy danh sách HDV
+        $hdvModel = new HDV();
+        $hdvList = $hdvModel->getAll();
+        
+        require 'views/admin/form_nhat_ky_tour.php';
+    }
+    
+    /**
+     * Lưu nhật ký tour - Admin
+     */
+    public function saveNhatKyTour() {
+        $conn = connectDB();
+        $id = $_POST['id'] ?? 0;
+        
+        // Xử lý upload hình ảnh
+        $imageUrls = [];
+        if (isset($_FILES['hinh_anh']) && !empty($_FILES['hinh_anh']['name'][0])) {
+            $uploadDir = 'uploads/nhat_ky/';
+            if (!file_exists($uploadDir)) {
+                mkdir($uploadDir, 0777, true);
+            }
+            
+            $maxFiles = min(count($_FILES['hinh_anh']['name']), 5);
+            for ($i = 0; $i < $maxFiles; $i++) {
+                if ($_FILES['hinh_anh']['error'][$i] === UPLOAD_ERR_OK) {
+                    $fileName = time() . '_' . $i . '_' . basename($_FILES['hinh_anh']['name'][$i]);
+                    $targetFile = $uploadDir . $fileName;
+                    
+                    if (move_uploaded_file($_FILES['hinh_anh']['tmp_name'][$i], $targetFile)) {
+                        $imageUrls[] = $targetFile;
+                    }
+                }
+            }
+        }
+        
+        $data = [
+            'tour_id' => $_POST['tour_id'] ?? 0,
+            'nhan_su_id' => $_POST['nhan_su_id'] ?? 0,
+            'loai_nhat_ky' => $_POST['loai_nhat_ky'] ?? 'hanh_trinh',
+            'tieu_de' => $_POST['tieu_de'] ?? '',
+            'noi_dung' => $_POST['noi_dung'] ?? '',
+            'ngay_ghi' => $_POST['ngay_ghi'] ?? date('Y-m-d H:i:s'),
+            'cach_xu_ly' => $_POST['cach_xu_ly'] ?? null,
+            'hinh_anh' => !empty($imageUrls) ? json_encode($imageUrls) : null
+        ];
+        
+        try {
+            if ($id > 0) {
+                // Update
+                if (!empty($imageUrls)) {
+                    // Xóa hình ảnh cũ nếu có
+                    $sqlOld = "SELECT hinh_anh FROM nhat_ky_tour WHERE id = ?";
+                    $stmtOld = $conn->prepare($sqlOld);
+                    $stmtOld->execute([$id]);
+                    $oldEntry = $stmtOld->fetch(PDO::FETCH_ASSOC);
+                    if ($oldEntry && !empty($oldEntry['hinh_anh'])) {
+                        $oldImages = json_decode($oldEntry['hinh_anh'], true);
+                        if ($oldImages && is_array($oldImages)) {
+                            foreach ($oldImages as $img) {
+                                if (file_exists($img)) {
+                                    unlink($img);
+                                }
+                            }
+                        }
+                    }
+                    
+                    $sql = "UPDATE nhat_ky_tour SET 
+                            tour_id = ?, nhan_su_id = ?, loai_nhat_ky = ?, tieu_de = ?, 
+                            noi_dung = ?, ngay_ghi = ?, cach_xu_ly = ?, hinh_anh = ?
+                            WHERE id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $result = $stmt->execute([
+                        $data['tour_id'], $data['nhan_su_id'], $data['loai_nhat_ky'], 
+                        $data['tieu_de'], $data['noi_dung'], $data['ngay_ghi'], 
+                        $data['cach_xu_ly'], $data['hinh_anh'], $id
+                    ]);
+                } else {
+                    $sql = "UPDATE nhat_ky_tour SET 
+                            tour_id = ?, nhan_su_id = ?, loai_nhat_ky = ?, tieu_de = ?, 
+                            noi_dung = ?, ngay_ghi = ?, cach_xu_ly = ?
+                            WHERE id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $result = $stmt->execute([
+                        $data['tour_id'], $data['nhan_su_id'], $data['loai_nhat_ky'], 
+                        $data['tieu_de'], $data['noi_dung'], $data['ngay_ghi'], 
+                        $data['cach_xu_ly'], $id
+                    ]);
+                }
+                $_SESSION['success'] = 'Cập nhật nhật ký thành công';
+            } else {
+                // Insert
+                $sql = "INSERT INTO nhat_ky_tour 
+                        (tour_id, nhan_su_id, loai_nhat_ky, tieu_de, noi_dung, ngay_ghi, cach_xu_ly, hinh_anh) 
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([
+                    $data['tour_id'], $data['nhan_su_id'], $data['loai_nhat_ky'], 
+                    $data['tieu_de'], $data['noi_dung'], $data['ngay_ghi'], 
+                    $data['cach_xu_ly'], $data['hinh_anh']
+                ]);
+                $_SESSION['success'] = 'Thêm nhật ký thành công';
+            }
+            
+            if (!$result) {
+                $_SESSION['error'] = 'Lỗi khi lưu nhật ký';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
+        }
+        
+        header('Location: index.php?act=admin/quanLyNhatKyTour');
+        exit;
+    }
+    
+    /**
+     * Xóa nhật ký tour - Admin
+     */
+    public function deleteNhatKyTour() {
+        $conn = connectDB();
+        $id = $_GET['id'] ?? 0;
+        
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Thiếu ID nhật ký';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+        
+        try {
+            // Lấy thông tin nhật ký để xóa hình ảnh
+            $sql = "SELECT hinh_anh FROM nhat_ky_tour WHERE id = ?";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([$id]);
+            $entry = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($entry) {
+                // Xóa hình ảnh
+                if (!empty($entry['hinh_anh'])) {
+                    $images = json_decode($entry['hinh_anh'], true);
+                    if ($images && is_array($images)) {
+                        foreach ($images as $img) {
+                            if (file_exists($img)) {
+                                unlink($img);
+                            }
+                        }
+                    }
+                }
+                
+                // Xóa nhật ký
+                $sql = "DELETE FROM nhat_ky_tour WHERE id = ?";
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([$id]);
+                
+                if ($result) {
+                    $_SESSION['success'] = 'Xóa nhật ký thành công';
+                } else {
+                    $_SESSION['error'] = 'Lỗi khi xóa nhật ký';
+                }
+            } else {
+                $_SESSION['error'] = 'Không tìm thấy nhật ký';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
+        }
+        
+        header('Location: index.php?act=admin/quanLyNhatKyTour');
+        exit;
     }
 }

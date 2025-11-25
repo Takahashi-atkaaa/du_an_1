@@ -419,7 +419,7 @@ class BookingController {
 
                 // Lưu yêu cầu đặc biệt nếu có
                 if (!empty($yeuCauDacBiet)) {
-                    $this->tourModel->insertYeuCauDacBiet($khachHang['khach_hang_id'], $tourId, $yeuCauDacBiet);
+                    $this->tourModel->insertYeuCauDacBiet($bookingId, $yeuCauDacBiet);
                 }
 
                 $_SESSION['success'] = "Đặt tour thành công! Mã booking: #{$bookingId}";
@@ -469,4 +469,230 @@ class BookingController {
         echo json_encode($result);
         exit();
     }
+
+    // Trang xuất tài liệu (báo giá, hợp đồng, hóa đơn)
+    public function xuatTaiLieu() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($id <= 0) {
+            $_SESSION['error'] = 'ID booking không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+        
+        $booking = $this->bookingModel->getBookingWithDetails($id);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+        
+        require 'views/admin/xuat_tai_lieu_booking.php';
+    }
+
+    // Xuất file PDF
+    public function exportPDF() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $type = $_GET['type'] ?? 'bao-gia'; // bao-gia, hop-dong, hoa-don
+        
+        if ($id <= 0) {
+            die('ID không hợp lệ');
+        }
+        
+        $booking = $this->bookingModel->getBookingWithDetails($id);
+        if (!$booking) {
+            die('Booking không tồn tại');
+        }
+        
+        // Tạo nội dung HTML
+        ob_start();
+        switch ($type) {
+            case 'hop-dong':
+                include 'views/admin/templates/hop_dong_template.php';
+                $filename = 'Hop_Dong_' . $booking['booking_id'] . '.pdf';
+                break;
+            case 'hoa-don':
+                include 'views/admin/templates/hoa_don_template.php';
+                $filename = 'Hoa_Don_' . $booking['booking_id'] . '.pdf';
+                break;
+            default:
+                include 'views/admin/templates/bao_gia_template.php';
+                $filename = 'Bao_Gia_' . $booking['booking_id'] . '.pdf';
+        }
+        $html = ob_get_clean();
+        
+        // Sử dụng thư viện dompdf hoặc tương tự để tạo PDF
+        // Nếu chưa cài, có thể tạm dùng cách đơn giản hơn
+        $this->generateSimplePDF($html, $filename);
+    }
+
+    // Generate PDF đơn giản (có thể thay bằng dompdf)
+    private function generateSimplePDF($html, $filename) {
+        // Cách 1: Sử dụng mPDF hoặc dompdf (cần cài qua composer)
+        // require_once 'vendor/autoload.php';
+        // $mpdf = new \Mpdf\Mpdf(['format' => 'A4']);
+        // $mpdf->WriteHTML($html);
+        // $mpdf->Output($filename, 'D'); // D = download
+        
+        // Cách 2: Tạm thời xuất HTML để xem trước và in (fallback)
+        header('Content-Type: text/html; charset=UTF-8');
+        
+        // Chuyển HTML sang PDF đơn giản
+        echo $this->convertHTMLtoPDF($html, $filename);
+    }
+
+    // Convert HTML to PDF đơn giản
+    private function convertHTMLtoPDF($html, $filename) {
+        // Thêm CSS cho print và auto print
+        $pdfHTML = '
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>' . $filename . '</title>
+            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+            <style>
+                body { font-family: Arial, sans-serif; font-size: 12pt; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+                .info-table td { border: 1px solid #dee2e6; padding: 8px; }
+                .info-table td:first-child { font-weight: 600; background: #f8f9fa; width: 30%; }
+                .detail-table { border: 1px solid #000; }
+                .detail-table th, .detail-table td { border: 1px solid #000; padding: 8px; }
+                .detail-table thead { background: #f8f9fa; font-weight: bold; }
+                .text-center { text-align: center; }
+                .text-right { text-align: right; }
+                .text-muted { color: #6c757d; }
+                .company-header { text-align: center; border-bottom: 3px double #000; padding-bottom: 15px; margin-bottom: 20px; }
+                .document-title { text-align: center; font-size: 1.75rem; font-weight: bold; margin: 20px 0; text-transform: uppercase; }
+                .total-section { border-top: 2px solid #000; padding-top: 15px; margin-top: 20px; }
+                .signature-section { margin-top: 40px; }
+                @media print {
+                    body { margin: 0; }
+                    .no-print { display: none; }
+                }
+            </style>
+        </head>
+        <body>' . $html . '
+            <div class="no-print text-center mt-4">
+                <button onclick="window.print()" class="btn btn-primary btn-lg">
+                    <i class="bi bi-printer"></i> In tài liệu
+                </button>
+                <button onclick="window.close()" class="btn btn-secondary btn-lg ms-2">
+                    <i class="bi bi-x-circle"></i> Đóng
+                </button>
+            </div>
+        </body>
+        </html>';
+        
+        return $pdfHTML;
+    }
+
+    // Gửi email
+    public function sendEmail() {
+        header('Content-Type: application/json');
+        
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $type = $_GET['type'] ?? 'bao-gia';
+        
+        if ($id <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID không hợp lệ']);
+            exit();
+        }
+        
+        $booking = $this->bookingModel->getBookingWithDetails($id);
+        if (!$booking) {
+            echo json_encode(['success' => false, 'message' => 'Booking không tồn tại']);
+            exit();
+        }
+        
+        $email = $booking['email'];
+        if (empty($email)) {
+            echo json_encode(['success' => false, 'message' => 'Không có email khách hàng']);
+            exit();
+        }
+        
+        // Tạo nội dung email
+        ob_start();
+        switch ($type) {
+            case 'hop-dong':
+                include 'views/admin/templates/hop_dong_template.php';
+                $subject = 'Hợp đồng dịch vụ du lịch - Booking #' . $booking['booking_id'];
+                break;
+            case 'hoa-don':
+                include 'views/admin/templates/hoa_don_template.php';
+                $subject = 'Hóa đơn thanh toán - Booking #' . $booking['booking_id'];
+                break;
+            default:
+                include 'views/admin/templates/bao_gia_template.php';
+                $subject = 'Báo giá tour du lịch - Booking #' . $booking['booking_id'];
+        }
+        $htmlContent = ob_get_clean();
+        
+        // Gửi email
+        $result = $this->sendHTMLEmail($email, $subject, $htmlContent, $booking['ho_ten']);
+        
+        if ($result) {
+            echo json_encode(['success' => true, 'message' => 'Đã gửi email thành công']);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Không thể gửi email']);
+        }
+        exit();
+    }
+
+    // Function gửi HTML email
+    private function sendHTMLEmail($to, $subject, $htmlContent, $toName = '') {
+        $from = 'info@dulichabc.vn';
+        $fromName = 'Công ty Du lịch ABC';
+        
+        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
+        $headers .= "From: $fromName <$from>" . "\r\n";
+        $headers .= "Reply-To: $from" . "\r\n";
+        $headers .= "X-Mailer: PHP/" . phpversion();
+        
+        // Email body
+        $message = '
+        <!DOCTYPE html>
+        <html lang="vi">
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; }
+                .content { background: #fff; padding: 20px; }
+                .footer { background: #f8f9fa; padding: 15px; text-align: center; font-size: 12px; color: #666; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h2>Công ty Du lịch ABC</h2>
+                    <p>Cảm ơn quý khách đã tin tưởng sử dụng dịch vụ</p>
+                </div>
+                <div class="content">
+                    <p>Kính gửi: <strong>' . htmlspecialchars($toName) . '</strong>,</p>
+                    <p>Chúng tôi xin gửi đến quý khách tài liệu đính kèm.</p>
+                    <hr>
+                    ' . $htmlContent . '
+                    <hr>
+                    <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ:</p>
+                    <ul>
+                        <li>Hotline: 1900 xxxx</li>
+                        <li>Email: info@dulichabc.vn</li>
+                        <li>Website: www.dulichabc.vn</li>
+                    </ul>
+                </div>
+                <div class="footer">
+                    <p>© 2025 Công ty Du lịch ABC. All rights reserved.</p>
+                </div>
+            </div>
+        </body>
+        </html>';
+        
+        // Gửi email
+        return mail($to, $subject, $message, $headers);
+    }
+
 }

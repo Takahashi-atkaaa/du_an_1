@@ -119,14 +119,17 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
+                // Redirect với thông báo thành công
+                $_SESSION['success'] = 'Tạo tour thành công!';
                 header('Location: index.php?act=admin/quanLyTour');
                 exit();
+            
             } catch (Exception $e) {
                 if (method_exists($this->model->conn, 'rollBack') && $this->model->conn->inTransaction()) {
                     $this->model->conn->rollBack();
                 }
 
-                $_SESSION['error'] = $e->getMessage();
+                $_SESSION['error'] = 'Lỗi khi tạo tour: ' . $e->getMessage();
                 header('Location: index.php?act=tour/create');
                 exit();
             }
@@ -218,6 +221,9 @@ class TourController {
                 }
             }
             
+       
+            // Redirect với thông báo thành công
+            $_SESSION['success'] = 'Cập nhật tour thành công!';
             header('Location: index.php?act=admin/quanLyTour');
             exit();
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && $id) {
@@ -564,4 +570,28 @@ class TourController {
         header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
         exit();
     }
+
+    // Trang đặt tour online qua QR Code
+    public function bookOnline() {
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=tour/index');
+            exit();
+        }
+        
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=tour/index');
+            exit();
+        }
+        
+        $lichTrinhList = $this->model->getLichTrinhByTourId($tourId);
+        $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($tourId);
+        $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
+        $anhChinh = $this->chonAnhChinh($hinhAnhList);
+    }
+
 }

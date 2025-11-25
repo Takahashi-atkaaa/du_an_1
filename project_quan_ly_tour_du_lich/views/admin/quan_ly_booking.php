@@ -3,50 +3,49 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Booking - Admin</title>
-    <link rel="stylesheet" href="public/css/admin.css">
+    <title>Quản lý Booking</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        .filter-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .filter-section form {
-            display: flex;
-            gap: 15px;
-            align-items: flex-end;
-        }
-        .filter-group {
-            flex: 1;
-        }
-        .filter-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        .filter-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-        }
-        .btn-filter {
-            padding: 8px 20px;
-            background: #007bff;
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+            padding: 2.5rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(102, 126, 234, 0.3);
         }
-        .btn-filter:hover {
-            background: #0056b3;
+        .stats-card {
+            border: none;
+            border-left: 4px solid;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            transition: all 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        }
+        .stats-icon {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-radius: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+        .filter-card {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+            margin-bottom: 1.5rem;
         }
         .status-badge {
-            padding: 5px 10px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-weight: 500;
+            font-size: 0.875rem;
             display: inline-block;
         }
         .status-ChoXacNhan {
@@ -54,166 +53,332 @@
             color: #856404;
         }
         .status-DaCoc {
-            background: #d1ecf1;
-            color: #0c5460;
+            background: #cfe2ff;
+            color: #084298;
         }
         .status-HoanTat {
-            background: #d4edda;
-            color: #155724;
+            background: #d1e7dd;
+            color: #0f5132;
         }
         .status-Huy {
             background: #f8d7da;
-            color: #721c24;
+            color: #842029;
         }
-        .action-buttons {
+        .table-custom {
+            margin-bottom: 0;
+        }
+        .table-custom thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .table-custom tbody tr {
+            transition: all 0.2s;
+        }
+        .table-custom tbody tr:hover {
+            background: #f8f9fa;
+            transform: scale(1.005);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6c757d;
+        }
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.3;
+        }
+        .booking-id {
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            color: #667eea;
+        }
+        .customer-info {
+            line-height: 1.4;
+        }
+        .action-btn-group {
             display: flex;
-            gap: 5px;
-        }
-        .btn-action {
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 12px;
-            display: inline-block;
-        }
-        .btn-view {
-            background: #17a2b8;
-            color: white;
-        }
-        .btn-edit {
-            background: #ffc107;
-            color: #212529;
-        }
-        .btn-delete {
-            background: #dc3545;
-            color: white;
-        }
-        .btn-action:hover {
-            opacity: 0.8;
-        }
-        .alert {
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            gap: 0.25rem;
         }
     </style>
 </head>
-<body>
-    <div class="admin-container">
-        <h1>Quản lý Booking</h1>
-        <nav>
-            <a href="index.php?act=admin/dashboard">← Quay lại Dashboard</a>
-            <a href="index.php?act=booking/datTourChoKhach">Đặt tour cho khách</a>
-        </nav>
+<body class="bg-light">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="index.php?act=admin/dashboard">
+                <i class="bi bi-speedometer2"></i> Quản trị
+            </a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">
+                            <i class="bi bi-calendar-check"></i> Booking
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
 
-        <div class="content">
-            <?php if (isset($_SESSION['success'])): ?>
-                <div class="alert alert-success">
-                    <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+    <div class="container-fluid px-4 py-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="container-fluid">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-5 fw-bold mb-2">
+                            <i class="bi bi-calendar-check-fill"></i> Quản Lý Booking
+                        </h1>
+                        <p class="lead mb-0 opacity-75">Quản lý đặt tour và xử lý booking của khách hàng</p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="index.php?act=booking/datTourChoKhach" class="btn btn-warning btn-lg">
+                            <i class="bi bi-plus-circle"></i> Đặt tour cho khách
+                        </a>
+                    </div>
                 </div>
-            <?php endif; ?>
+            </div>
+        </div>
 
-            <?php if (isset($_SESSION['error'])): ?>
-                <div class="alert alert-error">
-                    <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+        <!-- Alerts -->
+        <?php if (isset($_SESSION['success'])): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle"></i>
+                <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['error'])): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i>
+                <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <!-- Statistics -->
+        <div class="row g-4 mb-4">
+            <?php 
+            $total = count($bookings ?? []);
+            $choXacNhan = count(array_filter($bookings ?? [], fn($b) => $b['trang_thai'] === 'ChoXacNhan'));
+            $daCoc = count(array_filter($bookings ?? [], fn($b) => $b['trang_thai'] === 'DaCoc'));
+            $hoanTat = count(array_filter($bookings ?? [], fn($b) => $b['trang_thai'] === 'HoanTat'));
+            $huy = count(array_filter($bookings ?? [], fn($b) => $b['trang_thai'] === 'Huy'));
+            ?>
+            <div class="col-md-3">
+                <div class="card stats-card h-100" style="border-left-color: #0d6efd !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Tổng booking</p>
+                                <h2 class="mb-0 fw-bold"><?php echo $total; ?></h2>
+                            </div>
+                            <div class="stats-icon bg-primary bg-opacity-10 text-primary">
+                                <i class="bi bi-calendar-check"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            <?php endif; ?>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card h-100" style="border-left-color: #ffc107 !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Chờ xác nhận</p>
+                                <h2 class="mb-0 fw-bold text-warning"><?php echo $choXacNhan; ?></h2>
+                            </div>
+                            <div class="stats-icon bg-warning bg-opacity-10 text-warning">
+                                <i class="bi bi-hourglass-split"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card h-100" style="border-left-color: #0dcaf0 !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Đã cọc</p>
+                                <h2 class="mb-0 fw-bold text-info"><?php echo $daCoc; ?></h2>
+                            </div>
+                            <div class="stats-icon bg-info bg-opacity-10 text-info">
+                                <i class="bi bi-cash-coin"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card stats-card h-100" style="border-left-color: #198754 !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Hoàn tất</p>
+                                <h2 class="mb-0 fw-bold text-success"><?php echo $hoanTat; ?></h2>
+                            </div>
+                            <div class="stats-icon bg-success bg-opacity-10 text-success">
+                                <i class="bi bi-check-circle"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <h2>Danh sách Booking</h2>
-
-            <!-- Bộ lọc -->
-            <div class="filter-section">
-                <form method="GET" action="index.php">
-                    <input type="hidden" name="act" value="admin/quanLyBooking">
-                    <div class="filter-group">
-                        <label>Lọc theo trạng thái:</label>
-                        <select name="trang_thai">
-                            <option value="">Tất cả</option>
-                            <option value="ChoXacNhan" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'ChoXacNhan') ? 'selected' : ''; ?>>Chờ xác nhận</option>
-                            <option value="DaCoc" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'DaCoc') ? 'selected' : ''; ?>>Đã cọc</option>
-                            <option value="HoanTat" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'HoanTat') ? 'selected' : ''; ?>>Hoàn tất</option>
-                            <option value="Huy" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'Huy') ? 'selected' : ''; ?>>Hủy</option>
+        <!-- Filter Card -->
+        <div class="filter-card">
+            <form method="GET" action="index.php">
+                <input type="hidden" name="act" value="admin/quanLyBooking">
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-funnel text-primary"></i> Lọc theo trạng thái
+                        </label>
+                        <select name="trang_thai" class="form-select">
+                            <option value="">Tất cả trạng thái</option>
+                            <option value="ChoXacNhan" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'ChoXacNhan') ? 'selected' : ''; ?>>
+                                Chờ xác nhận
+                            </option>
+                            <option value="DaCoc" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'DaCoc') ? 'selected' : ''; ?>>
+                                Đã cọc
+                            </option>
+                            <option value="HoanTat" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'HoanTat') ? 'selected' : ''; ?>>
+                                Hoàn tất
+                            </option>
+                            <option value="Huy" <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] == 'Huy') ? 'selected' : ''; ?>>
+                                Hủy
+                            </option>
                         </select>
                     </div>
-                    <button type="submit" class="btn-filter">Lọc</button>
-                    <?php if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])): ?>
-                        <a href="index.php?act=admin/quanLyBooking" class="btn-action btn-filter" style="text-decoration: none;">Xóa bộ lọc</a>
-                    <?php endif; ?>
-                </form>
-            </div>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Lọc
+                        </button>
+                        <?php if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])): ?>
+                            <a href="index.php?act=admin/quanLyBooking" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                            </a>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </form>
+        </div>
 
-            <?php if (isset($bookings) && !empty($bookings)): ?>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Tour</th>
-                            <th>Khách hàng</th>
-                            <th>Số lượng</th>
-                            <th>Ngày khởi hành</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach ($bookings as $booking): ?>
-                            <tr>
-                                <td>#<?php echo $booking['booking_id']; ?></td>
-                                <td><?php echo htmlspecialchars($booking['ten_tour'] ?? 'N/A'); ?></td>
-                                <td>
-                                    <?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?><br>
-                                    <small><?php echo htmlspecialchars($booking['email'] ?? ''); ?></small>
-                                </td>
-                                <td><?php echo $booking['so_nguoi']; ?> người</td>
-                                <td><?php echo $booking['ngay_khoi_hanh'] ? date('d/m/Y', strtotime($booking['ngay_khoi_hanh'])) : 'N/A'; ?></td>
-                                <td><?php echo number_format($booking['tong_tien'] ?? 0); ?> VNĐ</td>
-                                <td>
-                                    <span class="status-badge status-<?php echo $booking['trang_thai']; ?>">
-                                        <?php
-                                        $statusLabels = [
-                                            'ChoXacNhan' => 'Chờ xác nhận',
-                                            'DaCoc' => 'Đã cọc',
-                                            'HoanTat' => 'Hoàn tất',
-                                            'Huy' => 'Hủy'
-                                        ];
-                                        echo $statusLabels[$booking['trang_thai']] ?? $booking['trang_thai'];
-                                        ?>
-                                    </span>
-                                </td>
-                                <td>
-                                    <div class="action-buttons">
-                                        <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" class="btn-action btn-view">Xem</a>
-                                        <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
-                                            <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" class="btn-action btn-edit">Sửa</a>
-                                        <?php endif; ?>
-                                        <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Admin'): ?>
-                                            <a href="index.php?act=booking/delete&id=<?php echo $booking['booking_id']; ?>" 
-                                               class="btn-action btn-delete" 
-                                               onclick="return confirm('Bạn có chắc chắn muốn xóa booking này?');">Xóa</a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            <?php else: ?>
-                <p>Không có booking nào.</p>
-            <?php endif; ?>
+        <!-- Booking Table -->
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <?php if (isset($bookings) && !empty($bookings)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-custom table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th style="width: 100px;">Mã booking</th>
+                                    <th>Tour</th>
+                                    <th>Khách hàng</th>
+                                    <th style="width: 100px;">Số người</th>
+                                    <th>Ngày khởi hành</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th style="width: 200px;">Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($bookings as $booking): ?>
+                                    <tr>
+                                        <td>
+                                            <span class="booking-id">#<?php echo $booking['booking_id']; ?></span>
+                                        </td>
+                                        <td>
+                                            <div class="fw-semibold"><?php echo htmlspecialchars($booking['ten_tour'] ?? 'N/A'); ?></div>
+                                        </td>
+                                        <td>
+                                            <div class="customer-info">
+                                                <div class="fw-semibold"><?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?></div>
+                                                <small class="text-muted">
+                                                    <i class="bi bi-envelope"></i> <?php echo htmlspecialchars($booking['email'] ?? 'N/A'); ?>
+                                                </small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-primary rounded-pill">
+                                                <i class="bi bi-people"></i> <?php echo $booking['so_nguoi']; ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <small>
+                                                <i class="bi bi-calendar-event text-primary"></i>
+                                                <?php echo $booking['ngay_khoi_hanh'] ? date('d/m/Y', strtotime($booking['ngay_khoi_hanh'])) : 'N/A'; ?>
+                                            </small>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">
+                                                <?php echo number_format($booking['tong_tien'] ?? 0); ?> ₫
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <span class="status-badge status-<?php echo $booking['trang_thai']; ?>">
+                                                <?php
+                                                $statusLabels = [
+                                                    'ChoXacNhan' => 'Chờ xác nhận',
+                                                    'DaCoc' => 'Đã cọc',
+                                                    'HoanTat' => 'Hoàn tất',
+                                                    'Huy' => 'Hủy'
+                                                ];
+                                                echo $statusLabels[$booking['trang_thai']] ?? $booking['trang_thai'];
+                                                ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="action-btn-group">
+                                                <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
+                                                   class="btn btn-sm btn-info" title="Xem chi tiết">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
+                                                    <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
+                                                       class="btn btn-sm btn-primary" title="Sửa">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                                <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Admin'): ?>
+                                                    <a href="index.php?act=booking/delete&id=<?php echo $booking['booking_id']; ?>" 
+                                                       class="btn btn-sm btn-danger" 
+                                                       onclick="return confirm('Bạn có chắc chắn muốn xóa booking này?');"
+                                                       title="Xóa">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                <?php endif; ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="empty-state">
+                        <i class="bi bi-calendar-x"></i>
+                        <h4 class="mb-3">Chưa có booking nào</h4>
+                        <p class="text-muted mb-4">
+                            <?php if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])): ?>
+                                Không tìm thấy booking với trạng thái này
+                            <?php else: ?>
+                                Hãy tạo booking đầu tiên cho khách hàng
+                            <?php endif; ?>
+                        </p>
+                        <a href="index.php?act=booking/datTourChoKhach" class="btn btn-primary btn-lg">
+                            <i class="bi bi-plus-circle"></i> Đặt tour cho khách ngay
+                        </a>
+                    </div>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
