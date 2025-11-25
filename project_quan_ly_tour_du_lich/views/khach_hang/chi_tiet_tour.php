@@ -17,7 +17,7 @@
                 <h1><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h1>
                 <p><?php echo htmlspecialchars($tour['mo_ta'] ?? ''); ?></p>
                 <p><strong>Loại tour:</strong> <?php echo htmlspecialchars($tour['loai_tour'] ?? ''); ?></p>
-                <p><strong>Giá cơ bản:</strong> <?php echo number_format((float)($tour['gia_co_ban'] ?? 0)); ?> VNĐ</p>
+                <p><strong>Giá cơ bản:</strong> <?php echo number_format((float)($tour['gia_co_ban'] ?? 0)); ?> VNĐ/1 Người</p>
                 <p><strong>Trạng thái:</strong> <?php echo htmlspecialchars($tour['trang_thai'] ?? ''); ?></p>
                 <?php if (isset($tour['chinh_sach']) && $tour['chinh_sach'] !== null && $tour['chinh_sach'] !== '') : ?>
                     <div class="chinh-sach">

@@ -4,18 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng nhập - Quản lý Tour Du lịch</title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <link rel="stylesheet" href="<?php echo BASE_URL; ?>public/css/style.css">
+    <style>
+        body.auth-page {
+            background-image: url('<?php echo BASE_URL; ?>public/images/logos/hinh-nen-viet-nam-4k10.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+    </style>
 </head>
-<body>
-    <div class="auth-container">
-        <h2>Đăng nhập</h2>
+<body class="auth-page">
+    <div class="auth-container"> 
         <?php if (isset($error)): ?>
             <div class="error"><?php echo $error; ?></div>
         <?php endif; ?>
         <form method="POST" action="index.php?act=auth/login">
             <div class="form-group">
-                <label>Email:</label>
-                <input type="email" name="email" required>
+                <label>Tên đăng nhập / Email:</label>
+                <input type="text" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
             </div>
             <div class="form-group">
                 <label>Mật khẩu:</label>

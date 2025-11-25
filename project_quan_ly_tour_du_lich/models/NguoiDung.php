@@ -33,6 +33,48 @@ class NguoiDung
         return $stmt->fetch();
     }
 
+    // Tìm người dùng theo số điện thoại
+    public function findByPhone($soDienThoai) {
+        $sql = "SELECT * FROM nguoi_dung WHERE so_dien_thoai = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$soDienThoai]);
+        return $stmt->fetch();
+    }
+
+    // Tìm hoặc tạo người dùng mới (cho nhân viên đặt tour)
+    public function findOrCreate($hoTen, $email, $soDienThoai, $vaiTro = 'KhachHang') {
+        // Tìm theo email trước (nếu có)
+        if (!empty($email)) {
+            $nguoiDung = $this->findByEmail($email);
+            if ($nguoiDung) {
+                return $nguoiDung;
+            }
+        }
+        
+        // Tìm theo số điện thoại (nếu có)
+        if (!empty($soDienThoai)) {
+            $nguoiDung = $this->findByPhone($soDienThoai);
+            if ($nguoiDung) {
+                return $nguoiDung;
+            }
+        }
+        
+        // Tạo mới nếu chưa có
+        $tenDangNhap = !empty($email) ? $email : (!empty($soDienThoai) ? 'user_' . $soDienThoai : 'user_' . time());
+        $matKhau = password_hash('123456', PASSWORD_DEFAULT); // Mật khẩu mặc định
+        
+        $nguoiDungId = $this->insert([
+            'ten_dang_nhap' => $tenDangNhap,
+            'ho_ten' => $hoTen,
+            'email' => $email ?? '',
+            'so_dien_thoai' => $soDienThoai ?? '',
+            'mat_khau' => $matKhau,
+            'vai_tro' => $vaiTro
+        ]);
+        
+        return $this->findById($nguoiDungId);
+    }
+
     // Tìm người dùng theo điều kiện
     public function find($conditions = []) {
         $sql = "SELECT * FROM nguoi_dung";
@@ -54,18 +96,23 @@ class NguoiDung
 
     // Thêm người dùng mới
     public function insert($data) {
-        $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, ho_ten, email, mat_khau, vai_tro, ngay_tao) 
-                VALUES (?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, ho_ten, email, so_dien_thoai, mat_khau, vai_tro, ngay_tao) 
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
-        $result = $stmt->execute([
-            $data['ten_dang_nhap'] ?? ($data['email'] ?? ''),
-            $data['ho_ten'] ?? '',
-            $data['email'] ?? '',
-            $data['mat_khau'] ?? '',
-            $data['vai_tro'] ?? 'KhachHang',
-            $data['ngay_tao'] ?? date('Y-m-d H:i:s')
-        ]);
-        
+        try {
+            $result = $stmt->execute([
+                $data['ten_dang_nhap'] ?? ($data['email'] ?? ''),
+                $data['ho_ten'] ?? '',
+                $data['email'] ?? '',
+                $data['so_dien_thoai'] ?? '',
+                $data['mat_khau'] ?? '',
+                $data['vai_tro'] ?? 'KhachHang',
+                $data['ngay_tao'] ?? date('Y-m-d H:i:s')
+            ]);
+        } catch (PDOException $e) {
+            return false;
+        }
+
         if ($result) {
             return $this->conn->lastInsertId();
         }
@@ -82,6 +129,13 @@ class NguoiDung
             $data['vai_tro'] ?? 'KhachHang',
             $id
         ]);
+    }
+
+    // Cập nhật mật khẩu (hash)
+    public function updatePassword($id, $hashedPassword) {
+        $sql = "UPDATE nguoi_dung SET mat_khau = ? WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$hashedPassword, $id]);
     }
 
     // Xóa người dùng

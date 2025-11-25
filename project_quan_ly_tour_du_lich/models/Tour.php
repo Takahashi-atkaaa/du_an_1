@@ -80,41 +80,39 @@ class Tour
 
     // Xóa tour
     public function delete($id) {
-      
-            // Xóa tất cả các bản ghi liên quan trước khi xóa tour
-            // Thứ tự xóa: từ bảng con đến bảng cha để tránh vi phạm foreign key constraint
-            
-            // 1. Xóa hình ảnh tour
-            $this->deleteHinhAnhByTourId($id);
-            
-            // 2. Xóa lịch trình tour
-            $this->deleteLichTrinhByTourId($id);
-            
-            // 3. Xóa lịch khởi hành
-            $this->deleteLichKhoiHanhByTourId($id);
-            
-            // 4. Xóa nhật ký tour
-            $this->deleteNhatKyByTourId($id);
-            
-            // 5. Xóa phản hồi đánh giá
-            $this->deletePhanHoiDanhGiaByTourId($id);
-            
-            // 6. Xóa giao dịch tài chính
-            $this->deleteGiaoDichTaiChinhByTourId($id);
-            
-            // 7. Xóa yêu cầu đặc biệt
-            $this->deleteYeuCauDacBietByTourId($id);
-            
-            // 8. Xóa booking (nếu muốn xóa cả booking khi xóa tour)
-            $this->deleteBookingByTourId($id);
-            
-            // 9. Cuối cùng mới xóa tour
-            $sql = "DELETE FROM tour WHERE tour_id = ?";
-            $stmt = $this->conn->prepare($sql);
-            $result = $stmt->execute([$id]);
-            
-           
-       
+        // Xóa tất cả các bản ghi liên quan trước khi xóa tour
+        // Thứ tự xóa: từ bảng con đến bảng cha để tránh vi phạm foreign key constraint
+        
+        // 1. Xóa hình ảnh tour
+        $this->deleteHinhAnhByTourId($id);
+        
+        // 2. Xóa lịch trình tour
+        $this->deleteLichTrinhByTourId($id);
+        
+        // 3. Xóa lịch khởi hành
+        $this->deleteLichKhoiHanhByTourId($id);
+        
+        // 4. Xóa nhật ký tour
+        $this->deleteNhatKyByTourId($id);
+        
+        // 5. Xóa phản hồi đánh giá
+        $this->deletePhanHoiDanhGiaByTourId($id);
+        
+        // 6. Xóa giao dịch tài chính
+        $this->deleteGiaoDichTaiChinhByTourId($id);
+        
+        // 7. Xóa yêu cầu đặc biệt
+        $this->deleteYeuCauDacBietByTourId($id);
+        
+        // 8. Xóa booking (nếu muốn xóa cả booking khi xóa tour)
+        $this->deleteBookingByTourId($id);
+        
+        // 9. Cuối cùng mới xóa tour
+        $sql = "DELETE FROM tour WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $result = $stmt->execute([$id]);
+        
+        return $result;
     }
 
     // Lấy danh sách lịch trình theo tour_id
@@ -181,10 +179,11 @@ class Tour
 
     // Lấy danh sách yêu cầu đặc biệt theo tour_id
     public function getYeuCauDacBietByTourId($tourId) {
-        $sql = "SELECT khach_hang_id, noi_dung 
-                FROM yeu_cau_dac_biet 
-                WHERE tour_id = ? 
-                ORDER BY id DESC";
+        $sql = "SELECT yc.*, b.khach_hang_id 
+                FROM yeu_cau_dac_biet yc
+                INNER JOIN booking b ON yc.booking_id = b.booking_id
+                WHERE b.tour_id = ? 
+                ORDER BY yc.id DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId]);
         return $stmt->fetchAll();
@@ -282,9 +281,24 @@ class Tour
 
     // Xóa yêu cầu đặc biệt theo tour_id
     public function deleteYeuCauDacBietByTourId($tourId) {
-        $sql = "DELETE FROM yeu_cau_dac_biet WHERE tour_id = ?";
+        $sql = "DELETE yc FROM yeu_cau_dac_biet yc
+                INNER JOIN booking b ON yc.booking_id = b.booking_id
+                WHERE b.tour_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([(int)$tourId]);
+    }
+
+    // Thêm yêu cầu đặc biệt
+    public function insertYeuCauDacBiet($bookingId, $noiDung, $loaiYeuCau = 'khac', $mucDoUuTien = 'trung_binh') {
+        $sql = "INSERT INTO yeu_cau_dac_biet (booking_id, loai_yeu_cau, tieu_de, mo_ta, muc_do_uu_tien) VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            (int)$bookingId,
+            $loaiYeuCau,
+            'Yêu cầu đặc biệt',
+            $noiDung,
+            $mucDoUuTien
+        ]);
     }
 
     // Xóa booking theo tour_id

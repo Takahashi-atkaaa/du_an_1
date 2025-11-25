@@ -9,11 +9,21 @@
 <body>
     <div class="auth-container">
         <h2>Đăng ký</h2>
+        <?php if (!empty($error)): ?>
+            <div class="form-error" style="color: #a94442; background:#f2dede; padding:10px; margin-bottom:10px; border-radius:4px;">
+                <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
         <form method="POST" action="index.php?act=auth/register">
             <div class="form-group">
                 <label>Họ và tên:</label>
                 <input type="text" name="ho_ten" required>
             </div>
+            <!-- Nếu muốn cho người dùng tự chọn tên đăng nhập, mở comment và hiển thị trường sau -->
+            <!-- <div class="form-group">
+                <label>Tên đăng nhập:</label>
+                <input type="text" name="ten_dang_nhap">
+            </div> -->
             <div class="form-group">
                 <label>Email:</label>
                 <input type="email" name="email" required>
