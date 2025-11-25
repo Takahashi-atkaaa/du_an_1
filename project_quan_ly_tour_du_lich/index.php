@@ -133,6 +133,10 @@ match ($act) {
     'hdv/lichLamViec' => (new HDVController())->lichLamViec(),
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
     'hdv/danhSachKhach' => (new HDVController())->danhSachKhach(),
+    'hdv/checkInKhach' => (new HDVController())->checkInKhach(),
+    'hdv/updateCheckInKhach' => (new HDVController())->updateCheckInKhach(),
+    'hdv/quanLyYeuCauDacBiet' => (new HDVController())->quanLyYeuCauDacBiet(),
+    'hdv/updateYeuCauDacBiet' => (new HDVController())->updateYeuCauDacBiet(),
     'hdv/phanHoi' => (new HDVController())->phanHoi(),
     // Admin - quản lý HDV
     'admin/quanLyHDV' => (new AdminController())->quanLyHDV(),

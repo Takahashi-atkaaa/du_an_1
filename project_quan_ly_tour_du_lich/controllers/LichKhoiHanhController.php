@@ -5,6 +5,7 @@ require_once 'models/PhanBoDichVu.php';
 require_once 'models/Tour.php';
 require_once 'models/NhanSu.php';
 require_once 'models/NhaCungCap.php';
+require_once 'models/Booking.php';
 
 class LichKhoiHanhController {
     private $lichKhoiHanhModel;
@@ -13,6 +14,7 @@ class LichKhoiHanhController {
     private $tourModel;
     private $nhanSuModel;
     private $nhaCungCapModel;
+    private $bookingModel;
     
     public function __construct() {
         $this->lichKhoiHanhModel = new LichKhoiHanh();
@@ -21,6 +23,7 @@ class LichKhoiHanhController {
         $this->tourModel = new Tour();
         $this->nhanSuModel = new NhanSu();
         $this->nhaCungCapModel = new NhaCungCap();
+        $this->bookingModel = new Booking();
     }
 
     // Danh sách lịch khởi hành
@@ -60,6 +63,15 @@ class LichKhoiHanhController {
         
         // Tính tổng chi phí
         $tongChiPhi = $this->phanBoDichVuModel->getTongChiPhi($id);
+
+        // Lấy yêu cầu đặc biệt của khách cho lịch khởi hành này
+        $yeuCauDacBietList = [];
+        if (!empty($lichKhoiHanh['tour_id']) && !empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+            $yeuCauDacBietList = $this->bookingModel->getSpecialRequestsByLichKhoiHanh(
+                $lichKhoiHanh['tour_id'],
+                $lichKhoiHanh['ngay_khoi_hanh']
+            );
+        }
         
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
@@ -169,8 +181,18 @@ class LichKhoiHanhController {
             $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
             
             if ($id > 0) {
+                $phanBo = $this->phanBoNhanSuModel->findById($id);
                 $result = $this->phanBoNhanSuModel->updateTrangThai($id, $trangThai);
                 if ($result) {
+                    if (
+                        $phanBo
+                        && $trangThai === 'DaXacNhan'
+                        && isset($phanBo['vai_tro'])
+                        && $phanBo['vai_tro'] === 'HDV'
+                        && isset($phanBo['lich_khoi_hanh_id'], $phanBo['nhan_su_id'])
+                    ) {
+                        $this->lichKhoiHanhModel->assignHDV($phanBo['lich_khoi_hanh_id'], $phanBo['nhan_su_id']);
+                    }
                     $_SESSION['success'] = 'Cập nhật trạng thái nhân sự thành công.';
                 } else {
                     $_SESSION['error'] = 'Không thể cập nhật trạng thái nhân sự.';
