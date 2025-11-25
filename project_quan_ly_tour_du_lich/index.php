@@ -3,43 +3,46 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+
+
 session_start();
 
 // Require toàn bộ các file khai báo môi trường, thực thi,...(không require view)
 
 // Require file Common
-require_once './commons/env.php'; // Khai báo biến môi trường
-require_once './commons/function.php'; // Hàm hỗ trợ
+require_once __DIR__ . '/commons/env.php';
+require_once __DIR__ . '/commons/function.php';
 
-// Require toàn bộ file Controllers
-require_once './controllers/AuthController.php';
-require_once './controllers/AdminController.php';
-require_once './controllers/TourController.php';
-require_once './controllers/BookingController.php';
-require_once './controllers/HDVController.php';
-require_once './controllers/KhachHangController.php';
-require_once './controllers/NhaCungCapController.php';
-require_once './controllers/LichKhoiHanhController.php';
-require_once './controllers/DanhGiaController.php';
+// Controllers
+require_once __DIR__ . '/controllers/AuthController.php';
+require_once __DIR__ . '/controllers/AdminController.php';
+require_once __DIR__ . '/controllers/TourController.php';
+require_once __DIR__ . '/controllers/BookingController.php';
+require_once __DIR__ . '/controllers/HDVController.php';
+require_once __DIR__ . '/controllers/KhachHangController.php';
+require_once __DIR__ . '/controllers/NhaCungCapController.php';
+require_once __DIR__ . '/controllers/LichKhoiHanhController.php';
+require_once __DIR__ . '/controllers/DanhGiaController.php';
 
-// Require toàn bộ file Models
-require_once './models/NguoiDung.php';
-require_once './models/Tour.php';
-require_once './models/Booking.php';
-require_once './models/BookingHistory.php';
-require_once './models/KhachHang.php';
-require_once './models/HDV.php';
-require_once './models/NhaCungCap.php';
-require_once './models/GiaoDich.php';
-require_once './models/DanhGia.php';
-require_once './models/NhanSu.php';
-require_once './models/LichKhoiHanh.php';
-require_once './models/PhanBoNhanSu.php';
-require_once './models/PhanBoDichVu.php';
-require_once './models/HDVManagement.php';
-require_once './models/TourCheckin.php';
-require_once './models/HotelRoomAssignment.php';
-require_once './models/DichVuNhaCungCap.php';
+// Models
+require_once __DIR__ . '/models/NguoiDung.php';
+require_once __DIR__ . '/models/Tour.php';
+require_once __DIR__ . '/models/Booking.php';
+require_once __DIR__ . '/models/BookingHistory.php';
+require_once __DIR__ . '/models/KhachHang.php';
+require_once __DIR__ . '/models/HDV.php';
+require_once __DIR__ . '/models/NhaCungCap.php';
+require_once __DIR__ . '/models/GiaoDich.php';
+require_once __DIR__ . '/models/DanhGia.php';
+require_once __DIR__ . '/models/NhanSu.php';
+require_once __DIR__ . '/models/LichKhoiHanh.php';
+require_once __DIR__ . '/models/PhanBoNhanSu.php';
+require_once __DIR__ . '/models/PhanBoDichVu.php';
+require_once __DIR__ . '/models/HDVManagement.php';
+require_once __DIR__ . '/models/TourCheckin.php';
+require_once __DIR__ . '/models/HotelRoomAssignment.php';
+require_once __DIR__ . '/models/DichVuNhaCungCap.php';
+
 
 // Route
 $act = $_GET['act'] ?? 'auth/login';

@@ -5,6 +5,7 @@ require_once 'models/PhanBoDichVu.php';
 require_once 'models/Tour.php';
 require_once 'models/NhanSu.php';
 require_once 'models/NhaCungCap.php';
+require_once 'models/DichVuNhaCungCap.php';
 require_once 'models/Booking.php';
 
 class LichKhoiHanhController {
@@ -15,6 +16,7 @@ class LichKhoiHanhController {
     private $nhanSuModel;
     private $nhaCungCapModel;
     private $bookingModel;
+    private $dichVuCatalogModel;
     
     public function __construct() {
         $this->lichKhoiHanhModel = new LichKhoiHanh();
@@ -24,6 +26,7 @@ class LichKhoiHanhController {
         $this->nhanSuModel = new NhanSu();
         $this->nhaCungCapModel = new NhaCungCap();
         $this->bookingModel = new Booking();
+        $this->dichVuCatalogModel = new DichVuNhaCungCap();
     }
 
     // Danh sách lịch khởi hành
@@ -60,6 +63,15 @@ class LichKhoiHanhController {
         
         // Lấy danh sách nhà cung cấp
         $nhaCungCapList = $this->nhaCungCapModel->getAll();
+
+        $catalogServicesMap = [];
+        if (!empty($nhaCungCapList)) {
+            $supplierIds = array_column($nhaCungCapList, 'id_nha_cung_cap');
+            $catalogServices = $this->dichVuCatalogModel->getBySupplierIds($supplierIds);
+            foreach ($catalogServices as $service) {
+                $catalogServicesMap[$service['nha_cung_cap_id']][] = $service;
+            }
+        }
         
         // Tính tổng chi phí
         $tongChiPhi = $this->phanBoDichVuModel->getTongChiPhi($id);

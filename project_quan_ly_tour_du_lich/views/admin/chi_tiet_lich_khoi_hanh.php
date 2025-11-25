@@ -92,6 +92,20 @@
     </style>
 </head>
 <body class="bg-light">
+<?php
+$serviceTypeOptions = [
+    'Xe' => 'Xe vận chuyển',
+    'KhachSan' => 'Khách sạn',
+    'VeMayBay' => 'Vé máy bay',
+    'Ve' => 'Vé tàu / xe khách',
+    'NhaHang' => 'Nhà hàng',
+    'DiemThamQuan' => 'Điểm tham quan',
+    'Visa' => 'Visa',
+    'BaoHiem' => 'Bảo hiểm',
+    'Khac' => 'Khác'
+];
+$catalogServicesMap = $catalogServicesMap ?? [];
+?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
@@ -425,24 +439,19 @@
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Loại dịch vụ <span class="text-danger">*</span></label>
-                                        <select name="loai_dich_vu" class="form-select" required>
-                                <option value="Xe">Xe</option>
-                                <option value="KhachSan">Khách sạn</option>
-                                <option value="VeMayBay">Vé máy bay</option>
-                                <option value="NhaHang">Nhà hàng</option>
-                                <option value="DiemThamQuan">Điểm tham quan</option>
-                                <option value="Visa">Visa</option>
-                                <option value="BaoHiem">Bảo hiểm</option>
-                                <option value="Khac">Khác</option>
+                                        <select name="loai_dich_vu" id="loaiDichVuSelect" class="form-select" required>
+                                <?php foreach ($serviceTypeOptions as $value => $label): ?>
+                                    <option value="<?php echo $value; ?>"><?php echo $label; ?></option>
+                                <?php endforeach; ?>
                             </select>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Tên dịch vụ <span class="text-danger">*</span></label>
-                                        <input type="text" name="ten_dich_vu" class="form-control" required>
+                                        <input type="text" name="ten_dich_vu" id="tenDichVuInput" class="form-control" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Nhà cung cấp</label>
-                                        <select name="nha_cung_cap_id" class="form-select">
+                                        <select name="nha_cung_cap_id" id="supplierSelect" class="form-select">
                                 <option value="">-- Chọn nhà cung cấp --</option>
                                 <?php foreach ($nhaCungCapList as $ncc): ?>
                                     <option value="<?php echo $ncc['id_nha_cung_cap']; ?>">
@@ -451,41 +460,49 @@
                                 <?php endforeach; ?>
                             </select>
                                     </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Dịch vụ có sẵn</label>
+                                        <select id="catalogServiceSelect" class="form-select" disabled>
+                                            <option value="">-- Chọn dịch vụ có sẵn --</option>
+                                        </select>
+                                        <div class="form-text">Tự động điền thông tin khi chọn.</div>
+                                        <input type="hidden" name="catalog_service_id" id="catalogServiceIdInput">
+                                    </div>
                                     <div class="col-md-3">
                                         <label class="form-label small fw-semibold">Số lượng <span class="text-danger">*</span></label>
-                                        <input type="number" name="so_luong" class="form-control" value="1" min="1" required>
+                                        <input type="number" name="so_luong" id="soLuongInput" class="form-control" value="1" min="1" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small fw-semibold">Đơn vị</label>
-                                        <input type="text" name="don_vi" class="form-control" placeholder="VD: phòng, xe...">
+                                        <input type="text" name="don_vi" id="donViInput" class="form-control" placeholder="VD: phòng, xe...">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Ngày bắt đầu</label>
-                                        <input type="date" name="ngay_bat_dau" class="form-control">
+                                        <input type="date" name="ngay_bat_dau" id="ngayBatDauInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Ngày kết thúc</label>
-                                        <input type="date" name="ngay_ket_thuc" class="form-control">
+                                        <input type="date" name="ngay_ket_thuc" id="ngayKetThucInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Giờ bắt đầu</label>
-                                        <input type="time" name="gio_bat_dau" class="form-control">
+                                        <input type="time" name="gio_bat_dau" id="gioBatDauInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Giờ kết thúc</label>
-                                        <input type="time" name="gio_ket_thuc" class="form-control">
+                                        <input type="time" name="gio_ket_thuc" id="gioKetThucInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Địa điểm</label>
-                                        <input type="text" name="dia_diem" class="form-control">
+                                        <input type="text" name="dia_diem" id="diaDiemInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Giá tiền (VNĐ)</label>
-                                        <input type="number" name="gia_tien" class="form-control" step="1000" min="0">
+                                        <input type="number" name="gia_tien" id="giaTienInput" class="form-control" step="1000" min="0">
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label small fw-semibold">Ghi chú</label>
-                                        <textarea name="ghi_chu" class="form-control" rows="2"></textarea>
+                                        <textarea name="ghi_chu" id="ghiChuInput" class="form-control" rows="2"></textarea>
                                     </div>
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-success">
@@ -610,5 +627,108 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function() {
+        const supplierCatalog = <?php echo json_encode($catalogServicesMap, JSON_UNESCAPED_UNICODE); ?>;
+        const serviceTypeLabels = <?php echo json_encode($serviceTypeOptions, JSON_UNESCAPED_UNICODE); ?>;
+
+        const supplierSelect = document.getElementById('supplierSelect');
+        const catalogSelect = document.getElementById('catalogServiceSelect');
+        if (!supplierSelect || !catalogSelect) {
+            return;
+        }
+
+        const loaiSelect = document.getElementById('loaiDichVuSelect');
+        const tenInput = document.getElementById('tenDichVuInput');
+        const donViInput = document.getElementById('donViInput');
+        const giaTienInput = document.getElementById('giaTienInput');
+        const ghiChuInput = document.getElementById('ghiChuInput');
+        const soLuongInput = document.getElementById('soLuongInput');
+        const catalogServiceIdInput = document.getElementById('catalogServiceIdInput');
+
+        function resetCatalogSelect() {
+            catalogSelect.innerHTML = '<option value="">-- Chọn dịch vụ có sẵn --</option>';
+            catalogSelect.disabled = true;
+            if (catalogServiceIdInput) {
+                catalogServiceIdInput.value = '';
+            }
+        }
+
+        function populateCatalogOptions(supplierId) {
+            resetCatalogSelect();
+            if (!supplierId || !supplierCatalog[supplierId] || supplierCatalog[supplierId].length === 0) {
+                return;
+            }
+            supplierCatalog[supplierId].forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                const typeLabel = serviceTypeLabels[service.loai_dich_vu] ?? service.loai_dich_vu ?? '';
+                option.textContent = service.ten_dich_vu + (typeLabel ? ` (${typeLabel})` : '');
+                option.dataset.service = JSON.stringify({
+                    loai: service.loai_dich_vu || '',
+                    ten: service.ten_dich_vu || '',
+                    donVi: service.don_vi_tinh || '',
+                    gia: service.gia_tham_khao || '',
+                    ghiChu: service.mo_ta || '',
+                    soLuong: service.cong_suat_toi_da || ''
+                });
+                catalogSelect.appendChild(option);
+            });
+            catalogSelect.disabled = false;
+        }
+
+        function applyCatalogData(raw) {
+            if (!raw) return;
+            if (loaiSelect && raw.loai) {
+                const hasOption = Array.from(loaiSelect.options).some(opt => opt.value === raw.loai);
+                if (hasOption) {
+                    loaiSelect.value = raw.loai;
+                }
+            }
+            if (tenInput && raw.ten) {
+                tenInput.value = raw.ten;
+            }
+            if (donViInput) {
+                donViInput.value = raw.donVi || '';
+            }
+            if (giaTienInput) {
+                giaTienInput.value = raw.gia || '';
+            }
+            if (ghiChuInput) {
+                ghiChuInput.value = raw.ghiChu || '';
+            }
+            if (soLuongInput && raw.soLuong) {
+                soLuongInput.value = raw.soLuong;
+            }
+        }
+
+        supplierSelect.addEventListener('change', function() {
+            populateCatalogOptions(this.value);
+        });
+
+        catalogSelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            if (!selected || !selected.dataset.service) {
+                if (catalogServiceIdInput) {
+                    catalogServiceIdInput.value = '';
+                }
+                return;
+            }
+            try {
+                const data = JSON.parse(selected.dataset.service);
+                applyCatalogData(data);
+                if (catalogServiceIdInput) {
+                    catalogServiceIdInput.value = selected.value || '';
+                }
+            } catch (error) {
+                console.error('Không thể đọc dữ liệu dịch vụ có sẵn', error);
+            }
+        });
+
+        if (supplierSelect.value) {
+            populateCatalogOptions(supplierSelect.value);
+        }
+    })();
+    </script>
 </body>
 </html>

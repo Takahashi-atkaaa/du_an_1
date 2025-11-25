@@ -194,7 +194,12 @@ class Booking
     public function getSpecialRequestsByLichKhoiHanh($tourId, $ngayKhoiHanh) {
         $sql = "SELECT 
                     y.id as yeu_cau_id,
-                    y.noi_dung,
+                    y.tieu_de,
+                    y.mo_ta,
+                    y.loai_yeu_cau,
+                    y.muc_do_uu_tien,
+                    y.trang_thai as trang_thai_yeu_cau,
+                    y.ngay_tao,
                     b.booking_id,
                     b.so_nguoi,
                     b.ngay_dat,
@@ -202,10 +207,9 @@ class Booking
                     nd.email,
                     nd.so_dien_thoai
                 FROM yeu_cau_dac_biet y
-                INNER JOIN khach_hang kh ON y.khach_hang_id = kh.khach_hang_id
+                INNER JOIN booking b ON y.booking_id = b.booking_id
+                INNER JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
                 INNER JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
-                INNER JOIN booking b ON b.khach_hang_id = y.khach_hang_id 
-                    AND b.tour_id = y.tour_id
                 WHERE b.tour_id = ?
                     AND b.ngay_khoi_hanh = ?
                     AND b.trang_thai IN ('ChoXacNhan','DaCoc','HoanTat')
