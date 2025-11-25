@@ -39,6 +39,7 @@ require_once './models/PhanBoDichVu.php';
 require_once './models/HDVManagement.php';
 require_once './models/TourCheckin.php';
 require_once './models/HotelRoomAssignment.php';
+require_once './models/DichVuNhaCungCap.php';
 
 // Route
 $act = $_GET['act'] ?? 'auth/login';
@@ -159,6 +160,8 @@ match ($act) {
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
+    'admin/updateNhaCungCap' => (new AdminController())->updateNhaCungCap(),
+    'admin/supplierServiceAction' => (new AdminController())->supplierServiceAction(),
     
     // Nhà cung cấp
     'nhaCungCap/dashboard' => (new NhaCungCapController())->dashboard(),
@@ -168,6 +171,10 @@ match ($act) {
     'nhaCungCap/hopDong' => (new NhaCungCapController())->hopDong(),
     'nhaCungCap/xacNhanBooking' => (new NhaCungCapController())->xacNhanBooking(),
     'nhaCungCap/capNhatGia' => (new NhaCungCapController())->capNhatGia(),
+    'nhaCungCap/storeDichVu' => (new NhaCungCapController())->storeDichVu(),
+    'nhaCungCap/updateDichVu' => (new NhaCungCapController())->updateDichVu(),
+    'nhaCungCap/deleteDichVu' => (new NhaCungCapController())->deleteDichVu(),
+    'nhaCungCap/storeBaoGiaThuCong' => (new NhaCungCapController())->storeBaoGiaThuCong(),
     
     // Khách hàng
     'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),

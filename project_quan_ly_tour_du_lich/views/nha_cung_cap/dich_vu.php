@@ -10,16 +10,12 @@
 </head>
 <body>
     <div class="container-fluid py-4">
-        <!-- Header -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1 class="h3 mb-0">
-                <i class="bi bi-briefcase"></i> Quản lý Dịch vụ
-            </h1>
             <div>
-                <a href="index.php?act=nhaCungCap/dashboard" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Dashboard
-                </a>
+                <h1 class="h3 mb-1"><i class="bi bi-briefcase"></i> Quản lý Dịch vụ</h1>
+                <p class="text-muted mb-0">Quản lý danh mục dịch vụ của bạn và các dịch vụ đang phục vụ tour</p>
             </div>
+         
         </div>
 
         <!-- Alert Messages -->
@@ -66,16 +62,129 @@
             </li>
         </ul>
 
-        <!-- Services List -->
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Tất cả dịch vụ</h5>
+        <?php 
+        $loaiDichVuMap = [
+            'Xe' => 'Xe', 
+            'KhachSan' => 'Khách sạn',
+            'VeMayBay' => 'Vé máy bay',
+            'NhaHang' => 'Nhà hàng',
+            'DiemThamQuan' => 'Điểm tham quan',
+            'Visa' => 'Visa',
+            'BaoHiem' => 'Bảo hiểm',
+            'Ve' => 'Vé',
+            'Khac' => 'Khác'
+        ];
+        ?>
+   <div class="d-flex gap-2">
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalAddCatalog">
+                    <i class="bi bi-plus-circle"></i> Thêm dịch vụ
+                </button>
+                
+            </div>
+        <!-- Catalog services -->
+        <div class="card mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0"><i class="bi bi-collection"></i> Danh mục dịch vụ của bạn</h5>
+                    <small class="text-muted">Dùng để gửi báo giá nhanh cho đội điều hành</small>
+                </div>
+                <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalAddCatalog">
+                    <i class="bi bi-plus-lg"></i> Nhập dịch vụ mới
+                </button>
             </div>
             <div class="card-body">
-                <?php if (empty($dichVu)): ?>
+                <?php $catalog = $catalogServices ?? []; ?>
+                <?php if (empty($catalog)): ?>
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-inbox" style="font-size: 3rem;"></i>
+                        <p class="mt-3">Bạn chưa thêm dịch vụ nào. Nhấn "Nhập dịch vụ mới" để bắt đầu.</p>
+                    </div>
+                <?php else: ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Tên dịch vụ</th>
+                                    <th>Loại</th>
+                                    <th>Giá tham khảo</th>
+                                    <th>Công suất</th>
+                                    <th>Thời gian xử lý</th>
+                                    <th>Trạng thái</th>
+                                    <th class="text-end">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php 
+                                $catalogStatusMap = [
+                                    'HoatDong' => ['text' => 'Hoạt động', 'class' => 'success'],
+                                    'TamDung' => ['text' => 'Tạm dừng', 'class' => 'warning'],
+                                    'NgungHopTac' => ['text' => 'Ngưng hợp tác', 'class' => 'secondary'],
+                                ];
+                                foreach ($catalog as $service): 
+                                ?>
+                                <tr>
+                                    <td>
+                                        <strong><?php echo htmlspecialchars($service['ten_dich_vu']); ?></strong>
+                                        <?php if (!empty($service['mo_ta'])): ?>
+                                            <div class="text-muted small">
+                                                <?php echo nl2br(htmlspecialchars($service['mo_ta'])); ?>
+                                            </div>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info text-dark">
+                                            <?php echo $loaiDichVuMap[$service['loai_dich_vu']] ?? $service['loai_dich_vu']; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if ($service['gia_tham_khao']): ?>
+                                            <strong class="text-primary"><?php echo number_format($service['gia_tham_khao'], 0, ',', '.'); ?>đ</strong>
+                                            <div class="text-muted small"><?php echo htmlspecialchars($service['don_vi_tinh'] ?? ''); ?></div>
+                                        <?php else: ?>
+                                            <span class="text-muted">Chưa nhập</span>
+                                        <?php endif; ?>
+                                    </td>
+                                    <td>
+                                        <?php echo $service['cong_suat_toi_da'] ? $service['cong_suat_toi_da'] : '-'; ?>
+                                    </td>
+                                    <td><?php echo $service['thoi_gian_xu_ly'] ? htmlspecialchars($service['thoi_gian_xu_ly']) : '-'; ?></td>
+                                    <td>
+                                        <?php $st = $catalogStatusMap[$service['trang_thai']] ?? ['text' => $service['trang_thai'], 'class' => 'secondary']; ?>
+                                        <span class="badge bg-<?php echo $st['class']; ?>"><?php echo $st['text']; ?></span>
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEditCatalog<?php echo $service['id']; ?>">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+                                            <form method="POST" action="index.php?act=nhaCungCap/deleteDichVu" onsubmit="return confirm('Bạn chắc chắn muốn xóa dịch vụ này?');">
+                                                <input type="hidden" name="dich_vu_id" value="<?php echo $service['id']; ?>">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Assigned Services List -->
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="bi bi-list-ul"></i> Dịch vụ đang phục vụ tour</h5>
+            </div>
+            <div class="card-body">
+                <?php $assigned = $dichVu ?? []; ?>
+                <?php if (empty($assigned)): ?>
                     <div class="text-center py-5 text-muted">
                         <i class="bi bi-inbox" style="font-size: 4rem;"></i>
-                        <p class="mt-3">Không có dịch vụ nào</p>
+                        <p class="mt-3">Hiện chưa có dịch vụ nào được phân bổ cho tour.</p>
                     </div>
                 <?php else: ?>
                     <div class="table-responsive">
@@ -103,18 +212,7 @@
                                     'HoanTat' => ['text' => 'Hoàn tất', 'class' => 'info']
                                 ];
                                 
-                                $loaiDichVuMap = [
-                                    'Xe' => 'Xe',
-                                    'KhachSan' => 'Khách sạn',
-                                    'VeMayBay' => 'Vé máy bay',
-                                    'NhaHang' => 'Nhà hàng',
-                                    'DiemThamQuan' => 'Điểm tham quan',
-                                    'Visa' => 'Visa',
-                                    'BaoHiem' => 'Bảo hiểm',
-                                    'Khac' => 'Khác'
-                                ];
-                                
-                                foreach ($dichVu as $dv): 
+                                foreach ($assigned as $dv): 
                                 ?>
                                 <tr>
                                     <td>
@@ -164,8 +262,8 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="index.php?act=nhaCungCap/baoGia" class="btn btn-sm btn-primary">
-                                            <i class="bi bi-eye"></i> Xem chi tiết
+                                        <a href="index.php?act=nhaCungCap/baoGia&trang_thai=<?php echo $dv['trang_thai']; ?>" class="btn btn-sm btn-primary">
+                                            <i class="bi bi-eye"></i> Theo dõi
                                         </a>
                                     </td>
                                 </tr>
@@ -177,6 +275,144 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal add catalog -->
+    <div class="modal fade" id="modalAddCatalog" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Thêm dịch vụ mới</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form method="POST" action="index.php?act=nhaCungCap/storeDichVu">
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Tên dịch vụ *</label>
+                                <input type="text" name="ten_dich_vu" class="form-control" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Loại dịch vụ</label>
+                                <select name="loai_dich_vu" class="form-select">
+                                    <?php foreach ($loaiDichVuMap as $key => $label): ?>
+                                        <option value="<?php echo $key; ?>"><?php echo $label; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Giá tham khảo</label>
+                                <input type="number" name="gia_tham_khao" class="form-control" min="0" step="1000" placeholder="VD: 1500000">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Đơn vị tính</label>
+                                <input type="text" name="don_vi_tinh" class="form-control" placeholder="phòng/đêm, suất, chuyến...">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Công suất tối đa</label>
+                                <input type="number" name="cong_suat_toi_da" class="form-control" min="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Thời gian xử lý</label>
+                                <input type="text" name="thoi_gian_xu_ly" class="form-control" placeholder="VD: 2 giờ">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Mô tả</label>
+                                <textarea name="mo_ta" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Tài liệu / đường dẫn tham khảo</label>
+                                <textarea name="tai_lieu_dinh_kem" class="form-control" rows="2" placeholder="URL hoặc ghi chú thêm"></textarea>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Trạng thái</label>
+                                <select name="trang_thai" class="form-select">
+                                    <option value="HoatDong">Hoạt động</option>
+                                    <option value="TamDung">Tạm dừng</option>
+                                    <option value="NgungHopTac">Ngưng hợp tác</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">Lưu</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <?php if (!empty($catalog)): ?>
+        <?php foreach ($catalog as $service): ?>
+        <div class="modal fade" id="modalEditCatalog<?php echo $service['id']; ?>" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Cập nhật dịch vụ: <?php echo htmlspecialchars($service['ten_dich_vu']); ?></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="index.php?act=nhaCungCap/updateDichVu">
+                        <input type="hidden" name="dich_vu_id" value="<?php echo $service['id']; ?>">
+                        <div class="modal-body">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Tên dịch vụ *</label>
+                                    <input type="text" name="ten_dich_vu" class="form-control" value="<?php echo htmlspecialchars($service['ten_dich_vu']); ?>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Loại dịch vụ</label>
+                                    <select name="loai_dich_vu" class="form-select">
+                                        <?php foreach ($loaiDichVuMap as $key => $label): ?>
+                                            <option value="<?php echo $key; ?>" <?php echo ($service['loai_dich_vu'] === $key) ? 'selected' : ''; ?>>
+                                                <?php echo $label; ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Giá tham khảo</label>
+                                    <input type="number" name="gia_tham_khao" class="form-control" min="0" step="1000" value="<?php echo $service['gia_tham_khao']; ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Đơn vị tính</label>
+                                    <input type="text" name="don_vi_tinh" class="form-control" value="<?php echo htmlspecialchars($service['don_vi_tinh'] ?? ''); ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Công suất tối đa</label>
+                                    <input type="number" name="cong_suat_toi_da" class="form-control" min="0" value="<?php echo $service['cong_suat_toi_da']; ?>">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Thời gian xử lý</label>
+                                    <input type="text" name="thoi_gian_xu_ly" class="form-control" value="<?php echo htmlspecialchars($service['thoi_gian_xu_ly'] ?? ''); ?>">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Mô tả</label>
+                                    <textarea name="mo_ta" class="form-control" rows="3"><?php echo htmlspecialchars($service['mo_ta'] ?? ''); ?></textarea>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label">Tài liệu / đường dẫn tham khảo</label>
+                                    <textarea name="tai_lieu_dinh_kem" class="form-control" rows="2"><?php echo htmlspecialchars($service['tai_lieu_dinh_kem'] ?? ''); ?></textarea>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Trạng thái</label>
+                                    <select name="trang_thai" class="form-select">
+                                        <option value="HoatDong" <?php echo ($service['trang_thai'] === 'HoatDong') ? 'selected' : ''; ?>>Hoạt động</option>
+                                        <option value="TamDung" <?php echo ($service['trang_thai'] === 'TamDung') ? 'selected' : ''; ?>>Tạm dừng</option>
+                                        <option value="NgungHopTac" <?php echo ($service['trang_thai'] === 'NgungHopTac') ? 'selected' : ''; ?>>Ngưng hợp tác</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>

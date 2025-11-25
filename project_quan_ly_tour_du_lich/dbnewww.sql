@@ -421,6 +421,28 @@ CREATE TABLE IF NOT EXISTS `phan_bo_dich_vu` (
 
 -- Data exporting was unselected.
 
+-- Dumping structure for table quan_ly_tour_du_lich.dich_vu_nha_cung_cap
+CREATE TABLE IF NOT EXISTS `dich_vu_nha_cung_cap` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nha_cung_cap_id` int NOT NULL,
+  `ten_dich_vu` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `mo_ta` text COLLATE utf8mb4_unicode_ci,
+  `loai_dich_vu` enum('KhachSan','NhaHang','Xe','Ve','VeMayBay','DiemThamQuan','Visa','BaoHiem','Khac') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Khac',
+  `gia_tham_khao` decimal(15,2) DEFAULT NULL,
+  `don_vi_tinh` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cong_suat_toi_da` int DEFAULT NULL,
+  `thoi_gian_xu_ly` varchar(120) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `tai_lieu_dinh_kem` text COLLATE utf8mb4_unicode_ci,
+  `trang_thai` enum('HoatDong','TamDung','NgungHopTac') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'HoatDong',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_dich_vu_ncc` (`nha_cung_cap_id`),
+  CONSTRAINT `dich_vu_nha_cung_cap_ibfk_1` FOREIGN KEY (`nha_cung_cap_id`) REFERENCES `nha_cung_cap` (`id_nha_cung_cap`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Data exporting was unselected.
+
 -- Dumping structure for table quan_ly_tour_du_lich.phan_bo_history
 CREATE TABLE IF NOT EXISTS `phan_bo_history` (
   `id` int NOT NULL AUTO_INCREMENT,
@@ -741,6 +763,12 @@ INSERT INTO `phan_bo_nhan_su` (`lich_khoi_hanh_id`, `nhan_su_id`, `vai_tro`, `gh
 INSERT INTO `phan_bo_dich_vu` (`lich_khoi_hanh_id`, `nha_cung_cap_id`, `loai_dich_vu`, `ten_dich_vu`, `so_luong`, `don_vi`, `ngay_bat_dau`, `ngay_ket_thuc`, `gia_tien`, `trang_thai`) VALUES
 ((SELECT `id` FROM `lich_khoi_hanh` LIMIT 1), (SELECT `id_nha_cung_cap` FROM `nha_cung_cap` LIMIT 1), 'KhachSan', 'Khách sạn Hạ Long 3 sao', 10, 'phòng', DATE_ADD(CURDATE(), INTERVAL 10 DAY), DATE_ADD(CURDATE(), INTERVAL 12 DAY), 2000000.00, 'DaXacNhan'),
 ((SELECT `id` FROM `lich_khoi_hanh` LIMIT 1), (SELECT `id_nha_cung_cap` FROM `nha_cung_cap` LIMIT 1), 'Xe', 'Xe 45 chỗ', 1, 'xe', DATE_ADD(CURDATE(), INTERVAL 10 DAY), DATE_ADD(CURDATE(), INTERVAL 12 DAY), 5000000.00, 'DaXacNhan');
+
+-- 12b. Dữ liệu mẫu cho bảng dich_vu_nha_cung_cap
+INSERT INTO `dich_vu_nha_cung_cap` (`nha_cung_cap_id`, `ten_dich_vu`, `mo_ta`, `loai_dich_vu`, `gia_tham_khao`, `don_vi_tinh`, `cong_suat_toi_da`, `thoi_gian_xu_ly`, `trang_thai`) VALUES
+((SELECT `id_nha_cung_cap` FROM `nha_cung_cap` LIMIT 1), 'Phòng Deluxe hướng biển', 'Gói phòng khách sạn 4 sao bao gồm buffet sáng', 'KhachSan', 2200000.00, 'phòng/đêm', 30, 'Xác nhận trong 2h', 'HoatDong'),
+((SELECT `id_nha_cung_cap` FROM `nha_cung_cap` LIMIT 1), 'Xe đưa đón sân bay', 'Xe 16 chỗ đón khách tại sân bay Nội Bài', 'Xe', 1500000.00, 'chuyến', 5, 'Đặt trước 1 ngày', 'HoatDong'),
+((SELECT `id_nha_cung_cap` FROM `nha_cung_cap` LIMIT 1 OFFSET 1), 'Buffet tối Đặc sản Đà Nẵng', 'Set buffet 40 món hải sản và đặc sản miền Trung', 'NhaHang', 350000.00, 'suất', 80, 'Chuẩn bị trong 3h', 'HoatDong');
 
 -- 13. Dữ liệu mẫu cho bảng diem_checkin
 INSERT INTO `diem_checkin` (`tour_id`, `ten_diem`, `loai_diem`, `thoi_gian_du_kien`, `ghi_chu`, `thu_tu`) VALUES
