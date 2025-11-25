@@ -156,12 +156,22 @@
         </div>
         <?php endif; ?>
         
-        <?php if (isset($_SESSION['error'])): ?>
+        <?php 
+        // Chỉ hiển thị lỗi nếu không phải lỗi về quyền
+        if (isset($_SESSION['error'])): 
+            $error_msg = $_SESSION['error'];
+            unset($_SESSION['error']);
+            // Bỏ qua thông báo lỗi về quyền
+            if (stripos($error_msg, 'quyền') === false && stripos($error_msg, 'permission') === false):
+        ?>
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
+            <i class="bi bi-exclamation-triangle"></i> <?php echo htmlspecialchars($error_msg); ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <?php endif; ?>
+        <?php 
+            endif;
+        endif; 
+        ?>
         
         <!-- Tour Selector -->
         <?php if (empty($tour)): ?>
@@ -282,7 +292,8 @@
         <?php endif; ?>
     </div>
 
-    <!-- Add/Edit Entry Modal -->
+    <!-- Add/Edit Entry Modal - Chỉ hiển thị khi có tour hợp lệ -->
+    <?php if ($tour): ?>
     <div class="modal fade" id="addEntryModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -296,9 +307,9 @@
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-                <form method="POST" action="index.php?act=hdv/save_nhat_ky" enctype="multipart/form-data">
-                    <input type="hidden" name="tour_id" value="<?php echo $tour['id'] ?? ''; ?>">
-                    <input type="hidden" name="entry_id" value="<?php echo $edit_entry['id'] ?? ''; ?>">
+                <form method="POST" action="index.php?act=hdv/save_nhat_ky" enctype="multipart/form-data" onsubmit="return validateForm()">
+                    <input type="hidden" name="tour_id" value="<?php echo isset($tour['id']) ? $tour['id'] : ''; ?>" id="form_tour_id">
+                    <input type="hidden" name="entry_id" value="<?php echo isset($edit_entry['id']) ? $edit_entry['id'] : ''; ?>">
                     
                     <div class="modal-body">
                         <div class="row">
@@ -357,6 +368,7 @@
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- Image Viewer Modal -->
     <div class="modal fade" id="imageViewerModal" tabindex="-1">
@@ -406,11 +418,23 @@
             new bootstrap.Modal(document.getElementById('imageViewerModal')).show();
         }
         
-        // Auto show modal when edit_id is present
+        // Validate form before submit
+        function validateForm() {
+            var tourId = document.getElementById('form_tour_id').value;
+            if (!tourId || tourId === '') {
+                alert('Lỗi: Không tìm thấy thông tin tour. Vui lòng thử lại.');
+                return false;
+            }
+            return true;
+        }
+        
         // Auto show modal when edit_id is present
         <?php if(isset($edit_entry)): ?>
         window.addEventListener('DOMContentLoaded', function() {
-            new bootstrap.Modal(document.getElementById('addEntryModal')).show();
+            var modal = document.getElementById('addEntryModal');
+            if (modal) {
+                new bootstrap.Modal(modal).show();
+            }
         });
         <?php endif; ?>
     </script>

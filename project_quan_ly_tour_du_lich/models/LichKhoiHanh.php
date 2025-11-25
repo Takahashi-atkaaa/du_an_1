@@ -20,48 +20,6 @@ class LichKhoiHanh
         return $stmt->fetchAll();
     }
 
-    // Lọc lịch khởi hành theo các tiêu chí
-    public function filter($filters) {
-        $sql = "SELECT lk.*, t.ten_tour, t.loai_tour
-                FROM lich_khoi_hanh lk
-                LEFT JOIN tour t ON lk.tour_id = t.tour_id
-                WHERE 1=1";
-        
-        $params = [];
-        
-        // Tìm kiếm theo tên tour hoặc điểm tập trung
-        if (!empty($filters['search'])) {
-            $sql .= " AND (t.ten_tour LIKE ? OR lk.diem_tap_trung LIKE ?)";
-            $searchParam = '%' . $filters['search'] . '%';
-            $params[] = $searchParam;
-            $params[] = $searchParam;
-        }
-        
-        // Lọc theo trạng thái
-        if (!empty($filters['trang_thai'])) {
-            $sql .= " AND lk.trang_thai = ?";
-            $params[] = $filters['trang_thai'];
-        }
-        
-        // Lọc theo ngày khởi hành từ
-        if (!empty($filters['tu_ngay'])) {
-            $sql .= " AND lk.ngay_khoi_hanh >= ?";
-            $params[] = $filters['tu_ngay'];
-        }
-        
-        // Lọc theo ngày khởi hành đến
-        if (!empty($filters['den_ngay'])) {
-            $sql .= " AND lk.ngay_khoi_hanh <= ?";
-            $params[] = $filters['den_ngay'];
-        }
-        
-        $sql .= " ORDER BY lk.ngay_khoi_hanh DESC, lk.gio_xuat_phat DESC";
-        
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll();
-    }
-
     // Lấy lịch khởi hành theo ID
     public function findById($id) {
         $sql = "SELECT lk.*, t.ten_tour, t.loai_tour, t.gia_co_ban

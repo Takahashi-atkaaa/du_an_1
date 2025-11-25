@@ -18,6 +18,7 @@
             <a href="index.php?act=booking/datTourChoKhach">Đặt tour cho khách</a>
             <a href="index.php?act=admin/baoCaoTaiChinh">Báo cáo Tài chính</a>
             <a href="index.php?act=admin/nhaCungCap">Nhà cung cấp</a>
+            <a href="index.php?act=admin/quanLyNhatKyTour">Quản lý Nhật ký Tour</a>
             <a href="index.php?act=admin/danhGia">Đánh giá</a>
             <a href="index.php?act=auth/logout">Đăng xuất</a>
         </nav>

@@ -100,10 +100,13 @@ match ($act) {
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
     'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
-    'admin/quanLyLichKhoiHanh' => (new AdminController())->quanLyLichKhoiHanh(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/danhGia' => (new AdminController())->danhGia(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
+    'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
+    'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
+    'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),
+    'admin/deleteNhatKyTour' => (new AdminController())->deleteNhatKyTour(),
     'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
@@ -150,12 +153,16 @@ match ($act) {
     'admin/checkInKhach' => (new AdminController())->checkInKhach(),
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
+    'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
     
     // Nhà cung cấp
+    'nhaCungCap/dashboard' => (new NhaCungCapController())->dashboard(),
     'nhaCungCap/baoGia' => (new NhaCungCapController())->baoGia(),
     'nhaCungCap/dichVu' => (new NhaCungCapController())->dichVu(),
     'nhaCungCap/congNo' => (new NhaCungCapController())->congNo(),
     'nhaCungCap/hopDong' => (new NhaCungCapController())->hopDong(),
+    'nhaCungCap/xacNhanBooking' => (new NhaCungCapController())->xacNhanBooking(),
+    'nhaCungCap/capNhatGia' => (new NhaCungCapController())->capNhatGia(),
     
     // Khách hàng
     'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),
