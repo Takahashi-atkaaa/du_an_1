@@ -182,6 +182,41 @@
             animation: fadeInUp 0.6s ease-out forwards;
         }
         
+        /* Background image for cards */
+        .feature-card .card-bg-image {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 1;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.4s ease;
+            z-index: 0;
+            border-radius: 1rem;
+        }
+        
+        .feature-card:hover .card-bg-image {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        /* Add overlay to make text readable */
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.65));
+            border-radius: 1rem;
+            z-index: 0;
+        }
+        
         /* Staggered animation delay */
         .feature-card:nth-child(1) { animation-delay: 0.1s; }
         .feature-card:nth-child(2) { animation-delay: 0.2s; }
@@ -216,24 +251,6 @@
             opacity: 0;
             transition: opacity 0.4s ease;
             border-radius: 1rem;
-        }
-        
-        .feature-card::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(102, 126, 234, 0.1);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-        }
-        
-        .feature-card:hover::after {
-            width: 400px;
-            height: 400px;
         }
         
         .feature-card:hover {
@@ -405,19 +422,20 @@
         
         .feature-card.logout-card h5,
         .feature-card.logout-card p {
-            color: white;
+            color: #1a202c;
             position: relative;
             z-index: 1;
         }
         
         .feature-card.logout-card .feature-icon {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
+            background: rgba(255, 255, 255, 0.3);
+            color: #1a202c;
             backdrop-filter: blur(10px);
         }
         
         .feature-card.logout-card:hover .feature-icon {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.4);
+            color: #c53030;
             transform: scale(1.15) rotate(-5deg);
         }
         
@@ -533,6 +551,7 @@
         <div class="row">
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/quanLyTour" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400');"></div>
                     <div class="feature-icon icon-blue">
                         <i class="bi bi-geo-alt"></i>
                         <span class="notification-badge">12</span>
@@ -544,6 +563,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=lichKhoiHanh/index" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400');"></div>
                     <div class="feature-icon icon-green">
                         <i class="bi bi-calendar-event"></i>
                         <span class="notification-badge">5</span>
@@ -555,6 +575,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/nhanSu" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400');"></div>
                     <div class="feature-icon icon-purple">
                         <i class="bi bi-people"></i>
                     </div>
@@ -565,6 +586,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/quanLyNguoiDung" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400');"></div>
                     <div class="feature-icon icon-orange">
                         <i class="bi bi-person-badge"></i>
                     </div>
@@ -575,6 +597,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/quanLyBooking" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
                     <div class="feature-icon icon-teal">
                         <i class="bi bi-journal-check"></i>
                         <span class="notification-badge">8</span>
@@ -586,6 +609,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=booking/datTourChoKhach" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400');"></div>
                     <div class="feature-icon icon-pink">
                         <i class="bi bi-plus-circle"></i>
                     </div>
@@ -596,6 +620,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/baoCaoTaiChinh" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=400');"></div>
                     <div class="feature-icon icon-indigo">
                         <i class="bi bi-graph-up"></i>
                     </div>
@@ -606,6 +631,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/danhGia" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400');"></div>
                     <div class="feature-icon icon-yellow">
                         <i class="bi bi-star"></i>
                         <span class="notification-badge">3</span>
@@ -617,6 +643,7 @@
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=auth/logout" class="feature-card logout-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
                     <div class="feature-icon">
                         <i class="bi bi-box-arrow-right"></i>
                     </div>
