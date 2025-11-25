@@ -144,8 +144,7 @@
                         </h1>
                         <p class="lead mb-0 opacity-75">Theo dõi diễn biến, sự cố, phản hồi và hoạt động của các tour</p>
                     </div>
-                    <a href="index.php?act=admin/formNhatKyTour" class="btn btn-light">
-                        <i class="bi bi-plus-circle"></i> Thêm nhật ký
+                  
                     </a>
                 </div>
             </div>
