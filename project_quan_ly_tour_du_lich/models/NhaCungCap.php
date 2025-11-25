@@ -29,24 +29,49 @@ class NhaCungCap
         return $stmt->fetch();
     }
 
-    // Lấy danh sách dịch vụ được phân bổ
-    public function getDichVu($nhaCungCapId, $trangThai = null) {
+    // Lấy danh sách dịch vụ được phân bổ kèm bộ lọc
+    public function getDichVu($nhaCungCapId, $filters = null) {
         $sql = "SELECT pbdv.*, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, 
                 t.ten_tour, t.tour_id
                 FROM phan_bo_dich_vu pbdv
                 LEFT JOIN lich_khoi_hanh lkh ON pbdv.lich_khoi_hanh_id = lkh.id
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id
                 WHERE pbdv.nha_cung_cap_id = ?";
-        
-        if ($trangThai) {
+        $params = [$nhaCungCapId];
+
+        if (is_array($filters)) {
+            if (!empty($filters['trang_thai'])) {
+                $sql .= " AND pbdv.trang_thai = ?";
+                $params[] = $filters['trang_thai'];
+            }
+            if (!empty($filters['loai_dich_vu'])) {
+                $sql .= " AND pbdv.loai_dich_vu = ?";
+                $params[] = $filters['loai_dich_vu'];
+            }
+            if (!empty($filters['keyword'])) {
+                $sql .= " AND (t.ten_tour LIKE ? OR pbdv.ten_dich_vu LIKE ?)";
+                $keyword = '%' . $filters['keyword'] . '%';
+                $params[] = $keyword;
+                $params[] = $keyword;
+            }
+        } elseif (!empty($filters)) {
+            // Giữ tương thích cũ: truyền chuỗi trạng thái
             $sql .= " AND pbdv.trang_thai = ?";
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$nhaCungCapId, $trangThai]);
-        } else {
-            $stmt = $this->conn->prepare($sql);
-            $stmt->execute([$nhaCungCapId]);
+            $params[] = $filters;
         }
-        
+
+        $sql .= " ORDER BY 
+                    CASE pbdv.trang_thai 
+                        WHEN 'ChoXacNhan' THEN 1
+                        WHEN 'DaXacNhan' THEN 2
+                        WHEN 'HoanTat' THEN 3
+                        WHEN 'TuChoi' THEN 4
+                        ELSE 5
+                    END,
+                    pbdv.created_at DESC";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -129,6 +154,147 @@ class NhaCungCap
                 LIMIT ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$nhaCungCapId, $limit]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Thêm nhà cung cấp mới
+    public function create($data) {
+        $sql = "INSERT INTO nha_cung_cap (ten_don_vi, loai_dich_vu, dia_chi, lien_he, mo_ta) 
+                VALUES (?, ?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([
+            $data['ten_don_vi'],
+            $data['loai_dich_vu'] ?? null,
+            $data['dia_chi'] ?? null,
+            $data['lien_he'] ?? null,
+            $data['mo_ta'] ?? null
+        ]);
+        return $this->conn->lastInsertId();
+    }
+
+    // Cập nhật nhà cung cấp
+    public function update($id, $data) {
+        $sql = "UPDATE nha_cung_cap 
+                SET ten_don_vi = ?, loai_dich_vu = ?, dia_chi = ?, lien_he = ?, mo_ta = ?
+                WHERE id_nha_cung_cap = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            $data['ten_don_vi'],
+            $data['loai_dich_vu'] ?? null,
+            $data['dia_chi'] ?? null,
+            $data['lien_he'] ?? null,
+            $data['mo_ta'] ?? null,
+            $id
+        ]);
+    }
+
+    // Xóa nhà cung cấp
+    public function delete($id) {
+        $sql = "DELETE FROM nha_cung_cap WHERE id_nha_cung_cap = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$id]);
+    }
+
+    // Tổng quan dịch vụ đã cung cấp theo loại
+    public function getServiceTypeSummary($nhaCungCapId) {
+        $sql = "SELECT 
+                    loai_dich_vu,
+                    COUNT(*) AS so_lan_cung_cap,
+                    SUM(IFNULL(gia_tien, 0)) AS tong_doanh_thu,
+                    SUM(CASE WHEN trang_thai = 'DaXacNhan' THEN 1 ELSE 0 END) AS so_da_xac_nhan,
+                    MIN(ngay_bat_dau) AS lan_dau,
+                    MAX(ngay_ket_thuc) AS lan_gan_nhat
+                FROM phan_bo_dich_vu
+                WHERE nha_cung_cap_id = ?
+                GROUP BY loai_dich_vu
+                ORDER BY so_lan_cung_cap DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$nhaCungCapId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Thống kê tổng hợp cho nhà cung cấp
+    public function getSupplierStats($nhaCungCapId) {
+        $sql = "SELECT 
+                    COUNT(*) AS tong_dich_vu,
+                    SUM(CASE WHEN trang_thai = 'DaXacNhan' THEN 1 ELSE 0 END) AS da_xac_nhan,
+                    SUM(CASE WHEN trang_thai = 'ChoXacNhan' THEN 1 ELSE 0 END) AS cho_xac_nhan,
+                    SUM(CASE WHEN trang_thai = 'TuChoi' THEN 1 ELSE 0 END) AS tu_choi,
+                    SUM(IFNULL(gia_tien, 0)) AS tong_gia_tri,
+                    MIN(created_at) AS hop_tac_tu,
+                    MAX(updated_at) AS moi_nhat
+                FROM phan_bo_dich_vu
+                WHERE nha_cung_cap_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$nhaCungCapId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Danh sách dịch vụ chi tiết theo tour
+    public function getSupplierServices($nhaCungCapId, $loaiDichVu = null, $limit = 50) {
+        $sql = "SELECT 
+                    pbdv.*,
+                    t.ten_tour,
+                    lkh.ngay_khoi_hanh,
+                    lkh.ngay_ket_thuc,
+                    lkh.id AS lich_khoi_hanh_id
+                FROM phan_bo_dich_vu pbdv
+                LEFT JOIN lich_khoi_hanh lkh ON pbdv.lich_khoi_hanh_id = lkh.id
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                WHERE pbdv.nha_cung_cap_id = ?";
+
+        $params = [$nhaCungCapId];
+
+        if ($loaiDichVu) {
+            $sql .= " AND pbdv.loai_dich_vu = ?";
+            $params[] = $loaiDichVu;
+        }
+
+        $sql .= " ORDER BY lkh.ngay_khoi_hanh DESC, pbdv.created_at DESC LIMIT ?";
+        $params[] = (int)$limit;
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    // Lấy danh sách loại dịch vụ đã từng cung cấp
+    public function getDistinctServiceTypes($nhaCungCapId) {
+        $sql = "SELECT DISTINCT loai_dich_vu 
+                FROM phan_bo_dich_vu 
+                WHERE nha_cung_cap_id = ?
+                ORDER BY loai_dich_vu";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$nhaCungCapId]);
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    }
+
+    // Thống kê báo giá theo trạng thái
+    public function getBaoGiaStats($nhaCungCapId) {
+        $sql = "SELECT 
+                    SUM(CASE WHEN trang_thai = 'ChoXacNhan' THEN 1 ELSE 0 END) AS cho_xac_nhan,
+                    SUM(CASE WHEN trang_thai = 'DaXacNhan' THEN 1 ELSE 0 END) AS da_xac_nhan,
+                    SUM(CASE WHEN trang_thai = 'TuChoi' THEN 1 ELSE 0 END) AS tu_choi,
+                    SUM(CASE WHEN trang_thai = 'HoanTat' THEN 1 ELSE 0 END) AS hoan_tat,
+                    COUNT(*) AS tong
+                FROM phan_bo_dich_vu
+                WHERE nha_cung_cap_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$nhaCungCapId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    // Danh sách lịch khởi hành sắp tới để gửi báo giá thủ công
+    public function getUpcomingLichKhoiHanh($limit = 20) {
+        $sql = "SELECT lkh.id, t.ten_tour, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc,
+                       lkh.diem_tap_trung, lkh.so_cho, lkh.trang_thai
+                FROM lich_khoi_hanh lkh
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                WHERE lkh.ngay_khoi_hanh >= DATE_SUB(CURDATE(), INTERVAL 2 DAY)
+                ORDER BY lkh.ngay_khoi_hanh ASC
+                LIMIT ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$limit]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

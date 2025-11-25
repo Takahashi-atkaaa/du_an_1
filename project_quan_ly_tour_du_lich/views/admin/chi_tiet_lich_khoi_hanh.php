@@ -568,13 +568,7 @@
                                                             <form method="POST" action="index.php?act=lichKhoiHanh/updateTrangThaiDichVu" class="d-inline">
                                                                 <input type="hidden" name="id" value="<?php echo $pb['id']; ?>">
                                                                 <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
-                                                                <select name="trang_thai" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                                    <option value="ChoXacNhan" <?php echo $pb['trang_thai'] == 'ChoXacNhan' ? 'selected' : ''; ?>>Chờ xác nhận</option>
-                                                                    <option value="DaXacNhan" <?php echo $pb['trang_thai'] == 'DaXacNhan' ? 'selected' : ''; ?>>Đã xác nhận</option>
-                                                                    <option value="TuChoi" <?php echo $pb['trang_thai'] == 'TuChoi' ? 'selected' : ''; ?>>Từ chối</option>
-                                                                    <option value="Huy" <?php echo $pb['trang_thai'] == 'Huy' ? 'selected' : ''; ?>>Hủy</option>
-                                                                    <option value="HoanTat" <?php echo $pb['trang_thai'] == 'HoanTat' ? 'selected' : ''; ?>>Hoàn tất</option>
-                                                                </select>
+                                                              
                                                             </form>
                                                         </td>
                                                         <td>

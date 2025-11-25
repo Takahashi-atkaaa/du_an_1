@@ -71,34 +71,10 @@
         </div>
         <?php endif; ?>
 
-        <!-- Navigation -->
-        <ul class="nav nav-pills mb-4">
-            <li class="nav-item">
-                <a class="nav-link active" href="index.php?act=nhaCungCap/dashboard">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?act=nhaCungCap/baoGia">
-                    <i class="bi bi-file-earmark-text"></i> Báo giá
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?act=nhaCungCap/dichVu">
-                    <i class="bi bi-briefcase"></i> Dịch vụ
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?act=nhaCungCap/congNo">
-                    <i class="bi bi-cash-stack"></i> Công nợ
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" href="index.php?act=nhaCungCap/hopDong">
-                    <i class="bi bi-file-earmark-check"></i> Lịch sử hợp tác
-                </a>
-            </li>
-        </ul>
+        <?php 
+            $currentTab = 'dashboard';
+            include __DIR__ . '/partials/main_nav.php';
+        ?>
 
         <!-- Statistics Cards -->
         <div class="row mb-4">
@@ -271,4 +247,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
 
