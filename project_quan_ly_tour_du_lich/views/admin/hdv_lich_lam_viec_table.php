@@ -140,7 +140,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <a href="index.php?act=admin/lich_khoi_hanh_chi_tiet&id=<?php echo $lich['id']; ?>" 
+                                    <a href="index.php?act=admin/chi_tiet_lich_khoi_hanh&id=<?php echo $lich['id']; ?>" 
                                        class="btn btn-sm btn-primary" title="Xem chi tiết">
                                         <i class="bi bi-eye"></i>
                                     </a>

@@ -55,7 +55,62 @@ class KhachHangController {
     }
     
     public function danhGia() {
+        // Lấy danh sách để khách hàng chọn
+        require_once 'models/Tour.php';
+        require_once 'models/NhaCungCap.php';
+        require_once 'models/NhanSu.php';
+        
+        $tourModel = new Tour();
+        $nccModel = new NhaCungCap();
+        $nhanSuModel = new NhanSu();
+        
+        $tourList = $tourModel->getAll();
+        $nccList = $nccModel->getAll();
+        $nhanSuList = $nhanSuModel->getAll();
+        
         require 'views/khach_hang/danh_gia.php';
+    }
+    
+    public function guiDanhGia() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=khachHang/danhGia');
+            exit();
+        }
+        
+        require_once 'models/DanhGia.php';
+        require_once 'models/KhachHang.php';
+        
+        // Lấy khach_hang_id từ session
+        $khachHangModel = new KhachHang();
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng';
+            header('Location: index.php?act=khachHang/danhGia');
+            exit();
+        }
+        
+        $data = [
+            'khach_hang_id' => $khachHang['khach_hang_id'],
+            'tour_id' => !empty($_POST['tour_id']) ? (int)$_POST['tour_id'] : null,
+            'nha_cung_cap_id' => !empty($_POST['nha_cung_cap_id']) ? (int)$_POST['nha_cung_cap_id'] : null,
+            'nhan_su_id' => !empty($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : null,
+            'loai_danh_gia' => $_POST['loai_danh_gia'],
+            'tieu_chi' => $_POST['tieu_chi'] ?? null,
+            'loai_dich_vu' => $_POST['loai_dich_vu'] ?? null,
+            'diem' => (int)$_POST['diem'],
+            'noi_dung' => $_POST['noi_dung']
+        ];
+        
+        $danhGiaModel = new DanhGia();
+        if ($danhGiaModel->create($data)) {
+            $_SESSION['success'] = 'Cảm ơn bạn đã đánh giá! Ý kiến của bạn rất quan trọng với chúng tôi.';
+        } else {
+            $_SESSION['error'] = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+        }
+        
+        header('Location: index.php?act=khachHang/danhGia');
+        exit();
     }
 
     private function chonAnhChinh(array $hinhAnhList) {

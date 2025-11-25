@@ -9,17 +9,20 @@ class HDV
     }
     // Lấy tất cả HDV (có thể lọc theo nhóm hoặc trạng thái)
     public function getAll($groupId = null, $availableOnly = false) {
-        $conds = ["vai_tro = 'HDV'"];
+        $conds = ["ns.vai_tro = 'HDV'"];
         $params = [];
         if ($groupId) {
-            $conds[] = 'group_id = ?';
+            $conds[] = 'ns.group_id = ?';
             $params[] = $groupId;
         }
         if ($availableOnly) {
-            $conds[] = 'is_available = 1';
+            $conds[] = 'ns.trang_thai_lam_viec = "SanSang"';
         }
         $where = implode(' AND ', $conds);
-        $sql = "SELECT * FROM nhan_su WHERE $where ORDER BY ho_ten ASC";
+        $sql = "SELECT ns.*, nd.ho_ten, nd.email, nd.so_dien_thoai, nd.avatar 
+                FROM nhan_su ns 
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id 
+                WHERE $where ORDER BY nd.ho_ten ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();

@@ -177,7 +177,7 @@ class Booking
     // Lấy booking với thông tin tour và khách hàng
     public function getBookingWithDetails($bookingId) {
         $sql = "SELECT b.*, 
-                t.ten_tour, t.gia_co_ban,
+                t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
                 kh.khach_hang_id, kh.dia_chi,
                 nd.ho_ten, nd.email, nd.so_dien_thoai
                 FROM booking b

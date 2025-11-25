@@ -29,6 +29,10 @@ class KhachHang
         return $stmt->fetch();
     }
 
+    public function findByUserId($userId) {
+        return $this->findByNguoiDungId($userId);
+    }
+
     public function insert($data) {
         $sql = "INSERT INTO khach_hang (nguoi_dung_id, dia_chi, gioi_tinh, ngay_sinh) VALUES (?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);

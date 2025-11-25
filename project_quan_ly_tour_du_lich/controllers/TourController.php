@@ -119,13 +119,17 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
+                // Redirect với thông báo thành công
+                $_SESSION['success'] = 'Tạo tour thành công!';
+                header('Location: index.php?act=admin/quanLyTour');
+                exit();
             
             } catch (Exception $e) {
                 if (method_exists($this->model->conn, 'rollBack') && $this->model->conn->inTransaction()) {
                     $this->model->conn->rollBack();
                 }
 
-                $_SESSION['error'] = $e->getMessage();
+                $_SESSION['error'] = 'Lỗi khi tạo tour: ' . $e->getMessage();
                 header('Location: index.php?act=tour/create');
                 exit();
             }
@@ -218,7 +222,8 @@ class TourController {
             }
             
        
-            
+            // Redirect với thông báo thành công
+            $_SESSION['success'] = 'Cập nhật tour thành công!';
             header('Location: index.php?act=admin/quanLyTour');
             exit();
         } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && $id) {
@@ -395,7 +400,7 @@ class TourController {
         $nhaCungCapList = $nhaCungCapModel->getAll();
         $tongChiPhi = $phanBoDichVuModel->getTongChiPhi($id);
         
-        require 'views/admin/chi_tiet_lich_khoi_hanh_tour.php';
+        require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
 
     // Phân bổ nhân sự cho lịch khởi hành
@@ -587,8 +592,6 @@ class TourController {
         $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($tourId);
         $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
         $anhChinh = $this->chonAnhChinh($hinhAnhList);
-        
-        require 'views/khach_hang/book_online.php';
     }
 
 }
