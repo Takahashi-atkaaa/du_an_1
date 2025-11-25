@@ -128,7 +128,7 @@
                         <p>Chưa có nhật ký nào cho tour này.</p>
                     <?php endif; ?>
                 </div>
-            </div>
+        </div>
         <?php else: ?>
             <p>Bạn chưa được phân công tour nào nên chưa thể ghi nhật ký.</p>
         <?php endif; ?>

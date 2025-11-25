@@ -54,18 +54,18 @@
                 <?php else: ?>
                     <div class="table-responsive">
                         <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
                                     <th>Tên đơn vị</th>
                                     <th>Loại dịch vụ</th>
                                     <th>Địa chỉ</th>
                                     <th>Liên hệ</th>
                                     <th>Đánh giá TB</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                                 <?php 
                                 $loaiDichVuMap = [
                                     'KhachSan' => 'Khách sạn',
@@ -211,10 +211,10 @@
                                     </div>
                                 </div>
                                 <?php endforeach; ?>
-                            </tbody>
-                        </table>
+                    </tbody>
+                </table>
                     </div>
-                <?php endif; ?>
+            <?php endif; ?>
             </div>
         </div>
     </div>

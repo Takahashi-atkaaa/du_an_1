@@ -119,8 +119,13 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
-                // Redirect với thông báo thành công
-                $_SESSION['success'] = 'Tạo tour thành công!';
+                $qrCreated = $this->generateTourQrFile($tourId);
+                $successMessage = 'Tạo tour thành công!';
+                if (!$qrCreated) {
+                    $successMessage .= ' (Chưa tạo được mã QR tự động, vui lòng tạo lại trong trang chi tiết tour).';
+                }
+
+                $_SESSION['success'] = $successMessage;
                 header('Location: index.php?act=admin/quanLyTour');
                 exit();
             
@@ -245,8 +250,12 @@ class TourController {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
         if ($id) {
             try {
+                $tour = $this->model->findById($id);
                 $result = $this->model->delete($id);
                 if ($result) {
+                    if ($tour && !empty($tour['qr_code_path'])) {
+                        deleteFile($tour['qr_code_path']);
+                    }
                     $_SESSION['success'] = 'Xóa tour thành công.';
                 } else {
                     $_SESSION['error'] = 'Không thể xóa tour.';
@@ -258,6 +267,33 @@ class TourController {
             $_SESSION['error'] = 'ID tour không hợp lệ.';
         }
         header('Location: index.php?act=admin/quanLyTour');
+        exit();
+    }
+
+    public function generateQr() {
+        requireRole('Admin');
+        $tourId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Tour không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Không tìm thấy tour.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+
+        $result = $this->generateTourQrFile($tourId);
+        if ($result) {
+            $_SESSION['success'] = 'Đã cập nhật mã QR cho tour.';
+        } else {
+            $_SESSION['error'] = 'Không thể tạo mã QR. Vui lòng thử lại sau.';
+        }
+
+        header('Location: index.php?act=admin/chiTietTour&id=' . $tourId);
         exit();
     }
 
@@ -310,6 +346,44 @@ class TourController {
             }
         }
         return null;
+    }
+
+    private function getTourBookingLink($tourId) {
+        return rtrim(BASE_URL, '/') . '/index.php?act=tour/show&id=' . $tourId;
+    }
+
+    private function generateTourQrFile($tourId) {
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            return false;
+        }
+
+        $qrDir = PATH_ROOT . 'public/uploads/qr/';
+        if (!is_dir($qrDir) && !mkdir($qrDir, 0777, true)) {
+            return false;
+        }
+
+        $fileName = 'tour_' . $tourId . '_' . time() . '.png';
+        $filePath = $qrDir . $fileName;
+        $bookingUrl = $this->getTourBookingLink($tourId);
+        $qrService = 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&data=' . urlencode($bookingUrl);
+        $context = stream_context_create(['http' => ['timeout' => 10]]);
+        $qrImage = @file_get_contents($qrService, false, $context);
+
+        if ($qrImage === false || file_put_contents($filePath, $qrImage) === false) {
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+            return false;
+        }
+
+        if (!empty($tour['qr_code_path'])) {
+            deleteFile($tour['qr_code_path']);
+        }
+
+        $relativePath = 'public/uploads/qr/' . $fileName;
+        $this->model->updateQrCodePath($tourId, $relativePath);
+        return $relativePath;
     }
 
     // Tạo lịch khởi hành cho tour

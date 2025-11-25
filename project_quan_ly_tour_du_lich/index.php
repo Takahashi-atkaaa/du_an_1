@@ -51,6 +51,7 @@ match ($act) {
     'tour/create' => (new TourController())->create(),
     'tour/update' => (new TourController())->update(),
     'tour/delete' => (new TourController())->delete(),
+    'tour/generateQr' => (new TourController())->generateQr(),
     // Lịch khởi hành trong tour
     'tour/taoLichKhoiHanh' => (new TourController())->taoLichKhoiHanh(),
     'tour/chiTietLichKhoiHanh' => (new TourController())->chiTietLichKhoiHanh(),

@@ -175,6 +175,7 @@
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center table-actions">
+                                        <?php $qrPath = !empty($tour['qr_code_path']) ? BASE_URL . $tour['qr_code_path'] : null; ?>
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="<?php echo BASE_URL; ?>index.php?act=tour/update&id=<?php echo urlencode($tour['tour_id']); ?>" 
                                                class="btn btn-outline-primary" title="Sửa tour">
@@ -187,6 +188,15 @@
                                             <a href="<?php echo BASE_URL; ?>index.php?act=admin/danhSachKhachTheoTour&tour_id=<?php echo urlencode($tour['tour_id']); ?>" 
                                                class="btn btn-outline-success" title="Danh sách khách">
                                                 <i class="bi bi-people"></i> Khách
+                                            </a>
+                                            <?php if ($qrPath): ?>
+                                                <a href="<?php echo $qrPath; ?>" class="btn btn-outline-secondary" target="_blank" rel="noopener" title="Xem mã QR">
+                                                    <i class="bi bi-qr-code"></i>
+                                                </a>
+                                            <?php endif; ?>
+                                            <a href="<?php echo BASE_URL; ?>index.php?act=tour/generateQr&id=<?php echo urlencode($tour['tour_id']); ?>"
+                                               class="btn btn-outline-dark" title="Tạo/Cập nhật mã QR">
+                                                <i class="bi bi-arrow-repeat"></i> QR
                                             </a>
                                         </div>
                                         <button onclick="if(confirm('Bạn có chắc muốn xóa tour này?')) window.location.href='<?php echo BASE_URL; ?>index.php?act=tour/delete&id=<?php echo urlencode($tour['tour_id']); ?>'" 
