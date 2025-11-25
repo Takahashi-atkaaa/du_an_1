@@ -186,10 +186,11 @@ class Tour
 
     // Lấy danh sách yêu cầu đặc biệt theo tour_id
     public function getYeuCauDacBietByTourId($tourId) {
-        $sql = "SELECT khach_hang_id, noi_dung 
-                FROM yeu_cau_dac_biet 
-                WHERE tour_id = ? 
-                ORDER BY id DESC";
+        $sql = "SELECT yc.*, b.khach_hang_id 
+                FROM yeu_cau_dac_biet yc
+                INNER JOIN booking b ON yc.booking_id = b.booking_id
+                WHERE b.tour_id = ? 
+                ORDER BY yc.id DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId]);
         return $stmt->fetchAll();
@@ -297,13 +298,15 @@ class Tour
     }
 
     // Thêm yêu cầu đặc biệt
-    public function insertYeuCauDacBiet($khachHangId, $tourId, $noiDung) {
-        $sql = "INSERT INTO yeu_cau_dac_biet (khach_hang_id, tour_id, noi_dung) VALUES (?, ?, ?)";
+    public function insertYeuCauDacBiet($bookingId, $noiDung, $loaiYeuCau = 'khac', $mucDoUuTien = 'trung_binh') {
+        $sql = "INSERT INTO yeu_cau_dac_biet (booking_id, loai_yeu_cau, tieu_de, mo_ta, muc_do_uu_tien) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
-            (int)$khachHangId,
-            (int)$tourId,
-            $noiDung
+            (int)$bookingId,
+            $loaiYeuCau,
+            'Yêu cầu đặc biệt',
+            $noiDung,
+            $mucDoUuTien
         ]);
     }
 

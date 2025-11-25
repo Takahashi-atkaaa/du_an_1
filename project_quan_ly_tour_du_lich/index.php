@@ -36,6 +36,9 @@ require_once './models/NhanSu.php';
 require_once './models/LichKhoiHanh.php';
 require_once './models/PhanBoNhanSu.php';
 require_once './models/PhanBoDichVu.php';
+require_once './models/HDVManagement.php';
+require_once './models/TourCheckin.php';
+require_once './models/HotelRoomAssignment.php';
 
 // Route
 $act = $_GET['act'] ?? 'auth/login';
