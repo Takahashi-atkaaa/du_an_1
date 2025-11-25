@@ -400,7 +400,7 @@ class TourController {
         $nhaCungCapList = $nhaCungCapModel->getAll();
         $tongChiPhi = $phanBoDichVuModel->getTongChiPhi($id);
         
-        require 'views/admin/chi_tiet_lich_khoi_hanh_tour.php';
+        require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
 
     // Phân bổ nhân sự cho lịch khởi hành

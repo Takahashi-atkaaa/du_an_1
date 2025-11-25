@@ -565,17 +565,23 @@
                                                         <td><small><?php echo htmlspecialchars($pb['dia_diem'] ?? 'N/A'); ?></small></td>
                                                         <td class="fw-bold text-primary"><?php echo $pb['gia_tien'] ? number_format($pb['gia_tien']) : '0'; ?> VNĐ</td>
                                                         <td>
-                                                            <form method="POST" action="index.php?act=lichKhoiHanh/updateTrangThaiDichVu" class="d-inline">
-                                                                <input type="hidden" name="id" value="<?php echo $pb['id']; ?>">
-                                                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
-                                                                <select name="trang_thai" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                                    <option value="ChoXacNhan" <?php echo $pb['trang_thai'] == 'ChoXacNhan' ? 'selected' : ''; ?>>Chờ xác nhận</option>
-                                                                    <option value="DaXacNhan" <?php echo $pb['trang_thai'] == 'DaXacNhan' ? 'selected' : ''; ?>>Đã xác nhận</option>
-                                                                    <option value="TuChoi" <?php echo $pb['trang_thai'] == 'TuChoi' ? 'selected' : ''; ?>>Từ chối</option>
-                                                                    <option value="Huy" <?php echo $pb['trang_thai'] == 'Huy' ? 'selected' : ''; ?>>Hủy</option>
-                                                                    <option value="HoanTat" <?php echo $pb['trang_thai'] == 'HoanTat' ? 'selected' : ''; ?>>Hoàn tất</option>
-                                                                </select>
-                                                            </form>
+                                                            <?php
+                                                            $badgeClass = match($pb['trang_thai'] ?? 'ChoXacNhan') {
+                                                                'DaXacNhan' => 'bg-success',
+                                                                'TuChoi' => 'bg-danger',
+                                                                'Huy' => 'bg-secondary',
+                                                                'HoanTat' => 'bg-primary',
+                                                                default => 'bg-warning text-dark'
+                                                            };
+                                                            $trangThaiText = match($pb['trang_thai'] ?? 'ChoXacNhan') {
+                                                                'DaXacNhan' => 'Đã xác nhận',
+                                                                'TuChoi' => 'Từ chối',
+                                                                'Huy' => 'Hủy',
+                                                                'HoanTat' => 'Hoàn tất',
+                                                                default => 'Chờ xác nhận'
+                                                            };
+                                                            ?>
+                                                            <span class="badge <?php echo $badgeClass; ?>"><?php echo $trangThaiText; ?></span>
                                                         </td>
                                                         <td>
                                                             <a href="index.php?act=lichKhoiHanh/deleteDichVu&id=<?php echo $pb['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 

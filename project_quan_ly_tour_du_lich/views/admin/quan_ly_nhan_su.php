@@ -170,7 +170,7 @@
             $total = count($nhan_su_list);
             $hdvCount = isset($data_by_role['HDV']) ? count($data_by_role['HDV']) : 0;
             $dieuHanhCount = isset($data_by_role['DieuHanh']) ? count($data_by_role['DieuHanh']) : 0;
-            $taiXeCount = isset($data_by_role['TaiXe']) ? count($data_by_role['TaiXe']) : 0;
+            $nhaCungCapCount = isset($data_by_role['NhaCungCap']) ? count($data_by_role['NhaCungCap']) : 0;
             ?>
             <div class="col-md-3">
                 <div class="card stats-card h-100" style="border-left-color: #0d6efd !important;">
@@ -222,11 +222,11 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center">
                             <div>
-                                <p class="text-muted mb-1 small">Tài xế</p>
-                                <h2 class="mb-0 fw-bold text-warning"><?php echo $taiXeCount; ?></h2>
+                                <p class="text-muted mb-1 small">Nhà cung cấp</p>
+                                <h2 class="mb-0 fw-bold text-warning"><?php echo $nhaCungCapCount; ?></h2>
                             </div>
                             <div class="stats-icon bg-warning bg-opacity-10 text-warning">
-                                <i class="bi bi-truck"></i>
+                                <i class="bi bi-shop"></i>
                             </div>
                         </div>
                     </div>
@@ -270,7 +270,7 @@
             $roleIcons = [
                 'HDV' => 'person-badge',
                 'DieuHanh' => 'briefcase',
-                'TaiXe' => 'truck',
+                'NhaCungCap' => 'shop',
                 'Khac' => 'three-dots'
             ];
             foreach($roles as $r): 
@@ -326,7 +326,7 @@
                                             echo match($nhan_su['vai_tro'] ?? '') {
                                                 'HDV' => 'bg-success',
                                                 'DieuHanh' => 'bg-info',
-                                                'TaiXe' => 'bg-warning text-dark',
+                                                'NhaCungCap' => 'bg-warning text-dark',
                                                 default => 'bg-secondary'
                                             };
                                         ?>">
@@ -443,7 +443,7 @@
                         <select name="vai_tro" id="vai_tro" class="form-select">
                             <option value="HDV">HDV</option>
                             <option value="DieuHanh">Điều hành</option>
-                            <option value="TaiXe">Tài xế</option>
+                            <option value="NhaCungCap">Nhà cung cấp</option>
                             <option value="Khac">Khác</option>
                         </select>
                     </div>
