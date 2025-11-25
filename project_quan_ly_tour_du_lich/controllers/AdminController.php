@@ -43,6 +43,11 @@ class AdminController {
         require 'views/admin/chi_tiet_tour_admin.php';
     }
     public function quanLyNguoiDung() {
+           require_once 'models/NguoiDung.php';
+    $nguoiDungModel = new NguoiDung();
+
+    // Lấy toàn bộ người dùng
+    $users = $nguoiDungModel->getAll();
         require 'views/admin/quan_ly_nguoi_dung.php';
     }
     
