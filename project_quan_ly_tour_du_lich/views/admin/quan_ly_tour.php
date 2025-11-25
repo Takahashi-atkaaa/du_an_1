@@ -79,8 +79,9 @@
                         <label class="form-label small text-muted">Loại tour</label>
                         <select name="loai_tour" class="form-select form-select-sm">
                             <option value="">Tất cả</option>
-                            <option value="TrongNuoc">Trong nước</option>
-                            <option value="NuocNgoai">Nước ngoài</option>
+                            <option value="TrongNuoc" <?php echo (isset($_GET['loai_tour']) && $_GET['loai_tour'] === 'TrongNuoc') ? 'selected' : ''; ?>>Trong nước</option>
+                            <option value="QuocTe" <?php echo (isset($_GET['loai_tour']) && $_GET['loai_tour'] === 'QuocTe') ? 'selected' : ''; ?>>Quốc tế</option>
+                            <option value="TheoYeuCau" <?php echo (isset($_GET['loai_tour']) && $_GET['loai_tour'] === 'TheoYeuCau') ? 'selected' : ''; ?>>Theo yêu cầu</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -150,15 +151,18 @@
                                         </small>
                                     </td>
                                     <td>
-                                        <?php if ($tour['loai_tour'] === 'TrongNuoc'): ?>
-                                            <span class="badge bg-info">
-                                                <i class="bi bi-house-door"></i> Trong nước
-                                            </span>
-                                        <?php else: ?>
-                                            <span class="badge bg-warning text-dark">
-                                                <i class="bi bi-globe"></i> Nước ngoài
-                                            </span>
-                                        <?php endif; ?>
+                                        <?php 
+                                        $loaiTourLabels = [
+                                            'TrongNuoc' => ['Trong nước', 'bg-info', 'bi-house-door'],
+                                            'QuocTe' => ['Quốc tế', 'bg-warning text-dark', 'bi-globe'],
+                                            'TheoYeuCau' => ['Theo yêu cầu', 'bg-secondary', 'bi-star']
+                                        ];
+                                        $loai = $tour['loai_tour'] ?? 'TrongNuoc';
+                                        $label = $loaiTourLabels[$loai] ?? $loaiTourLabels['TrongNuoc'];
+                                        ?>
+                                        <span class="badge <?php echo $label[1]; ?>">
+                                            <i class="bi <?php echo $label[2]; ?>"></i> <?php echo $label[0]; ?>
+                                        </span>
                                     </td>
                                     <td class="text-end">
                                         <span class="price-tag"><?php echo number_format((float)$tour['gia_co_ban'], 0, ',', '.'); ?>đ</span>
@@ -188,6 +192,11 @@
                                             <a href="<?php echo BASE_URL; ?>index.php?act=admin/danhSachKhachTheoTour&tour_id=<?php echo urlencode($tour['tour_id']); ?>" 
                                                class="btn btn-outline-success" title="Danh sách khách">
                                                 <i class="bi bi-people"></i> Khách
+                                            </a>
+                                            <a href="<?php echo BASE_URL; ?>index.php?act=tour/clone&id=<?php echo urlencode($tour['tour_id']); ?>" 
+                                               class="btn btn-outline-warning" title="Sao chép tour" 
+                                               onclick="return confirm('Bạn có muốn sao chép tour này?');">
+                                                <i class="bi bi-files"></i> Clone
                                             </a>
                                             <?php if ($qrPath): ?>
                                                 <a href="<?php echo $qrPath; ?>" class="btn btn-outline-secondary" target="_blank" rel="noopener" title="Xem mã QR">

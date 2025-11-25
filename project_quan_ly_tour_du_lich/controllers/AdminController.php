@@ -13,7 +13,32 @@ class AdminController {
     
     public function quanLyTour() {
         $tourModel = new Tour();
-        $tours = $tourModel->getAll();
+        
+        // Lọc theo loại tour
+        $loaiTour = $_GET['loai_tour'] ?? '';
+        $trangThai = $_GET['trang_thai'] ?? '';
+        $search = trim($_GET['search'] ?? '');
+        
+        if (!empty($loaiTour) || !empty($trangThai) || !empty($search)) {
+            $conditions = [];
+            if (!empty($loaiTour)) {
+                $conditions['loai_tour'] = $loaiTour;
+            }
+            if (!empty($trangThai)) {
+                $conditions['trang_thai'] = $trangThai;
+            }
+            $tours = $tourModel->find($conditions);
+            
+            // Lọc theo tìm kiếm nếu có
+            if (!empty($search)) {
+                $tours = array_filter($tours, function($tour) use ($search) {
+                    return stripos($tour['ten_tour'] ?? '', $search) !== false;
+                });
+            }
+        } else {
+            $tours = $tourModel->getAll();
+        }
+        
         require 'views/admin/quan_ly_tour.php';
     }
     
@@ -65,6 +90,32 @@ class AdminController {
     }
     
     public function baoCaoTaiChinh() {
+        $giaoDichModel = new GiaoDich();
+        $tourModel = new Tour();
+        
+        // Lọc theo thời gian
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        // Thống kê tổng hợp
+        $thongKeTongHop = $giaoDichModel->getThongKeTongHop($startDate, $endDate);
+        
+        // Thống kê theo từng tour
+        $thongKeTheoTour = $giaoDichModel->getThongKeTheoTour($startDate, $endDate);
+        
+        // Chi tiết giao dịch
+        $giaoDichList = [];
+        if ($tourId > 0) {
+            $giaoDichList = $giaoDichModel->getByTourId($tourId);
+            $thongKeTour = $giaoDichModel->getThongKeByTour($tourId);
+        } else {
+            $giaoDichList = $giaoDichModel->getAll();
+        }
+        
+        // Danh sách tour để filter
+        $tours = $tourModel->getAll();
+        
         require 'views/admin/bao_cao_tai_chinh.php';
     }
     public function addNhacungcap() {
