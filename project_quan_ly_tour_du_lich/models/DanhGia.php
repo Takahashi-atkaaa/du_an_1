@@ -298,7 +298,7 @@ class DanhGia {
         $sql = "SELECT dg.*, 
                        nd.ho_ten as ten_khach_hang,
                        nd.email as email_khach_hang,
-                       nd.dien_thoai as dien_thoai_khach_hang,
+                       nd.so_dien_thoai as dien_thoai_khach_hang,
                        t.ten_tour
                 FROM danh_gia dg
                 LEFT JOIN khach_hang k ON dg.khach_hang_id = k.khach_hang_id
