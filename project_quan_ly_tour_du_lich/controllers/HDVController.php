@@ -310,18 +310,24 @@ class HDVController {
         $tour_id = $_GET['tour_id'] ?? 0;
         $edit_id = $_GET['edit_id'] ?? 0;
         
+        // Xóa thông báo lỗi cũ về quyền
+        if (isset($_SESSION['error']) && strpos($_SESSION['error'], 'quyền') !== false) {
+            unset($_SESSION['error']);
+        }
+        
         if (!$userId) {
             header('Location: index.php?act=auth/login');
             exit();
         }
         
-        $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? AND vai_tro = 'HDV' LIMIT 1";
+        // Lấy nhan_su_id - không kiểm tra vai_tro
+        $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? LIMIT 1";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
         $stmt->execute([$userId]);
         $nhanSu = $stmt->fetch();
         
         if (!$nhanSu) {
-            $_SESSION['error'] = 'Không tìm thấy thông tin HDV.';
+            $_SESSION['error'] = 'Không tìm thấy thông tin nhân sự.';
             header('Location: index.php?act=hdv/tours');
             exit();
         }
@@ -332,22 +338,25 @@ class HDVController {
         $edit_entry = null;
         
         if ($tour_id > 0) {
-            // Kiểm tra quyền
-            $sql = "SELECT lkh.*, t.ten_tour 
+            // Lấy tour - không kiểm tra quyền
+            $sql = "SELECT lkh.*, t.ten_tour, t.tour_id as tour_table_id
                     FROM lich_khoi_hanh lkh 
                     LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                    WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                    WHERE lkh.id = ?";
             $stmt = $this->nhanSuModel->conn->prepare($sql);
-            $stmt->execute([$tour_id, $nhanSuId]);
+            $stmt->execute([$tour_id]);
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
             
-            if ($tour) {
-                // Lấy nhật ký tour
+            if (!$tour) {
+                $_SESSION['error'] = 'Tour không tồn tại (ID: ' . $tour_id . ')';
+                $tour_id = 0;
+            } else {
+                // Lấy nhật ký tour - sử dụng tour_id từ bảng tour
                 $sql = "SELECT * FROM nhat_ky_tour 
                         WHERE tour_id = ? AND nhan_su_id = ?
                         ORDER BY ngay_ghi DESC, id DESC";
                 $stmt = $this->nhanSuModel->conn->prepare($sql);
-                $stmt->execute([$tour['tour_id'], $nhanSuId]);
+                $stmt->execute([$tour['tour_table_id'], $nhanSuId]);
                 $nhat_ky_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 
                 // Nếu có edit_id, lấy dữ liệu để sửa
@@ -360,14 +369,13 @@ class HDVController {
             }
         }
         
-        // Lấy danh sách tour
+        // Lấy danh sách tour - không kiểm tra quyền
         $sql = "SELECT lkh.id, lkh.ngay_khoi_hanh, t.ten_tour 
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                WHERE lkh.hdv_id = ?
                 ORDER BY lkh.ngay_khoi_hanh DESC";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
+        $stmt->execute();
         $tours_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         require 'views/hdv/nhat_ky.php';
@@ -889,22 +897,22 @@ class HDVController {
      * Lưu nhật ký tour
      */
     public function saveNhatKy() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            $_SESSION['error'] = 'Không có quyền';
-            header('Location: index.php?act=hdv/tours');
+        if (!isset($_SESSION['user_id'])) {
+            $_SESSION['error'] = 'Vui lòng đăng nhập';
+            header('Location: index.php?act=auth/login');
             exit;
         }
         
         $userId = $_SESSION['user_id'];
         
-        // Lấy nhan_su_id
-        $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? AND vai_tro = 'HDV' LIMIT 1";
+        // Lấy nhan_su_id - không kiểm tra vai_tro
+        $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? LIMIT 1";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
         $stmt->execute([$userId]);
         $nhanSu = $stmt->fetch();
         
         if (!$nhanSu) {
-            $_SESSION['error'] = 'Không tìm thấy thông tin HDV';
+            $_SESSION['error'] = 'Không tìm thấy thông tin nhân sự';
             header('Location: index.php?act=hdv/tours');
             exit;
         }
@@ -913,17 +921,24 @@ class HDVController {
         $tour_id = $_POST['tour_id'] ?? 0;
         $entry_id = $_POST['entry_id'] ?? 0;
         
-        // Kiểm tra quyền với tour
-        $sql = "SELECT lkh.*, t.tour_id FROM lich_khoi_hanh lkh 
+        if ($tour_id <= 0) {
+            $_SESSION['error'] = 'Thiếu thông tin tour';
+            header('Location: index.php?act=hdv/nhat_ky');
+            exit;
+        }
+        
+        // Lấy tour - không kiểm tra quyền
+        $sql = "SELECT lkh.*, t.tour_id as tour_table_id, t.ten_tour 
+                FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                WHERE lkh.id = ?";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$tour_id, $nhanSuId]);
+        $stmt->execute([$tour_id]);
         $tour = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$tour) {
-            $_SESSION['error'] = 'Không có quyền truy cập tour này';
-            header('Location: index.php?act=hdv/tours');
+            $_SESSION['error'] = 'Tour không tồn tại (ID: ' . $tour_id . ')';
+            header('Location: index.php?act=hdv/nhat_ky&tour_id=' . $tour_id);
             exit;
         }
         
@@ -949,7 +964,7 @@ class HDVController {
         }
         
         $data = [
-            'tour_id' => $tour['tour_id'],
+            'tour_id' => $tour['tour_table_id'], // Sử dụng tour_id từ bảng tour
             'nhan_su_id' => $nhanSuId,
             'loai_nhat_ky' => $_POST['loai_nhat_ky'] ?? 'hanh_trinh',
             'tieu_de' => $_POST['tieu_de'] ?? '',
