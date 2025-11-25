@@ -20,6 +20,7 @@ require_once './controllers/HDVController.php';
 require_once './controllers/KhachHangController.php';
 require_once './controllers/NhaCungCapController.php';
 require_once './controllers/LichKhoiHanhController.php';
+require_once './controllers/DanhGiaController.php';
 
 // Require toàn bộ file Models
 require_once './models/NguoiDung.php';
@@ -101,7 +102,6 @@ match ($act) {
     'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
-    'admin/danhGia' => (new AdminController())->danhGia(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
@@ -169,6 +169,7 @@ match ($act) {
     'khachHang/chiTietTour' => (new KhachHangController())->chiTietTour(),
     'khachHang/datTour' => (new KhachHangController())->datTour(),
     'khachHang/danhGia' => (new KhachHangController())->danhGia(),
+    'khachHang/guiDanhGia' => (new KhachHangController())->guiDanhGia(),
     'khachHang/traCuu' => (new KhachHangController())->traCuu(),
 
     // Nhân sự
@@ -186,6 +187,14 @@ match ($act) {
     'admin/hdv_get_schedule' => (new AdminController())->hdvGetSchedule(),
     'admin/hdv_send_notification' => (new AdminController())->hdvSendNotification(),
     'admin/hdv_detail' => (new AdminController())->hdvDetail(),
+    
+    // Quản lý đánh giá & phản hồi
+    'admin/danhGia' => (new DanhGiaController())->index(),
+    'admin/danhGia/chiTiet' => (new DanhGiaController())->chiTiet(),
+    'admin/danhGia/traLoi' => (new DanhGiaController())->traLoi(),
+    'admin/danhGia/xoa' => (new DanhGiaController())->xoa(),
+    'admin/danhGia/baoCao' => (new DanhGiaController())->baoCao(),
+    'admin/danhGia/export' => (new DanhGiaController())->export(),
     
     // Default
     default => die("Route không tồn tại: $act")
