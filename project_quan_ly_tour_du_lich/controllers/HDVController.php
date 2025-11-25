@@ -499,7 +499,7 @@ class HDVController {
         // Lấy chi tiết tour và kiểm tra quyền
         $sql = "SELECT lkh.*, t.* 
                 FROM lich_khoi_hanh lkh 
-                LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
                 WHERE lkh.id = ? AND lkh.hdv_id = ?";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
         $stmt->execute([$tour_id, $nhanSu['nhan_su_id']]);

@@ -562,6 +562,17 @@
             </div>
             
             <div class="col-md-6 col-lg-4">
+                <a href="index.php?act=admin/nhaCungCap" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400');"></div>
+                    <div class="feature-icon icon-purple">
+                        <i class="bi bi-building-gear"></i>
+                    </div>
+                    <h5>Quản lý Nhà cung cấp</h5>
+                    <p>Theo dõi báo giá, dịch vụ và duyệt yêu cầu từ nhà cung cấp</p>
+                </a>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=lichKhoiHanh/index" class="feature-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400');"></div>
                     <div class="feature-icon icon-green">
