@@ -117,6 +117,7 @@ match ($act) {
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
     'hdv/tours' => (new HDVController())->tours(),
+    'hdv/xacNhanPhanBo' => (new HDVController())->xacNhanPhanBo(),
     'hdv/tour_detail' => (new HDVController())->tourDetail(),
     'hdv/khach' => (new HDVController())->khach(),
     'hdv/nhat_ky' => (new HDVController())->nhatKy(),
@@ -165,6 +166,7 @@ match ($act) {
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
     'admin/updateNhaCungCap' => (new AdminController())->updateNhaCungCap(),
+    'admin/chiTietDichVu' => (new AdminController())->chiTietDichVu(),
     'admin/supplierServiceAction' => (new AdminController())->supplierServiceAction(),
     
     // Nhà cung cấp
@@ -179,6 +181,7 @@ match ($act) {
     'nhaCungCap/updateDichVu' => (new NhaCungCapController())->updateDichVu(),
     'nhaCungCap/deleteDichVu' => (new NhaCungCapController())->deleteDichVu(),
     'nhaCungCap/storeBaoGiaThuCong' => (new NhaCungCapController())->storeBaoGiaThuCong(),
+    'nhaCungCap/chiTietDichVu' => (new NhaCungCapController())->chiTietDichVu(),
     
     // Khách hàng
     'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),

@@ -143,6 +143,7 @@
                                 <th>Ngày kết thúc</th>
                                 <th>Giá tiền</th>
                                 <th>Trạng thái</th>
+                                <th>Thao tác</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -178,6 +179,12 @@
                                                 <br><small class="text-muted">Đợi điều hành phê duyệt</small>
                                             <?php endif; ?>
                                         </span>
+                                    </td>
+                                    <td>
+                                        <a href="index.php?act=nhaCungCap/chiTietDichVu&id=<?php echo $dv['id']; ?>" 
+                                           class="btn btn-sm btn-info" title="Xem chi tiết">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>

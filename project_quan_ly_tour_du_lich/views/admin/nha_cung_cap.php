@@ -313,6 +313,10 @@ $statusMap = [
                                     <td><?php echo $service['ghi_chu'] ? nl2br(htmlspecialchars($service['ghi_chu'])) : '<span class="text-muted">-</span>'; ?></td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
+                                            <a href="index.php?act=admin/chiTietDichVu&id=<?php echo $service['id']; ?>&ncc_id=<?php echo $selectedSupplier['id_nha_cung_cap'] ?? ''; ?>" 
+                                               class="btn btn-info text-white" title="Xem chi tiết">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
                                             <?php if ($service['trang_thai'] === 'ChoXacNhan'): ?>
                                                 <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#approveServiceModal<?php echo $service['id']; ?>">
                                                     <i class="bi bi-check-circle"></i>
@@ -327,8 +331,8 @@ $statusMap = [
                                                 </button>
                                             <?php endif; ?>
                                             <?php if (!empty($service['ghi_chu'])): ?>
-                                                <button type="button" class="btn btn-info text-white" data-bs-toggle="modal" data-bs-target="#noteServiceModal<?php echo $service['id']; ?>">
-                                                    <i class="bi bi-info-circle"></i>
+                                                <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#noteServiceModal<?php echo $service['id']; ?>">
+                                                    <i class="bi bi-file-text"></i>
                                                 </button>
                                             <?php endif; ?>
                                         </div>

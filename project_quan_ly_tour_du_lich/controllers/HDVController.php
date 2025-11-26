@@ -450,11 +450,13 @@ class HDVController {
         $nhanSuId = $nhanSu['nhan_su_id'];
         $filter_status = $_GET['status'] ?? 'all';
         
-        // Lấy danh sách tour
-        $sql = "SELECT lkh.*, t.ten_tour 
+        // Lấy danh sách tour đã xác nhận (HDV chính hoặc phân bổ đã xác nhận)
+        $sql = "SELECT DISTINCT lkh.*, t.ten_tour, 
+                pbn.id as phan_bo_id, pbn.trang_thai as phan_bo_trang_thai, pbn.vai_tro as phan_bo_vai_tro
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                WHERE lkh.hdv_id = ?";
+                LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                WHERE (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
         
         if ($filter_status !== 'all') {
             $sql .= " AND lkh.trang_thai = ?";
@@ -462,15 +464,83 @@ class HDVController {
         
         $sql .= " ORDER BY lkh.ngay_khoi_hanh DESC";
         
-        $stmt = $this->nhanSuModel->conn->prepare($sql);
+        $params = [$nhanSuId, $nhanSuId, $nhanSuId];
         if ($filter_status !== 'all') {
-            $stmt->execute([$nhanSuId, $filter_status]);
-        } else {
-            $stmt->execute([$nhanSuId]);
+            $params[] = $filter_status;
         }
+        
+        $stmt = $this->nhanSuModel->conn->prepare($sql);
+        $stmt->execute($params);
         $tours = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
+        // Lấy danh sách phân bổ chờ xác nhận
+        $sql = "SELECT pbn.*, lkh.id as lich_khoi_hanh_id, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc,
+                t.ten_tour, t.tour_id
+                FROM phan_bo_nhan_su pbn
+                LEFT JOIN lich_khoi_hanh lkh ON pbn.lich_khoi_hanh_id = lkh.id
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                WHERE pbn.nhan_su_id = ? AND pbn.trang_thai = 'ChoXacNhan'
+                ORDER BY lkh.ngay_khoi_hanh ASC";
+        $stmt = $this->nhanSuModel->conn->prepare($sql);
+        $stmt->execute([$nhanSuId]);
+        $phanBoChoXacNhan = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
         require 'views/hdv/tours.php';
+    }
+    
+    /**
+     * Xác nhận hoặc từ chối phân bổ nhân sự
+     */
+    public function xacNhanPhanBo() {
+        $userId = $_SESSION['user_id'] ?? null;
+        if (!$userId) {
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+        
+        $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? AND vai_tro = 'HDV' LIMIT 1";
+        $stmt = $this->nhanSuModel->conn->prepare($sql);
+        $stmt->execute([$userId]);
+        $nhanSu = $stmt->fetch();
+        
+        if (!$nhanSu) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin HDV.';
+            header('Location: index.php?act=hdv/tours');
+            exit();
+        }
+        
+        $nhanSuId = $nhanSu['nhan_su_id'];
+        $phanBoId = $_POST['phan_bo_id'] ?? $_GET['phan_bo_id'] ?? 0;
+        $action = $_POST['action'] ?? $_GET['action'] ?? ''; // 'xac_nhan' hoặc 'tu_choi'
+        
+        if ($phanBoId <= 0 || !in_array($action, ['xac_nhan', 'tu_choi'])) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            header('Location: index.php?act=hdv/tours');
+            exit();
+        }
+        
+        // Kiểm tra phân bổ có thuộc về HDV này không
+        $phanBo = $this->phanBoNhanSuModel->findById($phanBoId);
+        if (!$phanBo || $phanBo['nhan_su_id'] != $nhanSuId) {
+            $_SESSION['error'] = 'Bạn không có quyền thực hiện thao tác này.';
+            header('Location: index.php?act=hdv/tours');
+            exit();
+        }
+        
+        // Cập nhật trạng thái
+        $trangThai = ($action === 'xac_nhan') ? 'DaXacNhan' : 'TuChoi';
+        $result = $this->phanBoNhanSuModel->updateTrangThai($phanBoId, $trangThai);
+        
+        if ($result) {
+            $_SESSION['success'] = $action === 'xac_nhan' 
+                ? 'Đã xác nhận phân bổ nhân sự thành công!' 
+                : 'Đã từ chối phân bổ nhân sự.';
+        } else {
+            $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật trạng thái.';
+        }
+        
+        header('Location: index.php?act=hdv/tours');
+        exit();
     }
     
     /**
@@ -496,17 +566,20 @@ class HDVController {
             exit();
         }
         
-        // Lấy chi tiết tour và kiểm tra quyền
-        $sql = "SELECT lkh.*, t.* 
+        // Lấy chi tiết tour và kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
+        $nhanSuId = $nhanSu['nhan_su_id'];
+        $sql = "SELECT DISTINCT lkh.*, t.* 
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id
-                WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                WHERE lkh.id = ? 
+                AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$tour_id, $nhanSu['nhan_su_id']]);
+        $stmt->execute([$nhanSuId, $tour_id, $nhanSuId, $nhanSuId]);
         $tour = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$tour) {
-            $_SESSION['error'] = 'Không tìm thấy tour hoặc bạn không có quyền truy cập';
+            $_SESSION['error'] = 'Không tìm thấy tour hoặc bạn không có quyền truy cập tour này. Tour phải được xác nhận trước khi xem.';
             header('Location: index.php?act=hdv/tours');
             exit();
         }
@@ -542,13 +615,15 @@ class HDVController {
         $tour = null;
         
         if ($tour_id > 0) {
-            // Kiểm tra quyền
-            $sql = "SELECT lkh.*, t.ten_tour 
+            // Kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
+            $sql = "SELECT DISTINCT lkh.*, t.ten_tour 
                     FROM lich_khoi_hanh lkh 
                     LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                    WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                    LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                    WHERE lkh.id = ? 
+                    AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
             $stmt = $this->nhanSuModel->conn->prepare($sql);
-            $stmt->execute([$tour_id, $nhanSuId]);
+            $stmt->execute([$nhanSuId, $tour_id, $nhanSuId, $nhanSuId]);
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($tour) {
@@ -687,14 +762,24 @@ class HDVController {
         $khach_list = [];
         
         if ($tour_id > 0) {
-            // Kiểm tra quyền
-            $sql = "SELECT lkh.*, t.ten_tour, t.tour_id 
+            // Kiểm tra xem HDV có được phân bổ vào tour/lịch khởi hành này và đã xác nhận không
+            // Kiểm tra qua: lich_khoi_hanh.hdv_id HOẶC phan_bo_nhan_su đã xác nhận
+            $sql = "SELECT DISTINCT lkh.*, t.ten_tour, t.tour_id 
                     FROM lich_khoi_hanh lkh 
                     LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                    WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                    LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                    WHERE (lkh.tour_id = ? OR lkh.id = ?)
+                    AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))
+                    LIMIT 1";
             $stmt = $this->nhanSuModel->conn->prepare($sql);
-            $stmt->execute([$tour_id, $nhanSuId]);
+            $stmt->execute([$nhanSuId, $tour_id, $tour_id, $nhanSuId, $nhanSuId]);
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$tour) {
+                $_SESSION['error'] = 'Bạn không có quyền truy cập tour này hoặc tour chưa được xác nhận.';
+                header('Location: index.php?act=hdv/checkin');
+                exit();
+            }
             
             if ($tour) {
                 // Lấy danh sách điểm check-in
@@ -730,14 +815,17 @@ class HDVController {
             }
         }
         
-        // Lấy danh sách tour đang chạy
-        $sql = "SELECT lkh.id, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, t.ten_tour 
+        // Lấy danh sách tour đang chạy mà HDV được phân bổ và đã xác nhận
+        // Kiểm tra qua: lich_khoi_hanh.hdv_id HOẶC phan_bo_nhan_su đã xác nhận
+        $sql = "SELECT DISTINCT lkh.id, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, t.ten_tour, t.tour_id
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                WHERE lkh.hdv_id = ? AND lkh.trang_thai IN ('DangChay', 'SapKhoiHanh')
+                LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                WHERE lkh.trang_thai IN ('DangChay', 'SapKhoiHanh')
+                AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))
                 ORDER BY lkh.ngay_khoi_hanh ASC";
         $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
+        $stmt->execute([$nhanSuId, $nhanSuId, $nhanSuId]);
         $tours_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
         
         require 'views/hdv/checkin.php';
@@ -747,20 +835,20 @@ class HDVController {
      * Lưu điểm check-in
      */
     public function saveDiemCheckin() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            $_SESSION['error'] = 'Không có quyền';
-            header('Location: index.php?act=hdv/tours');
-            exit;
-        }
-        
         $tour_id = $_POST['tour_id'] ?? 0;
         $diem_id = $_POST['diem_id'] ?? 0;
+        
+        // Normalize thoi_gian_du_kien: chuyển chuỗi rỗng thành NULL
+        $thoiGianDuKien = $_POST['thoi_gian_du_kien'] ?? null;
+        if ($thoiGianDuKien === '' || $thoiGianDuKien === null) {
+            $thoiGianDuKien = null;
+        }
         
         $data = [
             'tour_id' => $tour_id,
             'ten_diem' => $_POST['ten_diem'] ?? '',
             'loai_diem' => $_POST['loai_diem'] ?? 'tap_trung',
-            'thoi_gian_du_kien' => $_POST['thoi_gian_du_kien'] ?? null,
+            'thoi_gian_du_kien' => $thoiGianDuKien,
             'ghi_chu' => $_POST['ghi_chu'] ?? null,
             'thu_tu' => $_POST['thu_tu'] ?? 1
         ];
@@ -801,12 +889,6 @@ class HDVController {
      * Xóa điểm check-in
      */
     public function deleteDiemCheckin() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            $_SESSION['error'] = 'Không có quyền';
-            header('Location: index.php?act=hdv/tours');
-            exit;
-        }
-        
         $diem_id = $_GET['id'] ?? 0;
         $tour_id = $_GET['tour_id'] ?? 0;
         
@@ -827,12 +909,7 @@ class HDVController {
      * Lưu trạng thái check-in của khách
      */
     public function saveCheckinKhach() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            echo json_encode(['success' => false, 'message' => 'Không có quyền']);
-            exit;
-        }
-        
-        $userId = $_SESSION['user_id'];
+        $userId = $_SESSION['user_id'] ?? null;
         
         // Lấy nhan_su_id
         $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? AND vai_tro = 'HDV' LIMIT 1";
@@ -910,13 +987,15 @@ class HDVController {
         $yeu_cau_list = [];
         
         if ($tour_id > 0) {
-            // Kiểm tra quyền
-            $sql = "SELECT lkh.*, t.ten_tour, t.tour_id 
+            // Kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
+            $sql = "SELECT DISTINCT lkh.*, t.ten_tour, t.tour_id 
                     FROM lich_khoi_hanh lkh 
                     LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                    WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                    LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                    WHERE lkh.id = ? 
+                    AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
             $stmt = $this->nhanSuModel->conn->prepare($sql);
-            $stmt->execute([$tour_id, $nhanSuId]);
+            $stmt->execute([$nhanSuId, $tour_id, $nhanSuId, $nhanSuId]);
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($tour) {
@@ -965,13 +1044,7 @@ class HDVController {
      * Lưu yêu cầu đặc biệt
      */
     public function saveYeuCauDacBiet() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            $_SESSION['error'] = 'Không có quyền';
-            header('Location: index.php?act=hdv/tours');
-            exit;
-        }
-        
-        $userId = $_SESSION['user_id'];
+        $userId = $_SESSION['user_id'] ?? null;
         $tour_id = $_POST['tour_id'] ?? 0;
         $yeu_cau_id = $_POST['yeu_cau_id'] ?? 0;
         
@@ -1060,12 +1133,6 @@ class HDVController {
      * Xóa yêu cầu đặc biệt
      */
     public function deleteYeuCauDacBiet() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            $_SESSION['error'] = 'Không có quyền';
-            header('Location: index.php?act=hdv/tours');
-            exit;
-        }
-        
         $yeu_cau_id = $_GET['id'] ?? 0;
         $tour_id = $_GET['tour_id'] ?? 0;
         
@@ -1110,13 +1177,15 @@ class HDVController {
         $tour = null;
         
         if ($tour_id > 0) {
-            // Kiểm tra quyền
-            $sql = "SELECT lkh.*, t.ten_tour 
+            // Kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
+            $sql = "SELECT DISTINCT lkh.*, t.ten_tour 
                     FROM lich_khoi_hanh lkh 
                     LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                    WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                    LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                    WHERE lkh.id = ? 
+                    AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
             $stmt = $this->nhanSuModel->conn->prepare($sql);
-            $stmt->execute([$tour_id, $nhanSuId]);
+            $stmt->execute([$nhanSuId, $tour_id, $nhanSuId, $nhanSuId]);
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
         }
         
@@ -1305,13 +1374,7 @@ class HDVController {
      * Xóa nhật ký tour
      */
     public function deleteNhatKy() {
-        if (!isset($_SESSION['user_id']) || $_SESSION['vai_tro'] !== 'HDV') {
-            $_SESSION['error'] = 'Không có quyền';
-            header('Location: index.php?act=hdv/tours');
-            exit;
-        }
-        
-        $userId = $_SESSION['user_id'];
+        $userId = $_SESSION['user_id'] ?? null;
         $entry_id = $_GET['id'] ?? 0;
         $tour_id = $_GET['tour_id'] ?? 0;
         
@@ -1396,12 +1459,15 @@ class HDVController {
         
         $tour = null;
         if ($tour_id) {
-            $sql = "SELECT lkh.id, lkh.tour_id, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, t.ten_tour, t.tour_id
+            // Kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
+            $sql = "SELECT DISTINCT lkh.id, lkh.tour_id, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, t.ten_tour, t.tour_id
                     FROM lich_khoi_hanh lkh
                     LEFT JOIN tour t ON lkh.tour_id = t.tour_id
-                    WHERE lkh.id = ? AND lkh.hdv_id = ?";
+                    LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                    WHERE lkh.id = ? 
+                    AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
             $stmt = $this->nhanSuModel->conn->prepare($sql);
-            $stmt->execute([$tour_id, $nhanSuId]);
+            $stmt->execute([$nhanSuId, $tour_id, $nhanSuId, $nhanSuId]);
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
         }
         

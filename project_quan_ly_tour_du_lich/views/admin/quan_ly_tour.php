@@ -162,7 +162,7 @@
                                         ?>
                                         <span class="badge <?php echo $label[1]; ?>">
                                             <i class="bi <?php echo $label[2]; ?>"></i> <?php echo $label[0]; ?>
-                                        </span>
+                                            </span>
                                     </td>
                                     <td class="text-end">
                                         <span class="price-tag"><?php echo number_format((float)$tour['gia_co_ban'], 0, ',', '.'); ?>đ</span>

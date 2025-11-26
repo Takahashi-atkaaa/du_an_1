@@ -211,6 +211,35 @@ class AdminController {
         header('Location: index.php?act=admin/nhaCungCap');
         exit();
     }
+    
+    // Xem chi tiết dịch vụ
+    public function chiTietDichVu() {
+        $nhaCungCapModel = new NhaCungCap();
+        $dichVuId = $_GET['id'] ?? 0;
+        $nccId = $_GET['ncc_id'] ?? null;
+        
+        if ($dichVuId <= 0) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Admin có thể xem tất cả dịch vụ, không cần kiểm tra nhaCungCapId
+        $dichVu = $nhaCungCapModel->getDichVuById($dichVuId);
+        
+        if (!$dichVu) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Lấy thông tin nhà cung cấp nếu chưa có
+        if ($dichVu['nha_cung_cap_id'] && !$nccId) {
+            $nccId = $dichVu['nha_cung_cap_id'];
+        }
+        
+        require 'views/admin/chi_tiet_dich_vu.php';
+    }
 
     public function supplierServiceAction() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
