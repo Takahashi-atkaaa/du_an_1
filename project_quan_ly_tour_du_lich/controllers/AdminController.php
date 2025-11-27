@@ -36,7 +36,7 @@ class AdminController {
                 });
             }
         } else {
-            $tours = $tourModel->getAll();
+        $tours = $tourModel->getAll();
         }
         
         require 'views/admin/quan_ly_tour.php';

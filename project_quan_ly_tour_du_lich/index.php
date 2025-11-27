@@ -184,12 +184,19 @@ match ($act) {
     'nhaCungCap/chiTietDichVu' => (new NhaCungCapController())->chiTietDichVu(),
     
     // Khách hàng
+    'khachHang/dashboard' => (new KhachHangController())->dashboard(),
     'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),
     'khachHang/chiTietTour' => (new KhachHangController())->chiTietTour(),
     'khachHang/datTour' => (new KhachHangController())->datTour(),
     'khachHang/danhGia' => (new KhachHangController())->danhGia(),
     'khachHang/guiDanhGia' => (new KhachHangController())->guiDanhGia(),
     'khachHang/traCuu' => (new KhachHangController())->traCuu(),
+    'khachHang/hoaDon' => (new KhachHangController())->hoaDon(),
+    'khachHang/lichTrinhTour' => (new KhachHangController())->lichTrinhTour(),
+    'khachHang/thongBao' => (new KhachHangController())->thongBao(),
+    'khachHang/capNhatThongTin' => (new KhachHangController())->capNhatThongTin(),
+    'khachHang/guiYeuCauHoTro' => (new KhachHangController())->guiYeuCauHoTro(),
+    'khachHang/thanhToan' => (new KhachHangController())->thanhToan(),
 
     // Nhân sự
     'admin/nhanSu' => (new AdminController())->nhanSu(),

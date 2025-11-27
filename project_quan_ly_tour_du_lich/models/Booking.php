@@ -256,4 +256,37 @@ class Booking
         $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
         return $stmt->fetchAll();
     }
+
+    // Lấy booking theo khách hàng ID
+    public function getByKhachHangId($khachHangId) {
+        $sql = "SELECT b.*, 
+                t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
+                t.trang_thai as tour_trang_thai,
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                FROM booking b
+                LEFT JOIN tour t ON b.tour_id = t.tour_id
+                LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND b.ngay_khoi_hanh = lkh.ngay_khoi_hanh
+                WHERE b.khach_hang_id = ?
+                ORDER BY b.ngay_dat DESC, b.booking_id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$khachHangId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy booking theo user ID (nguoi_dung_id)
+    public function getByUserId($userId) {
+        $sql = "SELECT b.*, 
+                t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
+                t.trang_thai as tour_trang_thai,
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                FROM booking b
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN tour t ON b.tour_id = t.tour_id
+                LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND b.ngay_khoi_hanh = lkh.ngay_khoi_hanh
+                WHERE kh.nguoi_dung_id = ?
+                ORDER BY b.ngay_dat DESC, b.booking_id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$userId]);
+        return $stmt->fetchAll();
+    }
 }
