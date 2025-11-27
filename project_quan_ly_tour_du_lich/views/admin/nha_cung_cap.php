@@ -345,7 +345,7 @@ $statusMap = [
         <?php endif; ?>
             </div>
 
-        </div>
+            </div>
 
     <?php if (!empty($supplierServices)): ?>
         <?php foreach ($supplierServices as $service): ?>
