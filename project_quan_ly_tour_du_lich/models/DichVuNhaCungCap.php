@@ -46,6 +46,22 @@ class DichVuNhaCungCap
         return $this->conn->lastInsertId();
     }
 
+    public function getBySupplierIds(array $supplierIds)
+    {
+        $supplierIds = array_filter(array_map('intval', $supplierIds));
+        if (empty($supplierIds)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($supplierIds), '?'));
+        $sql = "SELECT * FROM dich_vu_nha_cung_cap 
+                WHERE nha_cung_cap_id IN ($placeholders)
+                ORDER BY nha_cung_cap_id, ten_dich_vu";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($supplierIds);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public function update($id, $nhaCungCapId, $data)
     {
         $sql = "UPDATE dich_vu_nha_cung_cap

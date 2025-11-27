@@ -13,7 +13,32 @@ class AdminController {
     
     public function quanLyTour() {
         $tourModel = new Tour();
-        $tours = $tourModel->getAll();
+        
+        // Lọc theo loại tour
+        $loaiTour = $_GET['loai_tour'] ?? '';
+        $trangThai = $_GET['trang_thai'] ?? '';
+        $search = trim($_GET['search'] ?? '');
+        
+        if (!empty($loaiTour) || !empty($trangThai) || !empty($search)) {
+            $conditions = [];
+            if (!empty($loaiTour)) {
+                $conditions['loai_tour'] = $loaiTour;
+            }
+            if (!empty($trangThai)) {
+                $conditions['trang_thai'] = $trangThai;
+            }
+            $tours = $tourModel->find($conditions);
+            
+            // Lọc theo tìm kiếm nếu có
+            if (!empty($search)) {
+                $tours = array_filter($tours, function($tour) use ($search) {
+                    return stripos($tour['ten_tour'] ?? '', $search) !== false;
+                });
+            }
+        } else {
+            $tours = $tourModel->getAll();
+        }
+        
         require 'views/admin/quan_ly_tour.php';
     }
     
@@ -65,6 +90,32 @@ class AdminController {
     }
     
     public function baoCaoTaiChinh() {
+        $giaoDichModel = new GiaoDich();
+        $tourModel = new Tour();
+        
+        // Lọc theo thời gian
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        // Thống kê tổng hợp
+        $thongKeTongHop = $giaoDichModel->getThongKeTongHop($startDate, $endDate);
+        
+        // Thống kê theo từng tour
+        $thongKeTheoTour = $giaoDichModel->getThongKeTheoTour($startDate, $endDate);
+        
+        // Chi tiết giao dịch
+        $giaoDichList = [];
+        if ($tourId > 0) {
+            $giaoDichList = $giaoDichModel->getByTourId($tourId);
+            $thongKeTour = $giaoDichModel->getThongKeByTour($tourId);
+        } else {
+            $giaoDichList = $giaoDichModel->getAll();
+        }
+        
+        // Danh sách tour để filter
+        $tours = $tourModel->getAll();
+        
         require 'views/admin/bao_cao_tai_chinh.php';
     }
     public function addNhacungcap() {
@@ -159,6 +210,35 @@ class AdminController {
         
         header('Location: index.php?act=admin/nhaCungCap');
         exit();
+    }
+    
+    // Xem chi tiết dịch vụ
+    public function chiTietDichVu() {
+        $nhaCungCapModel = new NhaCungCap();
+        $dichVuId = $_GET['id'] ?? 0;
+        $nccId = $_GET['ncc_id'] ?? null;
+        
+        if ($dichVuId <= 0) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Admin có thể xem tất cả dịch vụ, không cần kiểm tra nhaCungCapId
+        $dichVu = $nhaCungCapModel->getDichVuById($dichVuId);
+        
+        if (!$dichVu) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Lấy thông tin nhà cung cấp nếu chưa có
+        if ($dichVu['nha_cung_cap_id'] && !$nccId) {
+            $nccId = $dichVu['nha_cung_cap_id'];
+        }
+        
+        require 'views/admin/chi_tiet_dich_vu.php';
     }
 
     public function supplierServiceAction() {

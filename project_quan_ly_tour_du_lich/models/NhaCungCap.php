@@ -75,6 +75,26 @@ class NhaCungCap
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    // Lấy chi tiết một dịch vụ theo ID
+    public function getDichVuById($dichVuId, $nhaCungCapId = null) {
+        $sql = "SELECT pbdv.*, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, lkh.id as lich_khoi_hanh_id,
+                t.ten_tour, t.tour_id, t.mo_ta as tour_mo_ta,
+                ncc.ten_don_vi as nha_cung_cap_ten
+                FROM phan_bo_dich_vu pbdv
+                LEFT JOIN lich_khoi_hanh lkh ON pbdv.lich_khoi_hanh_id = lkh.id
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                LEFT JOIN nha_cung_cap ncc ON pbdv.nha_cung_cap_id = ncc.id_nha_cung_cap
+                WHERE pbdv.id = ?";
+        $params = [$dichVuId];
+        if ($nhaCungCapId !== null) {
+            $sql .= " AND pbdv.nha_cung_cap_id = ?";
+            $params[] = $nhaCungCapId;
+        }
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     // Cập nhật trạng thái dịch vụ (xác nhận booking)
     public function xacNhanDichVu($dichVuId, $giaTien = null) {
         if ($giaTien !== null) {

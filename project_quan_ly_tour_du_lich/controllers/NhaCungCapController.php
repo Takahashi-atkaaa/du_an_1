@@ -352,4 +352,27 @@ class NhaCungCapController {
         
         require 'views/nha_cung_cap/hop_dong.php';
     }
+    
+    // Xem chi tiết dịch vụ
+    public function chiTietDichVu() {
+        $nhaCungCap = $this->currentSupplier();
+        $nhaCungCapId = $nhaCungCap['id_nha_cung_cap'];
+        $dichVuId = $_GET['id'] ?? 0;
+        
+        if ($dichVuId <= 0) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=nhaCungCap/baoGia');
+            exit();
+        }
+        
+        $dichVu = $this->nhaCungCapModel->getDichVuById($dichVuId, $nhaCungCapId);
+        
+        if (!$dichVu) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ hoặc bạn không có quyền xem';
+            header('Location: index.php?act=nhaCungCap/baoGia');
+            exit();
+        }
+        
+        require 'views/nha_cung_cap/chi_tiet_dich_vu.php';
+    }
 }

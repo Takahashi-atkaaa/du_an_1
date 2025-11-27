@@ -78,6 +78,43 @@
             text-decoration: none;
             color: inherit;
             display: block;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Background image for feature cards */
+        .feature-card .card-bg-image {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 1;
+            background-size: cover;
+            background-position: center;
+            transition: all 0.4s ease;
+            z-index: 0;
+            border-radius: 1rem;
+        }
+        
+        .feature-card:hover .card-bg-image {
+            opacity: 1;
+            transform: scale(1.05);
+        }
+        
+        /* Add overlay to make text readable */
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.65));
+            border-radius: 1rem;
+            z-index: 0;
         }
         
         .feature-card:hover {
@@ -95,6 +132,13 @@
             justify-content: center;
             font-size: 2rem;
             margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .feature-card h5, .feature-card p {
+            position: relative;
+            z-index: 1;
         }
         
         .tour-card {
@@ -250,6 +294,7 @@
         <div class="row mb-4">
             <div class="col-md-4">
                 <a href="index.php?act=hdv/tours" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400');"></div>
                     <div class="feature-icon bg-primary bg-opacity-10 text-primary mx-auto">
                         <i class="bi bi-map"></i>
                     </div>
@@ -261,6 +306,7 @@
             </div>
             <div class="col-md-4">
                 <a href="index.php?act=hdv/khach" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400');"></div>
                     <div class="feature-icon bg-success bg-opacity-10 text-success mx-auto">
                         <i class="bi bi-people"></i>
                     </div>
@@ -272,6 +318,7 @@
             </div>
             <div class="col-md-4">
                 <a href="index.php?act=hdv/nhat_ky" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1455390582262-044cdead277a?w=400');"></div>
                     <div class="feature-icon bg-warning bg-opacity-10 text-warning mx-auto">
                         <i class="bi bi-journal-text"></i>
                     </div>
@@ -286,6 +333,7 @@
         <div class="row mb-4">
             <div class="col-md-4">
                 <a href="index.php?act=hdv/checkin" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
                     <div class="feature-icon bg-info bg-opacity-10 text-info mx-auto">
                         <i class="bi bi-check2-square"></i>
                     </div>
@@ -297,6 +345,7 @@
             </div>
             <div class="col-md-4">
                 <a href="index.php?act=hdv/yeu_cau_dac_biet" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400');"></div>
                     <div class="feature-icon bg-danger bg-opacity-10 text-danger mx-auto">
                         <i class="bi bi-exclamation-triangle"></i>
                     </div>
@@ -308,6 +357,7 @@
             </div>
             <div class="col-md-4">
                 <a href="index.php?act=hdv/phan_hoi" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400');"></div>
                     <div class="feature-icon bg-secondary bg-opacity-10 text-secondary mx-auto">
                         <i class="bi bi-star"></i>
                     </div>
