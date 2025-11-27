@@ -5,6 +5,13 @@ require_once 'models/KhachHang.php';
 require_once 'models/NguoiDung.php';
 require_once 'models/BookingHistory.php';
 
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 class BookingController {
     private $bookingModel;
     private $tourModel;

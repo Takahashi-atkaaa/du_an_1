@@ -513,7 +513,7 @@
                                 $tours = $tourModel->getAll();
                                 foreach($tours as $tour): 
                                 ?>
-                                <option value="<?php echo $tour['id']; ?>">
+                                <option value="<?php echo $tour['tour_id'] ?? $tour['id']; ?>">
                                     <?php echo htmlspecialchars($tour['ten_tour']); ?> 
                                     (<?php echo $tour['diem_khoi_hanh']; ?> - <?php echo $tour['diem_den']; ?>)
                                 </option>
