@@ -13,7 +13,32 @@ class AdminController {
     
     public function quanLyTour() {
         $tourModel = new Tour();
+        
+        // Lọc theo loại tour
+        $loaiTour = $_GET['loai_tour'] ?? '';
+        $trangThai = $_GET['trang_thai'] ?? '';
+        $search = trim($_GET['search'] ?? '');
+        
+        if (!empty($loaiTour) || !empty($trangThai) || !empty($search)) {
+            $conditions = [];
+            if (!empty($loaiTour)) {
+                $conditions['loai_tour'] = $loaiTour;
+            }
+            if (!empty($trangThai)) {
+                $conditions['trang_thai'] = $trangThai;
+            }
+            $tours = $tourModel->find($conditions);
+            
+            // Lọc theo tìm kiếm nếu có
+            if (!empty($search)) {
+                $tours = array_filter($tours, function($tour) use ($search) {
+                    return stripos($tour['ten_tour'] ?? '', $search) !== false;
+                });
+            }
+        } else {
         $tours = $tourModel->getAll();
+        }
+        
         require 'views/admin/quan_ly_tour.php';
     }
     
@@ -65,16 +90,211 @@ class AdminController {
     }
     
     public function baoCaoTaiChinh() {
+        $giaoDichModel = new GiaoDich();
+        $tourModel = new Tour();
+        
+        // Lọc theo thời gian
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        // Thống kê tổng hợp
+        $thongKeTongHop = $giaoDichModel->getThongKeTongHop($startDate, $endDate);
+        
+        // Thống kê theo từng tour
+        $thongKeTheoTour = $giaoDichModel->getThongKeTheoTour($startDate, $endDate);
+        
+        // Chi tiết giao dịch
+        $giaoDichList = [];
+        if ($tourId > 0) {
+            $giaoDichList = $giaoDichModel->getByTourId($tourId);
+            $thongKeTour = $giaoDichModel->getThongKeByTour($tourId);
+        } else {
+            $giaoDichList = $giaoDichModel->getAll();
+        }
+        
+        // Danh sách tour để filter
+        $tours = $tourModel->getAll();
+        
         require 'views/admin/bao_cao_tai_chinh.php';
     }
     public function addNhacungcap() {
-        require 'views/admin/nha_cung_cap.php';
+        $nhaCungCapModel = new NhaCungCap();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tenDonVi = trim($_POST['ten_don_vi'] ?? '');
+            $loaiDichVu = $_POST['loai_dich_vu'] ?? null;
+            $diaChi = $_POST['dia_chi'] ?? null;
+            $lienHe = $_POST['lien_he'] ?? null;
+            $moTa = $_POST['mo_ta'] ?? null;
+            
+            if ($tenDonVi === '') {
+                $_SESSION['error'] = 'Tên đơn vị không được để trống';
+            } else {
+                try {
+                    $data = [
+                        'ten_don_vi' => $tenDonVi,
+                        'loai_dich_vu' => $loaiDichVu,
+                        'dia_chi' => $diaChi,
+                        'lien_he' => $lienHe,
+                        'mo_ta' => $moTa
+                    ];
+                    $nhaCungCapModel->create($data);
+                    $_SESSION['success'] = 'Thêm nhà cung cấp thành công';
+                } catch (Exception $e) {
+                    $_SESSION['error'] = 'Không thể thêm nhà cung cấp: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        header('Location: index.php?act=admin/nhaCungCap');
+        exit();
     }
     
     public function nhaCungCap() {
         $nhaCungCapModel = new NhaCungCap();
         $nhaCungCapList = $nhaCungCapModel->getAll();
+        
+        $selectedId = $_GET['id'] ?? $_GET['ncc_id'] ?? ($nhaCungCapList[0]['id_nha_cung_cap'] ?? null);
+        $selectedLoai = $_GET['loai'] ?? null;
+        $selectedSupplier = null;
+        $serviceTypeSummary = [];
+        $supplierStats = [];
+        $supplierServices = [];
+        $serviceTypes = [];
+        
+        if ($selectedId) {
+            $selectedSupplier = $nhaCungCapModel->findById($selectedId);
+            if ($selectedSupplier) {
+                $serviceTypeSummary = $nhaCungCapModel->getServiceTypeSummary($selectedId);
+                $supplierStats = $nhaCungCapModel->getSupplierStats($selectedId);
+                $serviceTypes = $nhaCungCapModel->getDistinctServiceTypes($selectedId);
+                $supplierServices = $nhaCungCapModel->getSupplierServices($selectedId, $selectedLoai ?: null, 100);
+            }
+        }
+        
         require 'views/admin/nha_cung_cap.php';
+    }
+    
+    public function updateNhaCungCap() {
+        $nhaCungCapModel = new NhaCungCap();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id_nha_cung_cap'] ?? 0;
+            $tenDonVi = $_POST['ten_don_vi'] ?? '';
+            $loaiDichVu = $_POST['loai_dich_vu'] ?? null;
+            $diaChi = $_POST['dia_chi'] ?? null;
+            $lienHe = $_POST['lien_he'] ?? null;
+            $moTa = $_POST['mo_ta'] ?? null;
+            
+            if ($id <= 0) {
+                $_SESSION['error'] = 'ID nhà cung cấp không hợp lệ';
+            } elseif (empty($tenDonVi)) {
+                $_SESSION['error'] = 'Tên đơn vị không được để trống';
+            } else {
+                try {
+                    $data = [
+                        'ten_don_vi' => $tenDonVi,
+                        'loai_dich_vu' => $loaiDichVu,
+                        'dia_chi' => $diaChi,
+                        'lien_he' => $lienHe,
+                        'mo_ta' => $moTa
+                    ];
+                    $nhaCungCapModel->update($id, $data);
+                    $_SESSION['success'] = 'Cập nhật nhà cung cấp thành công';
+                } catch (Exception $e) {
+                    $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        header('Location: index.php?act=admin/nhaCungCap');
+        exit();
+    }
+    
+    // Xem chi tiết dịch vụ
+    public function chiTietDichVu() {
+        $nhaCungCapModel = new NhaCungCap();
+        $dichVuId = $_GET['id'] ?? 0;
+        $nccId = $_GET['ncc_id'] ?? null;
+        
+        if ($dichVuId <= 0) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Admin có thể xem tất cả dịch vụ, không cần kiểm tra nhaCungCapId
+        $dichVu = $nhaCungCapModel->getDichVuById($dichVuId);
+        
+        if (!$dichVu) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Lấy thông tin nhà cung cấp nếu chưa có
+        if ($dichVu['nha_cung_cap_id'] && !$nccId) {
+            $nccId = $dichVu['nha_cung_cap_id'];
+        }
+        
+        require 'views/admin/chi_tiet_dich_vu.php';
+    }
+
+    public function supplierServiceAction() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/nhaCungCap');
+            exit();
+        }
+
+        $serviceId = (int)($_POST['dich_vu_id'] ?? 0);
+        $action = $_POST['action'] ?? '';
+        $nccId = (int)($_POST['ncc_id'] ?? 0);
+        $redirect = 'index.php?act=admin/nhaCungCap';
+        if ($nccId) {
+            $redirect .= '&id=' . $nccId;
+        }
+
+        if ($serviceId <= 0 || $action === '') {
+            $_SESSION['error'] = 'Dịch vụ hoặc hành động không hợp lệ';
+            header('Location: ' . $redirect);
+            exit();
+        }
+
+        $nhaCungCapModel = new NhaCungCap();
+
+        try {
+            switch ($action) {
+                case 'approve':
+                    $giaTien = (int)($_POST['gia_tien'] ?? 0);
+                    if ($giaTien <= 0) {
+                        throw new Exception('Giá tiền phải lớn hơn 0');
+                    }
+                    $nhaCungCapModel->xacNhanDichVu($serviceId, $giaTien);
+                    $_SESSION['success'] = 'Đã xác nhận dịch vụ';
+                    break;
+                case 'reject':
+                    $ghiChu = trim($_POST['ghi_chu'] ?? '');
+                    $nhaCungCapModel->tuChoiDichVu($serviceId, $ghiChu ?: null);
+                    $_SESSION['success'] = 'Đã từ chối dịch vụ';
+                    break;
+                case 'update_price':
+                    $giaTien = (int)($_POST['gia_tien'] ?? 0);
+                    if ($giaTien <= 0) {
+                        throw new Exception('Giá tiền phải lớn hơn 0');
+                    }
+                    $nhaCungCapModel->capNhatGiaDichVu($serviceId, $giaTien);
+                    $_SESSION['success'] = 'Đã cập nhật giá dịch vụ';
+                    break;
+                default:
+                    $_SESSION['error'] = 'Hành động không được hỗ trợ';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Không thể xử lý: ' . $e->getMessage();
+        }
+
+        header('Location: ' . $redirect);
+        exit();
     }
     public function danhGia() {
         require 'views/admin/danh_gia.php';
