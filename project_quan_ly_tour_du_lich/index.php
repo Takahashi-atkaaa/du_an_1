@@ -49,6 +49,10 @@ $act = $_GET['act'] ?? 'auth/login';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
+            'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),
+        'admin/danhSachKhachBooking' => (new AdminController())->danhSachKhachBooking(),
+        'admin/xoaKhachBooking' => (new AdminController())->xoaKhachBooking(),
+        'admin/suaKhachBooking' => (new AdminController())->suaKhachBooking(),
     // Trang chủ - Tour
     'tour/index' => (new TourController())->index(),
     'tour/show' => (new TourController())->show(),

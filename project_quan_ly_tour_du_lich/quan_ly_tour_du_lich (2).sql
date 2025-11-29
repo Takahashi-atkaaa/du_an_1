@@ -1,3 +1,12 @@
+-- Bảng quản lý danh sách khách cho mỗi booking
+CREATE TABLE IF NOT EXISTS booking_khach_hang (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  booking_id INT NOT NULL,
+  khach_hang_id INT NOT NULL,
+  diem_danh ENUM('co_mat', 'vang_mat') DEFAULT 'co_mat',
+  FOREIGN KEY (booking_id) REFERENCES booking(booking_id) ON DELETE CASCADE,
+  FOREIGN KEY (khach_hang_id) REFERENCES khach_hang(khach_hang_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
@@ -375,7 +384,9 @@ CREATE TABLE `hotel_room_assignment` (
 
 CREATE TABLE `khach_hang` (
   `khach_hang_id` int(11) NOT NULL,
-  `nguoi_dung_id` int(11) DEFAULT NULL,
+  `ho_ten` varchar(255) DEFAULT NULL,
+  `email` varchar(255) DEFAULT NULL,
+  `so_dien_thoai` varchar(20) DEFAULT NULL,
   `dia_chi` varchar(255) DEFAULT NULL,
   `gioi_tinh` enum('Nam','Nữ','Khác') DEFAULT NULL,
   `ngay_sinh` date DEFAULT NULL
@@ -1488,6 +1499,27 @@ ALTER TABLE `yeu_cau_dac_biet`
   ADD CONSTRAINT `yeu_cau_dac_biet_ibfk_3` FOREIGN KEY (`nguoi_xu_ly_id`) REFERENCES `nhan_su` (`nhan_su_id`);
 COMMIT;
 
+
+CREATE TABLE thong_bao (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  nguoi_nhan_id INT NOT NULL,
+  tieu_de VARCHAR(255) NOT NULL,
+  noi_dung TEXT,
+  da_doc TINYINT(1) DEFAULT 0,
+  ngay_tao DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Đã xóa bảng danh_sach_khach theo yêu cầu
+
+ALTER TABLE booking ADD COLUMN lich_khoi_hanh_id INT DEFAULT NULL AFTER tour_id;
+UPDATE booking SET lich_khoi_hanh_id = [ID_LICH_KHOI_HANH] WHERE booking_id = [ID_BOOKING];
+
+
+ALTER TABLE lich_khoi_hanh ADD COLUMN gio_khoi_hanh TIME DEFAULT NULL AFTER ngay_khoi_hanh;
+ALTER TABLE lich_khoi_hanh ADD COLUMN dia_diem_tap_trung VARCHAR(255) DEFAULT NULL AFTER ngay_khoi_hanh;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+

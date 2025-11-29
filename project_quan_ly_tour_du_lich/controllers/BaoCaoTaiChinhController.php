@@ -148,6 +148,30 @@ class BaoCaoTaiChinhController {
             require 'views/admin/bao_cao_tai_chinh/thu_chi_tour.php';
         }
     }
+
+    // Xem danh sách khách của tour
+        } else {
+            // Hiển thị danh sách tours với thống kê
+            $tours = $this->tourModel->getAll();
+            foreach ($tours as &$tour) {
+                $tourId = $tour['tour_id'];
+                $tour['tong_thu'] = $this->giaoDichModel->getTongThuByTour($tourId);
+                $tour['tong_chi_gd'] = $this->giaoDichModel->getTongChiByTour($tourId);
+                $duToan = $this->duToanModel->getByTour($tourId);
+                $tour['tong_du_toan'] = $duToan[0]['tong_du_toan'] ?? 0;
+                $tour['tong_chi_thuc_te'] = $this->chiPhiModel->getTongThucTeByDuToan($duToan[0]['du_toan_id'] ?? null);
+                $tour['loi_nhuan'] = $tour['tong_thu'] - $tour['tong_chi_thuc_te'];
+                // Trạng thái so với dự toán
+                $tour['status'] = 'AnToan';
+                if ($tour['tong_chi_thuc_te'] > $tour['tong_du_toan']) {
+                    $tour['status'] = 'VuotDuToan';
+                } elseif ($tour['tong_chi_thuc_te'] > 0.9 * $tour['tong_du_toan']) {
+                    $tour['status'] = 'GanVuot';
+                }
+            }
+            require 'views/admin/bao_cao_tai_chinh/thu_chi_tour.php';
+        }
+    }
     
     // Báo cáo công nợ
     public function congNo() {
