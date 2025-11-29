@@ -290,6 +290,11 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="customer-tab" data-bs-toggle="pill" data-bs-target="#customer" type="button">
+                            <i class="bi bi-person-lines-fill"></i> Danh sách khách
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link" id="service-tab" data-bs-toggle="pill" data-bs-target="#service" type="button">
                             <i class="bi bi-gear"></i> Dịch vụ
                         </button>
@@ -429,6 +434,173 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                         <p class="mt-3">Chưa có nhân sự nào được phân bổ</p>
                                     </div>
             <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Danh sách khách -->
+                    <div class="tab-pane fade" id="customer" role="tabpanel">
+                        
+                        <!-- Add Customer Form -->
+                        <div class="add-form-card">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-person-plus"></i> Thêm khách mới
+                            </h6>
+                            <form method="POST" action="index.php?act=lichKhoiHanh/themKhachChiTiet">
+                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Booking <span class="text-danger">*</span></label>
+                                        <select name="booking_id" class="form-select" required>
+                                            <option value="">-- Chọn booking --</option>
+                                            <?php foreach ($bookingList as $b): ?>
+                                                <option value="<?php echo $b['booking_id']; ?>">
+                                                    Booking #<?php echo $b['booking_id']; ?> - <?php echo htmlspecialchars($b['ho_ten'] ?? 'N/A'); ?> (<?php echo $b['so_nguoi']; ?> người)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Họ tên <span class="text-danger">*</span></label>
+                                        <input type="text" name="ho_ten" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số CMND/CCCD</label>
+                                        <input type="text" name="so_cmnd" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số Passport</label>
+                                        <input type="text" name="so_passport" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Ngày sinh</label>
+                                        <input type="date" name="ngay_sinh" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Giới tính</label>
+                                        <select name="gioi_tinh" class="form-select">
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nu">Nữ</option>
+                                            <option value="Khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Quốc tịch</label>
+                                        <input type="text" name="quoc_tich" class="form-control" value="Việt Nam">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số điện thoại</label>
+                                        <input type="text" name="so_dien_thoai" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Email</label>
+                                        <input type="email" name="email" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Địa chỉ</label>
+                                        <input type="text" name="dia_chi" class="form-control">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Ghi chú</label>
+                                        <textarea name="ghi_chu" class="form-control" rows="2"></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Thêm khách
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Customer List -->
+                        <div class="section-card card">
+                            <div class="section-header">
+                                <i class="bi bi-person-lines-fill"></i> Danh sách khách chi tiết
+                            </div>
+                            <div class="card-body p-0">
+                                <?php if (!empty($bookingList)): ?>
+                                    <?php foreach ($bookingList as $booking): ?>
+                                        <div class="border-bottom p-3">
+                                            <h6 class="fw-bold mb-2">
+                                                Booking #<?php echo $booking['booking_id']; ?> - 
+                                                <?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?>
+                                                <span class="badge bg-primary ms-2"><?php echo $booking['so_nguoi']; ?> người</span>
+                                            </h6>
+                                            <?php 
+                                            $khachList = $danhSachKhachChiTiet[$booking['booking_id']] ?? [];
+                                            if (!empty($khachList)): ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>STT</th>
+                                                                <th>Họ tên</th>
+                                                                <th>CMND/Passport</th>
+                                                                <th>Ngày sinh</th>
+                                                                <th>Giới tính</th>
+                                                                <th>SĐT</th>
+                                                                <th>Trạng thái</th>
+                                                                <th>Thao tác</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($khachList as $idx => $khach): ?>
+                                                                <tr>
+                                                                    <td><?php echo $idx + 1; ?></td>
+                                                                    <td><?php echo htmlspecialchars($khach['ho_ten'] ?? 'N/A'); ?></td>
+                                                                    <td>
+                                                                        <?php if ($khach['so_cmnd']): ?>
+                                                                            CMND: <?php echo htmlspecialchars($khach['so_cmnd']); ?><br>
+                                                                        <?php endif; ?>
+                                                                        <?php if ($khach['so_passport']): ?>
+                                                                            Passport: <?php echo htmlspecialchars($khach['so_passport']); ?>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td><?php echo $khach['ngay_sinh'] ? date('d/m/Y', strtotime($khach['ngay_sinh'])) : 'N/A'; ?></td>
+                                                                    <td><?php echo htmlspecialchars($khach['gioi_tinh'] ?? 'N/A'); ?></td>
+                                                                    <td><?php echo htmlspecialchars($khach['so_dien_thoai'] ?? 'N/A'); ?></td>
+                                                                    <td>
+                                                                        <span class="badge <?php 
+                                                                            echo $khach['trang_thai'] === 'DaCheckIn' ? 'bg-success' : 
+                                                                                ($khach['trang_thai'] === 'DaCheckOut' ? 'bg-secondary' : 'bg-warning');
+                                                                        ?>">
+                                                                            <?php 
+                                                                            echo $khach['trang_thai'] === 'DaCheckIn' ? 'Đã check-in' : 
+                                                                                ($khach['trang_thai'] === 'DaCheckOut' ? 'Đã check-out' : 'Chưa check-in');
+                                                                            ?>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="btn-group btn-group-sm">
+                                                                            <a href="index.php?act=lichKhoiHanh/suaKhachChiTiet&id=<?php echo $khach['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                                                               class="btn btn-info" title="Sửa">
+                                                                                <i class="bi bi-pencil"></i>
+                                                                            </a>
+                                                                            <a href="index.php?act=lichKhoiHanh/xoaKhachChiTiet&id=<?php echo $khach['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                                                               class="btn btn-danger" 
+                                                                               onclick="return confirm('Xóa khách này?');"
+                                                                               title="Xóa">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            <?php else: ?>
+                                                <p class="text-muted mb-0">Chưa có khách nào trong booking này.</p>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="bi bi-person-x fs-1 opacity-25"></i>
+                                        <p class="mt-3">Chưa có booking nào cho lịch khởi hành này</p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
