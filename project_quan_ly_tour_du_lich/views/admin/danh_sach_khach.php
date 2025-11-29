@@ -298,10 +298,16 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
             
             <!-- Customer Table -->
             <div class="card customer-table-card">
-                <div class="card-header bg-white border-bottom">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">
                         <i class="bi bi-table"></i> Danh sách khách hàng
                     </h5>
+                    <?php if ($lichKhoiHanhId): ?>
+                        <a href="index.php?act=admin/themKhachLichKhoiHanh&lich_khoi_hanh_id=<?php echo $lichKhoiHanhId; ?>" 
+                           class="btn btn-primary btn-sm no-print">
+                            <i class="bi bi-plus-circle"></i> Thêm khách
+                        </a>
+                    <?php endif; ?>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($bookingList)): ?>
@@ -371,6 +377,10 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
                                             </td>
                                             <td class="no-print">
                                                 <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="index.php?act=admin/suaKhachLichKhoiHanh&booking_id=<?php echo $booking['booking_id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanhId; ?>" 
+                                                       class="btn btn-info" title="Sửa">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </a>
                                                     <?php if (!$booking['checkin_id']): ?>
                                                         <a href="index.php?act=admin/checkInKhach&booking_id=<?php echo $booking['booking_id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanhId; ?>" 
                                                            class="btn btn-success" title="Check-in">
@@ -385,6 +395,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
                                                     <a href="index.php?act=admin/phanPhongKhachSan&booking_id=<?php echo $booking['booking_id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanhId; ?>" 
                                                        class="btn btn-warning" title="Phân phòng">
                                                         <i class="bi bi-building"></i>
+                                                    </a>
+                                                    <a href="index.php?act=admin/xoaKhachLichKhoiHanh&booking_id=<?php echo $booking['booking_id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanhId; ?>" 
+                                                       class="btn btn-danger" 
+                                                       onclick="return confirm('Bạn có chắc chắn muốn xóa booking này?');"
+                                                       title="Xóa">
+                                                        <i class="bi bi-trash"></i>
                                                     </a>
                                                 </div>
                                             </td>

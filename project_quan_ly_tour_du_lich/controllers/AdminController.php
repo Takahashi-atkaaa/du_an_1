@@ -1305,4 +1305,178 @@ class AdminController {
         header('Location: index.php?act=admin/quanLyNhatKyTour');
         exit;
     }
+    
+    // Thêm khách vào lịch khởi hành
+    public function themKhachLichKhoiHanh() {
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $lichKhoiHanhModel = new LichKhoiHanh();
+            $bookingModel = new Booking();
+            $khachHangModel = new KhachHang();
+            $nguoiDungModel = new NguoiDung();
+            
+            $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+            if (!$lichKhoiHanh) {
+                $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+                header('Location: index.php?act=admin/danhSachKhachTheoTour');
+                exit();
+            }
+            
+            // Tìm hoặc tạo người dùng
+            $email = trim($_POST['email'] ?? '');
+            $hoTen = trim($_POST['ho_ten'] ?? '');
+            $soDienThoai = trim($_POST['so_dien_thoai'] ?? '');
+            
+            if (empty($email) || empty($hoTen)) {
+                $_SESSION['error'] = 'Vui lòng nhập đầy đủ thông tin khách hàng.';
+                header('Location: index.php?act=admin/themKhachLichKhoiHanh&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+                exit();
+            }
+            
+            // Tìm người dùng theo email
+            $nguoiDung = $nguoiDungModel->findByEmail($email);
+            if (!$nguoiDung) {
+                // Tạo người dùng mới
+                $nguoiDungId = $nguoiDungModel->insert([
+                    'ho_ten' => $hoTen,
+                    'email' => $email,
+                    'so_dien_thoai' => $soDienThoai,
+                    'vai_tro' => 'KhachHang',
+                    'mat_khau' => password_hash('123456', PASSWORD_DEFAULT) // Mật khẩu mặc định
+                ]);
+                $nguoiDung = $nguoiDungModel->findById($nguoiDungId);
+            }
+            
+            // Tìm hoặc tạo khách hàng
+            $khachHang = $khachHangModel->findOrCreateByNguoiDungInfo(
+                $nguoiDung['id'],
+                $_POST['dia_chi'] ?? null,
+                $_POST['gioi_tinh'] ?? null,
+                $_POST['ngay_sinh'] ?? null
+            );
+            
+            // Tạo booking
+            $bookingData = [
+                'tour_id' => $lichKhoiHanh['tour_id'],
+                'khach_hang_id' => $khachHang['khach_hang_id'],
+                'ngay_dat' => date('Y-m-d'),
+                'ngay_khoi_hanh' => $lichKhoiHanh['ngay_khoi_hanh'],
+                'ngay_ket_thuc' => $lichKhoiHanh['ngay_ket_thuc'],
+                'so_nguoi' => (int)($_POST['so_nguoi'] ?? 1),
+                'tong_tien' => (float)($_POST['tong_tien'] ?? 0),
+                'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            $bookingId = $bookingModel->insert($bookingData);
+            if ($bookingId) {
+                $_SESSION['success'] = 'Thêm khách vào lịch khởi hành thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể thêm booking.';
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit();
+        }
+        
+        // GET: hiển thị form
+        $lichKhoiHanhModel = new LichKhoiHanh();
+        $tourModel = new Tour();
+        $nguoiDungModel = new NguoiDung();
+        
+        $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+        if (!$lichKhoiHanh) {
+            $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+            header('Location: index.php?act=admin/danhSachKhachTheoTour');
+            exit();
+        }
+        
+        $tour = $tourModel->findById($lichKhoiHanh['tour_id']);
+        $khachHangList = $nguoiDungModel->getAll(); // Lấy danh sách khách hàng để chọn
+        
+        require 'views/admin/them_khach_lich_khoi_hanh.php';
+    }
+    
+    // Sửa khách trong lịch khởi hành
+    public function suaKhachLichKhoiHanh() {
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $bookingModel = new Booking();
+            
+            $booking = $bookingModel->findById($bookingId);
+            if (!$booking) {
+                $_SESSION['error'] = 'Booking không tồn tại.';
+                header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+                exit();
+            }
+            
+            $data = [
+                'so_nguoi' => (int)($_POST['so_nguoi'] ?? 1),
+                'tong_tien' => (float)($_POST['tong_tien'] ?? 0),
+                'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            $result = $bookingModel->update($bookingId, $data);
+            if ($result) {
+                $_SESSION['success'] = 'Cập nhật thông tin booking thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể cập nhật booking.';
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit();
+        }
+        
+        // GET: hiển thị form
+        $bookingModel = new Booking();
+        $lichKhoiHanhModel = new LichKhoiHanh();
+        $tourModel = new Tour();
+        
+        $booking = $bookingModel->getBookingWithDetails($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit();
+        }
+        
+        $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+        $tour = $tourModel->findById($booking['tour_id']);
+        
+        require 'views/admin/sua_khach_lich_khoi_hanh.php';
+    }
+    
+    // Xóa khách khỏi lịch khởi hành
+    public function xoaKhachLichKhoiHanh() {
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        $bookingModel = new Booking();
+        $booking = $bookingModel->findById($bookingId);
+        
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+        } else {
+            // Chỉ xóa nếu chưa check-in
+            $checkinModel = new TourCheckin();
+            $checkin = $checkinModel->getByBookingId($bookingId);
+            
+            if ($checkin) {
+                $_SESSION['error'] = 'Không thể xóa booking đã check-in. Vui lòng hủy booking thay vì xóa.';
+            } else {
+                $result = $bookingModel->delete($bookingId);
+                if ($result) {
+                    $_SESSION['success'] = 'Xóa booking thành công.';
+                } else {
+                    $_SESSION['error'] = 'Không thể xóa booking.';
+                }
+            }
+        }
+        
+        header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+        exit();
+    }
 }

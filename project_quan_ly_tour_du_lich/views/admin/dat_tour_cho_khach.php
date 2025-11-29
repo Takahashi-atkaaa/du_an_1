@@ -353,7 +353,7 @@
                                     value="<?php echo $formData['ngay_khoi_hanh'] ?? ''; ?>" 
                                     min="<?php echo date('Y-m-d'); ?>" required>
                             </div>
-                            
+
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar-check text-primary"></i> Ngày kết thúc

@@ -33,6 +33,35 @@ class CheckinKhach
         return $stmt->fetch();
     }
 
+    public function getByBookingId($bookingId)
+    {
+        $sql = "SELECT *
+                FROM tour_checkin
+                WHERE booking_id = ?
+                ORDER BY id ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$bookingId]);
+        return $stmt->fetchAll();
+    }
+
+    public function findById($id)
+    {
+        $sql = "SELECT *
+                FROM tour_checkin
+                WHERE id = ?
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$id]);
+        return $stmt->fetch();
+    }
+
+    public function delete($id)
+    {
+        $sql = "DELETE FROM tour_checkin WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$id]);
+    }
+
     public function insert($data)
     {
         $sql = "INSERT INTO tour_checkin (
@@ -76,6 +105,36 @@ class CheckinKhach
             $data['ghi_chu'] ?? null,
             $data['checkin_time'] ?? null,
             $data['checkout_time'] ?? null,
+            (int)$id
+        ]);
+    }
+
+    public function updateFull($id, $data)
+    {
+        $sql = "UPDATE tour_checkin
+                SET ho_ten = ?,
+                    so_cmnd = ?,
+                    so_passport = ?,
+                    ngay_sinh = ?,
+                    gioi_tinh = ?,
+                    quoc_tich = ?,
+                    dia_chi = ?,
+                    so_dien_thoai = ?,
+                    email = ?,
+                    ghi_chu = ?
+                WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([
+            $data['ho_ten'] ?? '',
+            $data['so_cmnd'] ?? null,
+            $data['so_passport'] ?? null,
+            $data['ngay_sinh'] ?? null,
+            $data['gioi_tinh'] ?? 'Khac',
+            $data['quoc_tich'] ?? 'Việt Nam',
+            $data['dia_chi'] ?? null,
+            $data['so_dien_thoai'] ?? null,
+            $data['email'] ?? null,
+            $data['ghi_chu'] ?? null,
             (int)$id
         ]);
     }

@@ -95,6 +95,8 @@ match ($act) {
     'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),
     'lichKhoiHanh/create' => (new LichKhoiHanhController())->create(),
     'lichKhoiHanh/chiTiet' => (new LichKhoiHanhController())->chiTiet(),
+    'lichKhoiHanh/chiTietTheoBooking' => (new LichKhoiHanhController())->chiTietTheoBooking(),
+    'lichKhoiHanh/edit' => (new LichKhoiHanhController())->edit(),
     'lichKhoiHanh/update' => (new LichKhoiHanhController())->update(),
     'lichKhoiHanh/phanBoNhanSu' => (new LichKhoiHanhController())->phanBoNhanSu(),
     'lichKhoiHanh/updateTrangThaiNhanSu' => (new LichKhoiHanhController())->updateTrangThaiNhanSu(),
@@ -102,6 +104,9 @@ match ($act) {
     'lichKhoiHanh/updateTrangThaiDichVu' => (new LichKhoiHanhController())->updateTrangThaiDichVu(),
     'lichKhoiHanh/deleteNhanSu' => (new LichKhoiHanhController())->deleteNhanSu(),
     'lichKhoiHanh/deleteDichVu' => (new LichKhoiHanhController())->deleteDichVu(),
+    'lichKhoiHanh/themKhachChiTiet' => (new LichKhoiHanhController())->themKhachChiTiet(),
+    'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
+    'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
     
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
@@ -164,6 +169,9 @@ match ($act) {
     'admin/nhanSu_get_users' => (new AdminController())->nhanSu_get_users(),
     // Admin - Quản lý khách theo tour
     'admin/danhSachKhachTheoTour' => (new AdminController())->danhSachKhachTheoTour(),
+    'admin/themKhachLichKhoiHanh' => (new AdminController())->themKhachLichKhoiHanh(),
+    'admin/suaKhachLichKhoiHanh' => (new AdminController())->suaKhachLichKhoiHanh(),
+    'admin/xoaKhachLichKhoiHanh' => (new AdminController())->xoaKhachLichKhoiHanh(),
     'admin/checkInKhach' => (new AdminController())->checkInKhach(),
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),

@@ -55,17 +55,17 @@ class BookingController {
         $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? '';
         $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
 
-        $data = [
-            'tour_id' => $tourId,
-            'khach_hang_id' => $khachHangId,
-            'ngay_dat' => date('Y-m-d'),
-            'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
+            $data = [
+                'tour_id' => $tourId,
+                'khach_hang_id' => $khachHangId,
+                'ngay_dat' => date('Y-m-d'),
+                'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
             'ngay_khoi_hanh' => $ngayKhoiHanh,
             'ngay_ket_thuc' => $ngayKetThuc,
-            'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
-            'trang_thai' => 'ChoXacNhan',
-            'ghi_chu' => $_POST['ghi_chu'] ?? null
-        ];
+                'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
+                'trang_thai' => 'ChoXacNhan',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
             
             $bookingId = $this->bookingModel->insert($data);
             if ($bookingId) {
@@ -234,7 +234,7 @@ class BookingController {
         
         $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? null;
         $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
-
+        
         $data = [
             'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
             'ngay_khoi_hanh' => $ngayKhoiHanh,

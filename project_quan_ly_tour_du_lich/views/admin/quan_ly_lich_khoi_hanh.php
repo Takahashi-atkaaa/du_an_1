@@ -288,22 +288,34 @@
                                                     <?php echo htmlspecialchars($lich['ten_tour'] ?? 'N/A'); ?>
                                                 </h5>
                                             </div>
+                                            <?php 
+                                            $soNhanSu = isset($lich['so_nhan_su']) ? (int)$lich['so_nhan_su'] : 0;
+                                            $isWaiting = $soNhanSu === 0;
+                                            ?>
                                             <span class="status-badge <?php 
-                                                echo match($lich['trang_thai']) {
-                                                    'SapKhoiHanh' => 'bg-info text-dark',
-                                                    'DangChay' => 'bg-success',
-                                                    'HoanThanh' => 'bg-secondary',
-                                                    default => 'bg-secondary'
-                                                };
+                                                if ($isWaiting) {
+                                                    echo 'bg-warning text-dark';
+                                                } else {
+                                                    echo match($lich['trang_thai']) {
+                                                        'SapKhoiHanh' => 'bg-info text-dark',
+                                                        'DangChay' => 'bg-success',
+                                                        'HoanThanh' => 'bg-secondary',
+                                                        default => 'bg-secondary'
+                                                    };
+                                                }
                                             ?>">
-                                                <?php
-                                                $statusLabels = [
-                                                    'SapKhoiHanh' => 'Sắp khởi hành',
-                                                    'DangChay' => 'Đang chạy',
-                                                    'HoanThanh' => 'Hoàn thành'
-                                                ];
-                                                echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
-                                                ?>
+                                                <?php if ($isWaiting): ?>
+                                                    Đang chờ phân bổ
+                                                <?php else: ?>
+                                                    <?php
+                                                    $statusLabels = [
+                                                        'SapKhoiHanh' => 'Sắp khởi hành',
+                                                        'DangChay' => 'Đang chạy',
+                                                        'HoanThanh' => 'Hoàn thành'
+                                                    ];
+                                                    echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
+                                                    ?>
+                                                <?php endif; ?>
                                             </span>
                                         </div>
 
@@ -338,15 +350,21 @@
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <div>
+                                            <div class="d-flex gap-2 align-items-center">
                                                 <span class="badge bg-light text-dark border">
                                                     <i class="bi bi-people"></i> <?php echo $lich['so_cho'] ?? 50; ?> chỗ
                                                 </span>
                                             </div>
-                                            <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
-                                               class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-eye"></i> Xem chi tiết
-                                            </a>
+                                            <div class="d-flex gap-2">
+                                                <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i> Xem chi tiết
+                                                </a>
+                                                <a href="index.php?act=lichKhoiHanh/edit&id=<?php echo $lich['id']; ?>" 
+                                                   class="btn btn-outline-secondary btn-sm">
+                                                    <i class="bi bi-pencil"></i> Sửa
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

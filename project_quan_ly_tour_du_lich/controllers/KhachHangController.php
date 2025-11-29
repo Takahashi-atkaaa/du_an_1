@@ -437,7 +437,7 @@ class KhachHangController {
         
         require 'views/khach_hang/thanh_toan.php';
     }
-    
+
     private function chonAnhChinh(array $hinhAnhList) {
         foreach ($hinhAnhList as $anh) {
             if (!empty($anh['url_anh'])) {
