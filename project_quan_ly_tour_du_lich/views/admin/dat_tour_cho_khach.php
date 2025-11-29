@@ -353,6 +353,15 @@
                                     value="<?php echo $formData['ngay_khoi_hanh'] ?? ''; ?>" 
                                     min="<?php echo date('Y-m-d'); ?>" required>
                             </div>
+                            
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">
+                                    <i class="bi bi-calendar-check text-primary"></i> Ngày kết thúc
+                                </label>
+                                <input type="date" name="ngay_ket_thuc" id="ngay_ket_thuc" class="form-control form-control-lg"
+                                    value="<?php echo $formData['ngay_ket_thuc'] ?? ''; ?>">
+                                <small class="text-muted">Nếu bỏ trống, hệ thống sẽ dùng ngày khởi hành</small>
+                            </div>
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
@@ -668,11 +677,26 @@
         }
 
         // Event listeners
+        function syncNgayKetThucMin() {
+            const endInput = document.getElementById('ngay_ket_thuc');
+            const startInput = document.getElementById('ngay_khoi_hanh');
+            if (!endInput || !startInput) return;
+            if (startInput.value) {
+                endInput.min = startInput.value;
+                if (!endInput.value || endInput.value < startInput.value) {
+                    endInput.value = startInput.value;
+                }
+            }
+        }
+
         document.getElementById('tour_id').addEventListener('change', function() {
             updateSummary();
             kiemTraChoTrong();
         });
-        document.getElementById('ngay_khoi_hanh').addEventListener('change', kiemTraChoTrong);
+        document.getElementById('ngay_khoi_hanh').addEventListener('change', function() {
+            syncNgayKetThucMin();
+            kiemTraChoTrong();
+        });
         document.getElementById('so_nguoi').addEventListener('input', function() {
             updateSummary();
             kiemTraChoTrong();
@@ -699,6 +723,7 @@
 
         // Initialize
         updateSummary();
+        syncNgayKetThucMin();
     </script>
 </body>
 </html>

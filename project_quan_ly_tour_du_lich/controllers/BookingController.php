@@ -5,6 +5,13 @@ require_once 'models/KhachHang.php';
 require_once 'models/NguoiDung.php';
 require_once 'models/BookingHistory.php';
 
+if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require_once __DIR__ . '/../vendor/autoload.php';
+}
+
+use Dompdf\Dompdf;
+use Dompdf\Options;
+
 class BookingController {
     private $bookingModel;
     private $tourModel;
@@ -45,16 +52,20 @@ class BookingController {
                 exit();
             }
 
-            $data = [
-                'tour_id' => $tourId,
-                'khach_hang_id' => $khachHangId,
-                'ngay_dat' => date('Y-m-d'),
-                'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
-                'ngay_khoi_hanh' => $_POST['ngay_khoi_hanh'] ?? '',
-                'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
-                'trang_thai' => 'ChoXacNhan',
-                'ghi_chu' => $_POST['ghi_chu'] ?? null
-            ];
+        $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? '';
+        $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
+
+        $data = [
+            'tour_id' => $tourId,
+            'khach_hang_id' => $khachHangId,
+            'ngay_dat' => date('Y-m-d'),
+            'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
+            'ngay_khoi_hanh' => $ngayKhoiHanh,
+            'ngay_ket_thuc' => $ngayKetThuc,
+            'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
+            'trang_thai' => 'ChoXacNhan',
+            'ghi_chu' => $_POST['ghi_chu'] ?? null
+        ];
             
             $bookingId = $this->bookingModel->insert($data);
             if ($bookingId) {
@@ -221,9 +232,13 @@ class BookingController {
             exit();
         }
         
+        $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? null;
+        $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
+
         $data = [
             'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
-            'ngay_khoi_hanh' => $_POST['ngay_khoi_hanh'] ?? null,
+            'ngay_khoi_hanh' => $ngayKhoiHanh,
+            'ngay_ket_thuc' => $ngayKetThuc,
             'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : 0,
             'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
             'ghi_chu' => $_POST['ghi_chu'] ?? null
@@ -406,6 +421,7 @@ class BookingController {
                     'khach_hang_id' => $khachHang['khach_hang_id'],
                     'ngay_dat' => date('Y-m-d'),
                     'ngay_khoi_hanh' => $ngayKhoiHanh,
+                    'ngay_ket_thuc' => !empty($_POST['ngay_ket_thuc']) ? $_POST['ngay_ket_thuc'] : $ngayKhoiHanh,
                     'so_nguoi' => $soNguoi,
                     'tong_tien' => $tongTien,
                     'trang_thai' => 'ChoXacNhan',

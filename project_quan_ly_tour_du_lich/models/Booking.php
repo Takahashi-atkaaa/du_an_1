@@ -56,14 +56,15 @@ class Booking
 
     // Thêm booking mới
     public function insert($data) {
-        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi, tong_tien, trang_thai, ghi_chu) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, ngay_ket_thuc, so_nguoi, tong_tien, trang_thai, ghi_chu) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         $result = $stmt->execute([
             $data['tour_id'] ?? 0,
             $data['khach_hang_id'] ?? 0,
             $data['ngay_dat'] ?? date('Y-m-d'),
             $data['ngay_khoi_hanh'] ?? null,
+            $data['ngay_ket_thuc'] ?? null,
             $data['so_nguoi'] ?? 1,
             $data['tong_tien'] ?? 0,
             $data['trang_thai'] ?? 'ChoXacNhan',
@@ -78,11 +79,12 @@ class Booking
 
     // Cập nhật booking
     public function update($id, $data) {
-        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             $data['so_nguoi'] ?? 1,
             $data['ngay_khoi_hanh'] ?? null,
+            $data['ngay_ket_thuc'] ?? null,
             $data['tong_tien'] ?? 0,
             $data['trang_thai'] ?? 'ChoXacNhan',
             $data['ghi_chu'] ?? null,
@@ -188,5 +190,105 @@ class Booking
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$bookingId]);
         return $stmt->fetch();
+    }
+
+    // Lấy danh sách yêu cầu đặc biệt dành cho một lịch khởi hành cụ thể
+    public function getSpecialRequestsByLichKhoiHanh($tourId, $ngayKhoiHanh) {
+        $sql = "SELECT 
+                    y.id as yeu_cau_id,
+                    y.tieu_de,
+                    y.mo_ta,
+                    y.loai_yeu_cau,
+                    y.muc_do_uu_tien,
+                    y.trang_thai as trang_thai_yeu_cau,
+                    y.ngay_tao,
+                    b.booking_id,
+                    b.so_nguoi,
+                    b.ngay_dat,
+                    nd.ho_ten,
+                    nd.email,
+                    nd.so_dien_thoai
+                FROM yeu_cau_dac_biet y
+                INNER JOIN booking b ON y.booking_id = b.booking_id
+                INNER JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                INNER JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                WHERE b.tour_id = ?
+                    AND b.ngay_khoi_hanh = ?
+                    AND b.trang_thai IN ('ChoXacNhan','DaCoc','HoanTat')
+                ORDER BY b.ngay_dat DESC, y.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy danh sách khách/nhóm tham gia tour cho một lịch cụ thể
+    public function getKhachByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh) {
+        $sql = "SELECT 
+                    b.booking_id,
+                    b.khach_hang_id,
+                    b.so_nguoi,
+                    b.ngay_dat,
+                    b.ghi_chu as ghi_chu_booking,
+                    nd.ho_ten,
+                    nd.email,
+                    nd.so_dien_thoai,
+                    kh.dia_chi,
+                    (
+                        SELECT id 
+                        FROM yeu_cau_dac_biet y 
+                        WHERE y.booking_id = b.booking_id
+                        ORDER BY y.id DESC 
+                        LIMIT 1
+                    ) as yeu_cau_id,
+                    (
+                        SELECT mo_ta 
+                        FROM yeu_cau_dac_biet y 
+                        WHERE y.booking_id = b.booking_id
+                        ORDER BY y.id DESC 
+                        LIMIT 1
+                    ) as yeu_cau_dac_biet
+                FROM booking b
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                WHERE b.tour_id = ?
+                    AND b.ngay_khoi_hanh = ?
+                    AND b.trang_thai IN ('ChoXacNhan','DaCoc','HoanTat')
+                ORDER BY b.ngay_dat ASC, b.booking_id ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy booking theo khách hàng ID
+    public function getByKhachHangId($khachHangId) {
+        $sql = "SELECT b.*, 
+                t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
+                t.trang_thai as tour_trang_thai,
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                FROM booking b
+                LEFT JOIN tour t ON b.tour_id = t.tour_id
+                LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND b.ngay_khoi_hanh = lkh.ngay_khoi_hanh
+                WHERE b.khach_hang_id = ?
+                ORDER BY b.ngay_dat DESC, b.booking_id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$khachHangId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy booking theo user ID (nguoi_dung_id)
+    public function getByUserId($userId) {
+        $sql = "SELECT b.*, 
+                t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
+                t.trang_thai as tour_trang_thai,
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                FROM booking b
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN tour t ON b.tour_id = t.tour_id
+                LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND b.ngay_khoi_hanh = lkh.ngay_khoi_hanh
+                WHERE kh.nguoi_dung_id = ?
+                ORDER BY b.ngay_dat DESC, b.booking_id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$userId]);
+        return $stmt->fetchAll();
     }
 }

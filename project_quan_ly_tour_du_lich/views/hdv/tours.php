@@ -138,6 +138,60 @@
             </ul>
         </div>
 
+        <!-- Thông báo phân bổ chờ xác nhận -->
+        <?php if (!empty($phanBoChoXacNhan)): ?>
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center mb-3">
+                <i class="bi bi-bell-fill me-2 fs-4"></i>
+                <h5 class="mb-0">Bạn có <?php echo count($phanBoChoXacNhan); ?> phân bổ nhân sự chờ xác nhận</h5>
+            </div>
+            <div class="list-group">
+                <?php foreach ($phanBoChoXacNhan as $pb): ?>
+                <div class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                <i class="bi bi-calendar-event"></i> 
+                                <?php echo htmlspecialchars($pb['ten_tour'] ?? 'Tour không xác định'); ?>
+                            </h6>
+                            <p class="mb-1 text-muted small">
+                                <i class="bi bi-calendar"></i> 
+                                Khởi hành: <?php echo date('d/m/Y', strtotime($pb['ngay_khoi_hanh'])); ?>
+                                <?php if (!empty($pb['ngay_ket_thuc'])): ?>
+                                - <?php echo date('d/m/Y', strtotime($pb['ngay_ket_thuc'])); ?>
+                                <?php endif; ?>
+                            </p>
+                            <p class="mb-1">
+                                <span class="badge bg-info"><?php echo htmlspecialchars($pb['phan_bo_vai_tro'] ?? 'HDV'); ?></span>
+                                <?php if (!empty($pb['ghi_chu'])): ?>
+                                <span class="text-muted small">- <?php echo htmlspecialchars($pb['ghi_chu']); ?></span>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                        <div class="ms-3">
+                            <form method="POST" action="index.php?act=hdv/xacNhanPhanBo" class="d-inline">
+                                <input type="hidden" name="phan_bo_id" value="<?php echo $pb['id']; ?>">
+                                <input type="hidden" name="action" value="xac_nhan">
+                                <button type="submit" class="btn btn-sm btn-success me-1" onclick="return confirm('Bạn có chắc chắn muốn xác nhận phân bổ này?');">
+                                    <i class="bi bi-check-circle"></i> Xác nhận
+                                </button>
+                            </form>
+                            <form method="POST" action="index.php?act=hdv/xacNhanPhanBo" class="d-inline">
+                                <input type="hidden" name="phan_bo_id" value="<?php echo $pb['id']; ?>">
+                                <input type="hidden" name="action" value="tu_choi">
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn từ chối phân bổ này?');">
+                                    <i class="bi bi-x-circle"></i> Từ chối
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        <?php endif; ?>
+
         <!-- Tours List -->
         <?php if (!empty($tours)): ?>
             <div class="row">

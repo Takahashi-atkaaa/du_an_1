@@ -309,9 +309,17 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <small>
+                                            <?php
+                                                $ngayKhoiHanh = !empty($booking['ngay_khoi_hanh']) ? $booking['ngay_khoi_hanh'] : ($booking['ngay_dat'] ?? null);
+                                                $ngayKetThuc = isset($booking['ngay_ket_thuc']) && !empty($booking['ngay_ket_thuc']) ? $booking['ngay_ket_thuc'] : $ngayKhoiHanh;
+                                            ?>
+                                            <small class="d-block">
                                                 <i class="bi bi-calendar-event text-primary"></i>
-                                                <?php echo $booking['ngay_khoi_hanh'] ? date('d/m/Y', strtotime($booking['ngay_khoi_hanh'])) : 'N/A'; ?>
+                                                Khởi hành: <?php echo $ngayKhoiHanh ? date('d/m/Y', strtotime($ngayKhoiHanh)) : 'N/A'; ?>
+                                            </small>
+                                            <small class="d-block">
+                                                <i class="bi bi-calendar-check text-success"></i>
+                                                Kết thúc: <?php echo $ngayKetThuc ? date('d/m/Y', strtotime($ngayKetThuc)) : 'N/A'; ?>
                                             </small>
                                         </td>
                                         <td>
@@ -337,6 +345,10 @@
                                                 <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
                                                    class="btn btn-sm btn-info" title="Xem chi tiết">
                                                     <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="index.php?act=tour/phanBoNhanSuLichKhoiHanh&id=<?php echo $booking['tour_id']; ?>" 
+                                                   class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ">
+                                                    <i class="bi bi-people-fill"></i>
                                                 </a>
                                                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
                                                     <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 

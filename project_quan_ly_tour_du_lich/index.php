@@ -3,42 +3,47 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 
+
+
 session_start();
 
 // Require toàn bộ các file khai báo môi trường, thực thi,...(không require view)
 
 // Require file Common
-require_once './commons/env.php'; // Khai báo biến môi trường
-require_once './commons/function.php'; // Hàm hỗ trợ
+require_once __DIR__ . '/commons/env.php';
+require_once __DIR__ . '/commons/function.php';
 
-// Require toàn bộ file Controllers
-require_once './controllers/AuthController.php';
-require_once './controllers/AdminController.php';
-require_once './controllers/TourController.php';
-require_once './controllers/BookingController.php';
-require_once './controllers/HDVController.php';
-require_once './controllers/KhachHangController.php';
-require_once './controllers/NhaCungCapController.php';
-require_once './controllers/LichKhoiHanhController.php';
-require_once './controllers/DanhGiaController.php';
+// Controllers
+require_once __DIR__ . '/controllers/AuthController.php';
+require_once __DIR__ . '/controllers/AdminController.php';
+require_once __DIR__ . '/controllers/TourController.php';
+require_once __DIR__ . '/controllers/BookingController.php';
+require_once __DIR__ . '/controllers/HDVController.php';
+require_once __DIR__ . '/controllers/KhachHangController.php';
+require_once __DIR__ . '/controllers/NhaCungCapController.php';
+require_once __DIR__ . '/controllers/LichKhoiHanhController.php';
+require_once __DIR__ . '/controllers/DanhGiaController.php';
 
-// Require toàn bộ file Models
-require_once './models/NguoiDung.php';
-require_once './models/Tour.php';
-require_once './models/Booking.php';
-require_once './models/BookingHistory.php';
-require_once './models/KhachHang.php';
-require_once './models/HDV.php';
-require_once './models/NhaCungCap.php';
-require_once './models/GiaoDich.php';
-require_once './models/DanhGia.php';
-require_once './models/NhanSu.php';
-require_once './models/LichKhoiHanh.php';
-require_once './models/PhanBoNhanSu.php';
-require_once './models/PhanBoDichVu.php';
-require_once './models/HDVManagement.php';
-require_once './models/TourCheckin.php';
-require_once './models/HotelRoomAssignment.php';
+// Models
+require_once __DIR__ . '/models/NguoiDung.php';
+require_once __DIR__ . '/models/Tour.php';
+require_once __DIR__ . '/models/Booking.php';
+require_once __DIR__ . '/models/BookingHistory.php';
+require_once __DIR__ . '/models/KhachHang.php';
+require_once __DIR__ . '/models/HDV.php';
+require_once __DIR__ . '/models/NhaCungCap.php';
+require_once __DIR__ . '/models/GiaoDich.php';
+require_once __DIR__ . '/models/DanhGia.php';
+require_once __DIR__ . '/models/NhanSu.php';
+require_once __DIR__ . '/models/LichKhoiHanh.php';
+require_once __DIR__ . '/models/PhanBoNhanSu.php';
+require_once __DIR__ . '/models/PhanBoDichVu.php';
+require_once __DIR__ . '/models/HDVManagement.php';
+require_once __DIR__ . '/models/TourCheckin.php';
+require_once __DIR__ . '/models/HotelRoomAssignment.php';
+require_once __DIR__ . '/models/DichVuNhaCungCap.php';
+require_once __DIR__ . '/models/YeuCauDacBiet.php';
+
 
 // Route
 $act = $_GET['act'] ?? 'auth/login';
@@ -51,6 +56,8 @@ match ($act) {
     'tour/create' => (new TourController())->create(),
     'tour/update' => (new TourController())->update(),
     'tour/delete' => (new TourController())->delete(),
+    'tour/clone' => (new TourController())->clone(),
+    'tour/generateQr' => (new TourController())->generateQr(),
     // Lịch khởi hành trong tour
     'tour/taoLichKhoiHanh' => (new TourController())->taoLichKhoiHanh(),
     'tour/chiTietLichKhoiHanh' => (new TourController())->chiTietLichKhoiHanh(),
@@ -103,6 +110,8 @@ match ($act) {
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
+    'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
+    'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
     'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),
@@ -111,6 +120,7 @@ match ($act) {
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
     'hdv/tours' => (new HDVController())->tours(),
+    'hdv/xacNhanPhanBo' => (new HDVController())->xacNhanPhanBo(),
     'hdv/tour_detail' => (new HDVController())->tourDetail(),
     'hdv/khach' => (new HDVController())->khach(),
     'hdv/nhat_ky' => (new HDVController())->nhatKy(),
@@ -133,6 +143,10 @@ match ($act) {
     'hdv/lichLamViec' => (new HDVController())->lichLamViec(),
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
     'hdv/danhSachKhach' => (new HDVController())->danhSachKhach(),
+    'hdv/checkInKhach' => (new HDVController())->checkInKhach(),
+    'hdv/updateCheckInKhach' => (new HDVController())->updateCheckInKhach(),
+    'hdv/quanLyYeuCauDacBiet' => (new HDVController())->quanLyYeuCauDacBiet(),
+    'hdv/updateYeuCauDacBiet' => (new HDVController())->updateYeuCauDacBiet(),
     'hdv/phanHoi' => (new HDVController())->phanHoi(),
     // Admin - quản lý HDV
     'admin/quanLyHDV' => (new AdminController())->quanLyHDV(),
@@ -154,6 +168,9 @@ match ($act) {
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
+    'admin/updateNhaCungCap' => (new AdminController())->updateNhaCungCap(),
+    'admin/chiTietDichVu' => (new AdminController())->chiTietDichVu(),
+    'admin/supplierServiceAction' => (new AdminController())->supplierServiceAction(),
     
     // Nhà cung cấp
     'nhaCungCap/dashboard' => (new NhaCungCapController())->dashboard(),
@@ -163,14 +180,26 @@ match ($act) {
     'nhaCungCap/hopDong' => (new NhaCungCapController())->hopDong(),
     'nhaCungCap/xacNhanBooking' => (new NhaCungCapController())->xacNhanBooking(),
     'nhaCungCap/capNhatGia' => (new NhaCungCapController())->capNhatGia(),
+    'nhaCungCap/storeDichVu' => (new NhaCungCapController())->storeDichVu(),
+    'nhaCungCap/updateDichVu' => (new NhaCungCapController())->updateDichVu(),
+    'nhaCungCap/deleteDichVu' => (new NhaCungCapController())->deleteDichVu(),
+    'nhaCungCap/storeBaoGiaThuCong' => (new NhaCungCapController())->storeBaoGiaThuCong(),
+    'nhaCungCap/chiTietDichVu' => (new NhaCungCapController())->chiTietDichVu(),
     
     // Khách hàng
+    'khachHang/dashboard' => (new KhachHangController())->dashboard(),
     'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),
     'khachHang/chiTietTour' => (new KhachHangController())->chiTietTour(),
     'khachHang/datTour' => (new KhachHangController())->datTour(),
     'khachHang/danhGia' => (new KhachHangController())->danhGia(),
     'khachHang/guiDanhGia' => (new KhachHangController())->guiDanhGia(),
     'khachHang/traCuu' => (new KhachHangController())->traCuu(),
+    'khachHang/hoaDon' => (new KhachHangController())->hoaDon(),
+    'khachHang/lichTrinhTour' => (new KhachHangController())->lichTrinhTour(),
+    'khachHang/thongBao' => (new KhachHangController())->thongBao(),
+    'khachHang/capNhatThongTin' => (new KhachHangController())->capNhatThongTin(),
+    'khachHang/guiYeuCauHoTro' => (new KhachHangController())->guiYeuCauHoTro(),
+    'khachHang/thanhToan' => (new KhachHangController())->thanhToan(),
 
     // Nhân sự
     'admin/nhanSu' => (new AdminController())->nhanSu(),

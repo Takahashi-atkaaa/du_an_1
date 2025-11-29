@@ -229,6 +229,17 @@
                         </div>
                         <div class="info-row">
                             <div class="info-label">
+                                <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
+                            </div>
+                            <div class="info-value">
+                                <?php 
+                                    $endDate = $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'];
+                                    echo $endDate ? date('d/m/Y', strtotime($endDate)) : 'N/A'; 
+                                ?>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
                                 <i class="bi bi-cash-coin text-success"></i> Tổng tiền
                             </div>
                             <div class="info-value">
@@ -386,6 +397,15 @@
                                         </label>
                                         <input type="date" name="ngay_khoi_hanh" class="form-control" 
                                                value="<?php echo $booking['ngay_khoi_hanh'] ?? ''; ?>">
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
+                                        </label>
+                                       <input type="date" name="ngay_ket_thuc" class="form-control"
+                                              value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
+                                        <small class="text-muted">Để trống sẽ dùng ngày khởi hành</small>
                                     </div>
 
                                     <div class="col-12">
