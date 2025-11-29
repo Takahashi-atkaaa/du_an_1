@@ -1518,6 +1518,7 @@ UPDATE booking SET lich_khoi_hanh_id = [ID_LICH_KHOI_HANH] WHERE booking_id = [I
 ALTER TABLE lich_khoi_hanh ADD COLUMN gio_khoi_hanh TIME DEFAULT NULL AFTER ngay_khoi_hanh;
 ALTER TABLE lich_khoi_hanh ADD COLUMN dia_diem_tap_trung VARCHAR(255) DEFAULT NULL AFTER ngay_khoi_hanh;
 
+<<<<<<< HEAD
 
 -- Bổ sung bảng du_toan_tour nếu chưa có
 CREATE TABLE IF NOT EXISTS du_toan_tour (
@@ -1568,7 +1569,6 @@ INSERT INTO giao_dich_tai_chinh (id, tour_id, loai, so_tien, ngay_giao_dich, mo_
 (5, 5, 'Chi', 8000000, '2025-11-12', 'Chi phí xe Nhật');
 
 SELECT * FROM tour;
-
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

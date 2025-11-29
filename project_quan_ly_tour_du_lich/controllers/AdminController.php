@@ -1,6 +1,7 @@
 <?php
 
 class AdminController {
+<<<<<<< HEAD
     // Hiển thị so sánh chi tiết chi phí thực tế và dự toán
     public function soSanhChiTietChiPhi() {
         require_once __DIR__ . '/../models/DuToanTour.php';
@@ -46,88 +47,90 @@ class AdminController {
         require 'views/admin/chi_tiet_nguoi_dung.php';
     }
     // ...existing code...
-                    // Xóa khách khỏi booking
-                    public function xoaKhachBooking() {
-                        require_once 'models/Booking.php';
-                        require_once 'models/KhachHang.php';
-                        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-                        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
-                        if ($bookingId > 0 && $khachHangId > 0) {
-                            $bookingModel = new Booking();
-                            $sql = "DELETE FROM booking_khach_hang WHERE booking_id = ? AND khach_hang_id = ?";
-                            $stmt = $bookingModel->conn->prepare($sql);
-                            $stmt->execute([$bookingId, $khachHangId]);
-                        }
-                        // Nếu là AJAX thì trả về JSON, nếu không thì reload lại trang hiện tại
-                        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                            echo json_encode(['success' => true]);
-                            exit;
-                        } else {
-                            // Reload lại trang hiện tại
-                            echo '<script>window.location.reload();</script>';
-                            exit;
-                        }
-                    }
+    
+    // Xóa khách khỏi booking
+    public function xoaKhachBooking() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
+        if ($bookingId > 0 && $khachHangId > 0) {
+            $bookingModel = new Booking();
+            $sql = "DELETE FROM booking_khach_hang WHERE booking_id = ? AND khach_hang_id = ?";
+            $stmt = $bookingModel->conn->prepare($sql);
+            $stmt->execute([$bookingId, $khachHangId]);
+        }
+        // Nếu là AJAX thì trả về JSON, nếu không thì reload lại trang hiện tại
+        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+            echo json_encode(['success' => true]);
+            exit;
+        } else {
+            // Reload lại trang hiện tại
+            echo '<script>window.location.reload();</script>';
+            exit;
+        }
+    }
 
-                    // Sửa thông tin khách hàng của booking
-                    public function suaKhachBooking() {
-                        require_once 'models/Booking.php';
-                        require_once 'models/KhachHang.php';
-                        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-                        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
-                        $khachHangModel = new KhachHang();
-                        $bookingModel = new Booking();
-                        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $khachHangId > 0) {
-                            $tenKhachHang = $_POST['ho_ten'] ?? '';
-                            $gmail = $_POST['email'] ?? '';
-                            $soDienThoai = $_POST['so_dien_thoai'] ?? '';
-                            $diaChi = $_POST['dia_chi'] ?? '';
-                            $ngaySinh = $_POST['ngay_sinh'] ?? null;
-                            $gioiTinh = $_POST['gioi_tinh'] ?? null;
-                            if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
-                                $gioiTinh = null;
-                            }
-                            $sql = "UPDATE khach_hang SET ten_khach_hang = ?, gmail = ?, so_dien_thoai = ?, dia_chi = ?, gioi_tinh = ?, ngay_sinh = ? WHERE khach_hang_id = ?";
-                            $stmt = $khachHangModel->conn->prepare($sql);
-                            $stmt->execute([$tenKhachHang, $gmail, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh, $khachHangId]);
-                            echo '<script>window.location.href = "index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId . '";</script>';
-                            exit;
-                        }
-                        // Lấy thông tin khách để hiển thị form sửa
-                        $khach = $khachHangModel->findById($khachHangId);
-                        require 'views/admin/sua_khach_booking.php';
-                    }
-                // Xử lý thêm khách hàng vào booking
-                public function themKhachBooking() {
-                    require_once 'models/Booking.php';
-                    require_once 'models/KhachHang.php';
-                    $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-                    $hoTen = $_POST['ho_ten'] ?? '';
-                    $email = $_POST['email'] ?? '';
-                    $soDienThoai = $_POST['so_dien_thoai'] ?? '';
-                    $diaChi = $_POST['dia_chi'] ?? '';
-                    $ngaySinh = $_POST['ngay_sinh'] ?? null;
-                    $gioiTinh = $_POST['gioi_tinh'] ?? null;
-                    if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
-                        $gioiTinh = null;
-                    }
-                    $diemDanh = $_POST['diem_danh'] ?? 'co_mat';
-                    if ($bookingId > 0 && $hoTen && $email && $soDienThoai) {
-                        $khachHangModel = new KhachHang();
-                        // Chèn trực tiếp vào bảng khach_hang
-                        $sqlInsertKH = "INSERT INTO khach_hang (ten_khach_hang, gmail, so_dien_thoai, dia_chi, gioi_tinh, ngay_sinh) VALUES (?, ?, ?, ?, ?, ?)";
-                        $stmtInsertKH = $khachHangModel->conn->prepare($sqlInsertKH);
-                        $stmtInsertKH->execute([$hoTen, $email, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh]);
-                        $khachHangId = $khachHangModel->conn->lastInsertId();
-                        // Thêm khách vào bảng booking_khach_hang
-                        $sqlInsertBK = "INSERT INTO booking_khach_hang (booking_id, khach_hang_id, diem_danh) VALUES (?, ?, ?)";
-                        $stmtInsertBK = $khachHangModel->conn->prepare($sqlInsertBK);
-                        $stmtInsertBK->execute([$bookingId, $khachHangId, $diemDanh]);
-                    }
-                    // Quay lại trang danh sách khách booking
-                    header('Location: index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId);
-                    exit;
-                }
+    // Sửa thông tin khách hàng của booking
+    public function suaKhachBooking() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
+        $khachHangModel = new KhachHang();
+        $bookingModel = new Booking();
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $khachHangId > 0) {
+            $tenKhachHang = $_POST['ho_ten'] ?? '';
+            $gmail = $_POST['email'] ?? '';
+            $soDienThoai = $_POST['so_dien_thoai'] ?? '';
+            $diaChi = $_POST['dia_chi'] ?? '';
+            $ngaySinh = $_POST['ngay_sinh'] ?? null;
+            $gioiTinh = $_POST['gioi_tinh'] ?? null;
+            if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
+                $gioiTinh = null;
+            }
+            $sql = "UPDATE khach_hang SET ten_khach_hang = ?, gmail = ?, so_dien_thoai = ?, dia_chi = ?, gioi_tinh = ?, ngay_sinh = ? WHERE khach_hang_id = ?";
+            $stmt = $khachHangModel->conn->prepare($sql);
+            $stmt->execute([$tenKhachHang, $gmail, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh, $khachHangId]);
+            echo '<script>window.location.href = "index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId . '";</script>';
+            exit;
+        }
+        // Lấy thông tin khách để hiển thị form sửa
+        $khach = $khachHangModel->findById($khachHangId);
+        require 'views/admin/sua_khach_booking.php';
+    }
+    
+    // Xử lý thêm khách hàng vào booking
+    public function themKhachBooking() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $hoTen = $_POST['ho_ten'] ?? '';
+        $email = $_POST['email'] ?? '';
+        $soDienThoai = $_POST['so_dien_thoai'] ?? '';
+        $diaChi = $_POST['dia_chi'] ?? '';
+        $ngaySinh = $_POST['ngay_sinh'] ?? null;
+        $gioiTinh = $_POST['gioi_tinh'] ?? null;
+        if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
+            $gioiTinh = null;
+        }
+        $diemDanh = $_POST['diem_danh'] ?? 'co_mat';
+        if ($bookingId > 0 && $hoTen && $email && $soDienThoai) {
+            $khachHangModel = new KhachHang();
+            // Chèn trực tiếp vào bảng khach_hang
+            $sqlInsertKH = "INSERT INTO khach_hang (ten_khach_hang, gmail, so_dien_thoai, dia_chi, gioi_tinh, ngay_sinh) VALUES (?, ?, ?, ?, ?, ?)";
+            $stmtInsertKH = $khachHangModel->conn->prepare($sqlInsertKH);
+            $stmtInsertKH->execute([$hoTen, $email, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh]);
+            $khachHangId = $khachHangModel->conn->lastInsertId();
+            // Thêm khách vào bảng booking_khach_hang
+            $sqlInsertBK = "INSERT INTO booking_khach_hang (booking_id, khach_hang_id, diem_danh) VALUES (?, ?, ?)";
+            $stmtInsertBK = $khachHangModel->conn->prepare($sqlInsertBK);
+            $stmtInsertBK->execute([$bookingId, $khachHangId, $diemDanh]);
+        }
+        // Quay lại trang danh sách khách booking
+        header('Location: index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId);
+        exit;
+    }
             // Hiển thị danh sách booking của tour
     // Hiển thị danh sách khách hàng của booking
     public function danhSachKhachBooking() {
