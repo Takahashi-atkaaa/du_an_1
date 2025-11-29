@@ -4,6 +4,7 @@ Table booking {
   khach_hang_id int
   ngay_dat date
   ngay_khoi_hanh date
+  ngay_ket_thuc date
   so_nguoi int
   tong_tien decimal(15,2)
   trang_thai varchar [note: 'enum(\'ChoXacNhan\',\'DaCoc\',\'HoanTat\',\'Huy\')']

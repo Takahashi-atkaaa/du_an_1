@@ -42,6 +42,7 @@ require_once __DIR__ . '/models/HDVManagement.php';
 require_once __DIR__ . '/models/TourCheckin.php';
 require_once __DIR__ . '/models/HotelRoomAssignment.php';
 require_once __DIR__ . '/models/DichVuNhaCungCap.php';
+require_once __DIR__ . '/models/YeuCauDacBiet.php';
 
 
 // Route
@@ -109,6 +110,8 @@ match ($act) {
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
+    'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
+    'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
     'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),

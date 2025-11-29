@@ -93,6 +93,62 @@ class AdminController {
         
         require 'views/admin/quan_ly_booking.php';
     }
+
+    public function yeuCauDacBiet() {
+        require_once 'models/YeuCauDacBiet.php';
+        require_once 'models/Tour.php';
+
+        $filters = [
+            'keyword' => trim($_GET['keyword'] ?? ''),
+            'tour_id' => isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0,
+            'muc_do_uu_tien' => $_GET['muc_do_uu_tien'] ?? '',
+            'trang_thai' => $_GET['trang_thai'] ?? '',
+            'loai_yeu_cau' => $_GET['loai_yeu_cau'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? '',
+        ];
+
+        $yeuCauModel = new YeuCauDacBiet();
+        $requests = $yeuCauModel->getAllForAdmin($filters);
+        $stats = $yeuCauModel->getSummaryStats();
+        $histories = $yeuCauModel->getHistoriesByRequestIds(array_column($requests, 'id'));
+
+        $tourModel = new Tour();
+        $tourList = $tourModel->getAll();
+
+        require 'views/admin/quan_ly_yeu_cau_dac_biet.php';
+    }
+
+    public function capNhatYeuCauDacBiet() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        $yeuCauId = isset($_POST['yeu_cau_id']) ? (int)$_POST['yeu_cau_id'] : 0;
+        if ($yeuCauId <= 0) {
+            $_SESSION['error'] = 'Thiếu mã yêu cầu cần cập nhật.';
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        require_once 'models/YeuCauDacBiet.php';
+        $yeuCauModel = new YeuCauDacBiet();
+
+        $data = [
+            'trang_thai' => $_POST['trang_thai'] ?? null,
+            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? null,
+            'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null
+        ];
+
+        $nguoiXuLyId = $_SESSION['user_id'] ?? null;
+        $result = $yeuCauModel->updateByAdmin($yeuCauId, $data, $nguoiXuLyId);
+
+        $_SESSION[$result ? 'success' : 'error'] = $result ? 'Cập nhật yêu cầu thành công.' : 'Không thể cập nhật yêu cầu.';
+
+        header('Location: index.php?act=admin/yeuCauDacBiet');
+        exit();
+    }
     
     public function baoCaoTaiChinh() {
         $giaoDichModel = new GiaoDich();

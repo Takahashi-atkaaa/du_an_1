@@ -56,14 +56,15 @@ class Booking
 
     // Thêm booking mới
     public function insert($data) {
-        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi, tong_tien, trang_thai, ghi_chu) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, ngay_ket_thuc, so_nguoi, tong_tien, trang_thai, ghi_chu) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         $result = $stmt->execute([
             $data['tour_id'] ?? 0,
             $data['khach_hang_id'] ?? 0,
             $data['ngay_dat'] ?? date('Y-m-d'),
             $data['ngay_khoi_hanh'] ?? null,
+            $data['ngay_ket_thuc'] ?? null,
             $data['so_nguoi'] ?? 1,
             $data['tong_tien'] ?? 0,
             $data['trang_thai'] ?? 'ChoXacNhan',
@@ -78,11 +79,12 @@ class Booking
 
     // Cập nhật booking
     public function update($id, $data) {
-        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             $data['so_nguoi'] ?? 1,
             $data['ngay_khoi_hanh'] ?? null,
+            $data['ngay_ket_thuc'] ?? null,
             $data['tong_tien'] ?? 0,
             $data['trang_thai'] ?? 'ChoXacNhan',
             $data['ghi_chu'] ?? null,
@@ -234,14 +236,14 @@ class Booking
                     (
                         SELECT id 
                         FROM yeu_cau_dac_biet y 
-                        WHERE y.khach_hang_id = b.khach_hang_id AND y.tour_id = b.tour_id 
+                        WHERE y.booking_id = b.booking_id
                         ORDER BY y.id DESC 
                         LIMIT 1
                     ) as yeu_cau_id,
                     (
-                        SELECT noi_dung 
+                        SELECT mo_ta 
                         FROM yeu_cau_dac_biet y 
-                        WHERE y.khach_hang_id = b.khach_hang_id AND y.tour_id = b.tour_id 
+                        WHERE y.booking_id = b.booking_id
                         ORDER BY y.id DESC 
                         LIMIT 1
                     ) as yeu_cau_dac_biet

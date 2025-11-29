@@ -302,9 +302,10 @@ class HDVController {
         $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
         $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
         $khachHangId = isset($_POST['khach_hang_id']) ? (int)$_POST['khach_hang_id'] : 0;
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
         $noiDung = trim($_POST['noi_dung'] ?? '');
 
-        if ($lichKhoiHanhId <= 0 || $tourId <= 0 || $khachHangId <= 0) {
+        if ($lichKhoiHanhId <= 0 || $tourId <= 0 || $khachHangId <= 0 || $bookingId <= 0) {
             $_SESSION['error'] = 'Thiếu thông tin yêu cầu đặc biệt.';
             header('Location: index.php?act=hdv/checkInKhach');
             exit();
@@ -319,6 +320,13 @@ class HDVController {
         if (!isset($allowed[$lichKhoiHanhId]) || $allowed[$lichKhoiHanhId] !== $tourId) {
             $_SESSION['error'] = 'Bạn không được phép cập nhật yêu cầu cho tour này.';
             header('Location: index.php?act=hdv/checkInKhach');
+            exit();
+        }
+
+        $booking = $this->bookingModel->findById($bookingId);
+        if (!$booking || (int)$booking['tour_id'] !== $tourId) {
+            $_SESSION['error'] = 'Booking không hợp lệ.';
+            header('Location: index.php?act=hdv/checkInKhach&lich_id=' . $lichKhoiHanhId);
             exit();
         }
 

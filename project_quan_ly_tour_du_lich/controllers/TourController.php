@@ -479,37 +479,49 @@ class TourController {
 
     // Phân bổ nhân sự cho lịch khởi hành
     public function phanBoNhanSuLichKhoiHanh() {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            require_once 'models/PhanBoNhanSu.php';
-            $phanBoNhanSuModel = new PhanBoNhanSu();
-            
-            $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
-            $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
-            $nhanSuId = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
-            $vaiTro = $_POST['vai_tro'] ?? 'Khac';
-            $ghiChu = $_POST['ghi_chu'] ?? null;
-            
-            if ($lichKhoiHanhId > 0 && $nhanSuId > 0) {
-                $data = [
-                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
-                    'nhan_su_id' => $nhanSuId,
-                    'vai_tro' => $vaiTro,
-                    'ghi_chu' => $ghiChu
-                ];
-                
-                $result = $phanBoNhanSuModel->insert($data);
-                if ($result) {
-                    $_SESSION['success'] = 'Phân bổ nhân sự thành công.';
-                } else {
-                    $_SESSION['error'] = 'Không thể phân bổ nhân sự.';
-                }
-            } else {
-                $_SESSION['error'] = 'Thông tin không hợp lệ.';
+        // Nếu là GET (click từ màn booking) thì chuyển sang màn chi tiết tour để chọn lịch khởi hành
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $tourIdFromGet = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+            if ($tourIdFromGet > 0) {
+                header('Location: index.php?act=admin/chiTietTour&id=' . $tourIdFromGet);
+                exit();
             }
-            
-            header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+
+            // Không có tour_id hợp lệ -> về trang quản lý booking
+            $_SESSION['error'] = 'Thiếu thông tin tour để phân bổ nhân sự.';
+            header('Location: index.php?act=admin/quanLyBooking');
             exit();
         }
+
+        require_once 'models/PhanBoNhanSu.php';
+        $phanBoNhanSuModel = new PhanBoNhanSu();
+        
+        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+        $tourId = isset($_POST['tour_id']) ? (int)$_POST['tour_id'] : 0;
+        $nhanSuId = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
+        $vaiTro = $_POST['vai_tro'] ?? 'Khac';
+        $ghiChu = $_POST['ghi_chu'] ?? null;
+        
+        if ($lichKhoiHanhId > 0 && $nhanSuId > 0) {
+            $data = [
+                'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                'nhan_su_id' => $nhanSuId,
+                'vai_tro' => $vaiTro,
+                'ghi_chu' => $ghiChu
+            ];
+            
+            $result = $phanBoNhanSuModel->insert($data);
+            if ($result) {
+                $_SESSION['success'] = 'Phân bổ nhân sự thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể phân bổ nhân sự.';
+            }
+        } else {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+        }
+        
+        header('Location: index.php?act=tour/chiTietLichKhoiHanh&id=' . $lichKhoiHanhId . '&tour_id=' . $tourId);
+        exit();
     }
 
     // Cập nhật trạng thái phân bổ nhân sự

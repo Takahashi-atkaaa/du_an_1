@@ -25,6 +25,11 @@
                     <input type="date" name="ngay_khoi_hanh" required>
                 </div>
                 <div class="form-group">
+                    <label>Ngày kết thúc (nếu có):</label>
+                    <input type="date" name="ngay_ket_thuc">
+                    <small>Nếu bỏ trống, hệ thống sẽ dùng ngày khởi hành.</small>
+                </div>
+                <div class="form-group">
                     <label>Ghi chú:</label>
                     <textarea name="ghi_chu" rows="3"></textarea>
                 </div>
@@ -34,6 +39,25 @@
                 </div>
                 <button type="submit">Xác nhận đặt tour</button>
             </form>
+            <script>
+                (function() {
+                    const startInput = document.querySelector('input[name="ngay_khoi_hanh"]');
+                    const endInput = document.querySelector('input[name="ngay_ket_thuc"]');
+                    if (!startInput || !endInput) return;
+                    
+                    function syncEndDate() {
+                        if (startInput.value) {
+                            endInput.min = startInput.value;
+                            if (!endInput.value || endInput.value < startInput.value) {
+                                endInput.value = startInput.value;
+                            }
+                        }
+                    }
+                    
+                    startInput.addEventListener('change', syncEndDate);
+                    syncEndDate();
+                })();
+            </script>
         <?php endif; ?>
     </div>
 </body>
