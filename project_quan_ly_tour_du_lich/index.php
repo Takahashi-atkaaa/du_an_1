@@ -53,10 +53,10 @@ $act = $_GET['act'] ?? 'auth/login';
 match ($act) {
     'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
     'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
-            'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),
-        'admin/danhSachKhachBooking' => (new AdminController())->danhSachKhachBooking(),
-        'admin/xoaKhachBooking' => (new AdminController())->xoaKhachBooking(),
-        'admin/suaKhachBooking' => (new AdminController())->suaKhachBooking(),
+    'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),
+    'admin/danhSachKhachBooking' => (new AdminController())->danhSachKhachBooking(),
+    'admin/xoaKhachBooking' => (new AdminController())->xoaKhachBooking(),
+    'admin/suaKhachBooking' => (new AdminController())->suaKhachBooking(),
     // Trang chủ - Tour
     'tour/index' => (new TourController())->index(),
     'tour/show' => (new TourController())->show(),

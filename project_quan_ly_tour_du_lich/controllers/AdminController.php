@@ -36,7 +36,7 @@ class AdminController {
         $tour = ['ten_tour' => $duToan ? $duToan['ten_tour'] : ''];
         require 'views/admin/bao_cao_tai_chinh/so_sanh_chi_tiet.php';
     }
-    // ...existing code...
+    
     public function xemChiTietNguoiDung() {
         require_once 'models/NguoiDung.php';
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
@@ -44,8 +44,8 @@ class AdminController {
         $nguoiDung = $nguoiDungModel->findById($id);
         require 'views/admin/chi_tiet_nguoi_dung.php';
     }
-    // ...existing code...
-                    // Xóa khách khỏi booking
+    
+    // Xóa khách khỏi booking
                     public function xoaKhachBooking() {
                         require_once 'models/Booking.php';
                         require_once 'models/KhachHang.php';
