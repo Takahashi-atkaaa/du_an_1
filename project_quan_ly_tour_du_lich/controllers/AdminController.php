@@ -36,6 +36,7 @@ class AdminController {
         $tour = ['ten_tour' => $duToan ? $duToan['ten_tour'] : ''];
         require 'views/admin/bao_cao_tai_chinh/so_sanh_chi_tiet.php';
     }
+    
     // ...existing code...
     public function xemChiTietNguoiDung() {
         require_once 'models/NguoiDung.php';
