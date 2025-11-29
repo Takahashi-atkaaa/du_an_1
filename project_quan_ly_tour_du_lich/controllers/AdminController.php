@@ -1,6 +1,15 @@
 <?php
 
 class AdminController {
+    // ...existing code...
+    public function xemChiTietNguoiDung() {
+        require_once 'models/NguoiDung.php';
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $nguoiDungModel = new NguoiDung();
+        $nguoiDung = $nguoiDungModel->findById($id);
+        require 'views/admin/chi_tiet_nguoi_dung.php';
+    }
+    // ...existing code...
                     // Xóa khách khỏi booking
                     public function xoaKhachBooking() {
                         require_once 'models/Booking.php';
@@ -190,6 +199,59 @@ class AdminController {
         require 'views/admin/chi_tiet_tour_admin.php';
     }
     public function quanLyNguoiDung() {
+        require_once 'models/NguoiDung.php';
+        $nguoiDungModel = new NguoiDung();
+        $search = $_GET['search'] ?? '';
+        $searchMonth = $_GET['search_month'] ?? '';
+        $searchDate = $_GET['search_date'] ?? '';
+        $searchRole = $_GET['search_role'] ?? '';
+        $nguoiDungList = $nguoiDungModel->getAll();
+        $highlightedUser = null;
+        // Tìm kiếm theo tên/email/sđt
+        if ($search !== '') {
+            foreach ($nguoiDungList as $key => $nd) {
+                if (
+                    stripos($nd['ho_ten'], $search) !== false ||
+                    stripos($nd['email'], $search) !== false ||
+                    stripos($nd['so_dien_thoai'], $search) !== false
+                ) {
+                    $highlightedUser = $nd;
+                    unset($nguoiDungList[$key]);
+                    $nguoiDungList = array_merge([$highlightedUser], $nguoiDungList);
+                    break;
+                }
+            }
+        }
+        // Lọc chính xác theo tháng tạo: chỉ hiển thị đúng tháng được chọn
+        if ($searchMonth !== '') {
+            $filteredList = [];
+            foreach ($nguoiDungList as $nd) {
+                if (strpos($nd['ngay_tao'], $searchMonth) === 0) {
+                    $filteredList[] = $nd;
+                }
+            }
+            $nguoiDungList = $filteredList;
+        }
+        // Lọc chính xác theo ngày tạo
+        if ($searchDate !== '') {
+            $filteredList = [];
+            foreach ($nguoiDungList as $nd) {
+                if (strpos($nd['ngay_tao'], $searchDate) === 0) {
+                    $filteredList[] = $nd;
+                }
+            }
+            $nguoiDungList = $filteredList;
+        }
+        // Lọc theo vai trò
+        if ($searchRole !== '') {
+            $filteredList = [];
+            foreach ($nguoiDungList as $nd) {
+                if ($nd['vai_tro'] === $searchRole) {
+                    $filteredList[] = $nd;
+                }
+            }
+            $nguoiDungList = $filteredList;
+        }
         require 'views/admin/quan_ly_nguoi_dung.php';
     }
     

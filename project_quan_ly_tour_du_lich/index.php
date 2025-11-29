@@ -110,6 +110,7 @@ match ($act) {
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
     'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
+    'admin/xemChiTietNguoiDung' => (new AdminController())->xemChiTietNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),

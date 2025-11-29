@@ -34,7 +34,7 @@ class BaoCaoTaiChinhController {
         $denNgay = date('Y-m-t');
         
         // Thống kê giao dịch tháng này
-        $thongKe = $this->giaoDichModel->thongKeTheoLoai($tuNgay, $denNgay);
+        $thongKe = $this->giaoDichModel->getThongKeTongHop($tuNgay, $denNgay);
         
         // Tính tổng thu, tổng chi, lợi nhuận
         $tongThu = 0;
@@ -71,11 +71,8 @@ class BaoCaoTaiChinhController {
         $filters = array_filter($filters);
         
         // Lấy danh sách giao dịch
-        if (empty($filters)) {
-            $giaoDichs = $this->giaoDichModel->getAll();
-        } else {
-            $giaoDichs = $this->giaoDichModel->search($filters);
-        }
+        // Chưa có hàm search, chỉ dùng getAll
+        $giaoDichs = $this->giaoDichModel->getAll();
         
         // Tính tổng thu, tổng chi
         $tongThu = 0;
@@ -95,83 +92,7 @@ class BaoCaoTaiChinhController {
         require 'views/admin/bao_cao_tai_chinh/lich_su_giao_dich.php';
     }
     
-    // Báo cáo thu chi từng tour
-    public function thuChiTour() {
-        $tourId = $_GET['tour_id'] ?? null;
-        if ($tourId) {
-            // Lấy thông tin tour
-            $tour = $this->tourModel->findById($tourId);
-            // Lấy giao dịch của tour
-            $giaoDichs = $this->giaoDichModel->getByTour($tourId);
-            // Tính tổng thu từ giao dịch
-            $tongThu = $this->giaoDichModel->getTongThuByTour($tourId);
-            // Tính tổng chi từ giao dịch
-            $tongChiGD = $this->giaoDichModel->getTongChiByTour($tourId);
-            // Tính tổng chi phí thực tế đã duyệt
-            $tongChiThucTe = $this->chiPhiModel->getTongThucTeByDuToan(
-                ($this->duToanModel->getByTour($tourId)[0]['du_toan_id'] ?? null)
-            );
-            // Lấy dự toán tour
-            $duToan = $this->duToanModel->getByTour($tourId);
-            $tongDuToan = $duToan[0]['tong_du_toan'] ?? 0;
-            // Tính lợi nhuận thực tế
-            $loiNhuan = $tongThu - $tongChiThucTe;
-            // Lấy trạng thái so với dự toán
-            $status = 'AnToan';
-            if ($tongChiThucTe > $tongDuToan) {
-                $status = 'VuotDuToan';
-            } elseif ($tongChiThucTe > 0.9 * $tongDuToan) {
-                $status = 'GanVuot';
-            }
-            // Lấy danh sách booking của tour
-            $bookings = $this->bookingModel->getByTour($tourId);
-            require 'views/admin/bao_cao_tai_chinh/chi_tiet_thu_chi_tour.php';
-        } else {
-            // Hiển thị danh sách tours với thống kê
-            $tours = $this->tourModel->getAll();
-            foreach ($tours as &$tour) {
-                $tourId = $tour['tour_id'];
-                $tour['tong_thu'] = $this->giaoDichModel->getTongThuByTour($tourId);
-                $tour['tong_chi_gd'] = $this->giaoDichModel->getTongChiByTour($tourId);
-                $duToan = $this->duToanModel->getByTour($tourId);
-                $tour['tong_du_toan'] = $duToan[0]['tong_du_toan'] ?? 0;
-                $tour['tong_chi_thuc_te'] = $this->chiPhiModel->getTongThucTeByDuToan($duToan[0]['du_toan_id'] ?? null);
-                $tour['loi_nhuan'] = $tour['tong_thu'] - $tour['tong_chi_thuc_te'];
-                // Trạng thái so với dự toán
-                $tour['status'] = 'AnToan';
-                if ($tour['tong_chi_thuc_te'] > $tour['tong_du_toan']) {
-                    $tour['status'] = 'VuotDuToan';
-                } elseif ($tour['tong_chi_thuc_te'] > 0.9 * $tour['tong_du_toan']) {
-                    $tour['status'] = 'GanVuot';
-                }
-            }
-            require 'views/admin/bao_cao_tai_chinh/thu_chi_tour.php';
-        }
-    }
 
-    // Xem danh sách khách của tour
-        } else {
-            // Hiển thị danh sách tours với thống kê
-            $tours = $this->tourModel->getAll();
-            foreach ($tours as &$tour) {
-                $tourId = $tour['tour_id'];
-                $tour['tong_thu'] = $this->giaoDichModel->getTongThuByTour($tourId);
-                $tour['tong_chi_gd'] = $this->giaoDichModel->getTongChiByTour($tourId);
-                $duToan = $this->duToanModel->getByTour($tourId);
-                $tour['tong_du_toan'] = $duToan[0]['tong_du_toan'] ?? 0;
-                $tour['tong_chi_thuc_te'] = $this->chiPhiModel->getTongThucTeByDuToan($duToan[0]['du_toan_id'] ?? null);
-                $tour['loi_nhuan'] = $tour['tong_thu'] - $tour['tong_chi_thuc_te'];
-                // Trạng thái so với dự toán
-                $tour['status'] = 'AnToan';
-                if ($tour['tong_chi_thuc_te'] > $tour['tong_du_toan']) {
-                    $tour['status'] = 'VuotDuToan';
-                } elseif ($tour['tong_chi_thuc_te'] > 0.9 * $tour['tong_du_toan']) {
-                    $tour['status'] = 'GanVuot';
-                }
-            }
-            require 'views/admin/bao_cao_tai_chinh/thu_chi_tour.php';
-        }
-    }
     
     // Báo cáo công nợ
     public function congNo() {
