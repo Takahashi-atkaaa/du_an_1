@@ -88,6 +88,62 @@ class LichKhoiHanhController {
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
 
+    /**
+     * Đi từ booking sang màn chi tiết lịch khởi hành để phân bổ nhân sự & dịch vụ.
+     * Nếu chưa có lịch khởi hành cho tour + ngày khởi hành của booking thì tự tạo mới.
+     */
+    public function chiTietTheoBooking() {
+        $bookingId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'ID booking không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+
+        $booking = $this->bookingModel->getBookingWithDetails($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+
+        $tourId = (int)($booking['tour_id'] ?? 0);
+        $ngayKhoiHanh = $booking['ngay_khoi_hanh'] ?? $booking['ngay_dat'];
+
+        if ($tourId <= 0 || empty($ngayKhoiHanh)) {
+            $_SESSION['error'] = 'Booking chưa có thông tin tour hoặc ngày khởi hành.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+
+        // Tìm lịch khởi hành tương ứng
+        $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh);
+
+        if (!$lichKhoiHanh) {
+            // Tự tạo lịch khởi hành mới dựa trên thông tin booking
+            $data = [
+                'tour_id' => $tourId,
+                'ngay_khoi_hanh' => $ngayKhoiHanh,
+                'gio_xuat_phat' => null,
+                'ngay_ket_thuc' => $booking['ngay_ket_thuc'] ?? $ngayKhoiHanh,
+                'gio_ket_thuc' => null,
+                'diem_tap_trung' => '',
+                'so_cho' => 50,
+                'hdv_id' => null,
+                'trang_thai' => 'SapKhoiHanh',
+                'ghi_chu' => 'Tạo tự động từ booking #' . $bookingId
+            ];
+
+            $lichKhoiHanhId = $this->lichKhoiHanhModel->insert($data);
+        } else {
+            $lichKhoiHanhId = $lichKhoiHanh['id'];
+        }
+
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId . '&from_booking=' . $bookingId);
+        exit();
+    }
+
     // Tạo lịch khởi hành mới
     public function create() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -115,6 +171,28 @@ class LichKhoiHanhController {
         }
         
         $tours = $this->tourModel->getAll();
+        require 'views/admin/tao_lich_khoi_hanh.php';
+    }
+
+    // Hiển thị form sửa lịch khởi hành
+    public function edit() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($id <= 0) {
+            $_SESSION['error'] = 'ID lịch khởi hành không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit();
+        }
+
+        $lichKhoiHanh = $this->lichKhoiHanhModel->findById($id);
+        if (!$lichKhoiHanh) {
+            $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit();
+        }
+
+        $tours = $this->tourModel->getAll();
+        $mode = 'edit';
         require 'views/admin/tao_lich_khoi_hanh.php';
     }
 

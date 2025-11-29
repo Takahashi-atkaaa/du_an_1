@@ -95,6 +95,8 @@ match ($act) {
     'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),
     'lichKhoiHanh/create' => (new LichKhoiHanhController())->create(),
     'lichKhoiHanh/chiTiet' => (new LichKhoiHanhController())->chiTiet(),
+    'lichKhoiHanh/chiTietTheoBooking' => (new LichKhoiHanhController())->chiTietTheoBooking(),
+    'lichKhoiHanh/edit' => (new LichKhoiHanhController())->edit(),
     'lichKhoiHanh/update' => (new LichKhoiHanhController())->update(),
     'lichKhoiHanh/phanBoNhanSu' => (new LichKhoiHanhController())->phanBoNhanSu(),
     'lichKhoiHanh/updateTrangThaiNhanSu' => (new LichKhoiHanhController())->updateTrangThaiNhanSu(),

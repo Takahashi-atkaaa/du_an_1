@@ -346,8 +346,8 @@
                                                    class="btn btn-sm btn-info" title="Xem chi tiết">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="index.php?act=tour/phanBoNhanSuLichKhoiHanh&id=<?php echo $booking['tour_id']; ?>" 
-                                                   class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ">
+                                                <a href="index.php?act=lichKhoiHanh/chiTietTheoBooking&id=<?php echo $booking['booking_id']; ?>" 
+                                                   class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ theo booking này">
                                                     <i class="bi bi-people-fill"></i>
                                                 </a>
                                                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>

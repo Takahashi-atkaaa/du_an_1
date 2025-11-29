@@ -11,9 +11,15 @@ class LichKhoiHanh
 
     // Lấy tất cả lịch khởi hành
     public function getAll() {
-        $sql = "SELECT lk.*, t.ten_tour, t.loai_tour
+        $sql = "SELECT 
+                    lk.*, 
+                    t.ten_tour, 
+                    t.loai_tour,
+                    COUNT(DISTINCT pbn.id) AS so_nhan_su
                 FROM lich_khoi_hanh lk
                 LEFT JOIN tour t ON lk.tour_id = t.tour_id
+                LEFT JOIN phan_bo_nhan_su pbn ON pbn.lich_khoi_hanh_id = lk.id
+                GROUP BY lk.id
                 ORDER BY lk.ngay_khoi_hanh DESC, lk.gio_xuat_phat DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
@@ -41,6 +47,17 @@ class LichKhoiHanh
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId]);
         return $stmt->fetchAll();
+    }
+
+    // Tìm lịch khởi hành theo tour và ngày khởi hành (dùng để map từ booking)
+    public function findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh) {
+        $sql = "SELECT * FROM lich_khoi_hanh 
+                WHERE tour_id = ? AND ngay_khoi_hanh = ?
+                ORDER BY id ASC
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        return $stmt->fetch();
     }
 
     // Thêm lịch khởi hành mới

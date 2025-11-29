@@ -162,9 +162,15 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                             <?php echo htmlspecialchars($lichKhoiHanh['ten_tour'] ?? 'N/A'); ?>
                         </p>
                     </div>
-                    <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
-                        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="index.php?act=lichKhoiHanh/edit&id=<?php echo $lichKhoiHanh['id']; ?>" 
+                           class="btn btn-warning">
+                            <i class="bi bi-pencil-square"></i> Sửa lịch
+                        </a>
+                        <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
+                            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
