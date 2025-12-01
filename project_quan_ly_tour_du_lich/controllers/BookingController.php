@@ -4,6 +4,8 @@ require_once 'models/Tour.php';
 require_once 'models/KhachHang.php';
 require_once 'models/NguoiDung.php';
 require_once 'models/BookingHistory.php';
+require_once 'models/BookingDeletionHistory.php';
+require_once 'models/LichKhoiHanh.php';
 
 if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require_once __DIR__ . '/../vendor/autoload.php';
@@ -18,6 +20,8 @@ class BookingController {
     private $khachHangModel;
     private $nguoiDungModel;
     private $historyModel;
+    private $deletionHistoryModel;
+    private $lichKhoiHanhModel;
     
     public function __construct() {
         $this->bookingModel = new Booking();
@@ -25,6 +29,8 @@ class BookingController {
         $this->khachHangModel = new KhachHang();
         $this->nguoiDungModel = new NguoiDung();
         $this->historyModel = new BookingHistory();
+        $this->deletionHistoryModel = new BookingDeletionHistory();
+        $this->lichKhoiHanhModel = new LichKhoiHanh();
     }
     
     public function create() {
@@ -52,12 +58,16 @@ class BookingController {
                 exit();
             }
 
+        $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? '';
+        $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
+
             $data = [
                 'tour_id' => $tourId,
                 'khach_hang_id' => $khachHangId,
                 'ngay_dat' => date('Y-m-d'),
                 'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
-                'ngay_khoi_hanh' => $_POST['ngay_khoi_hanh'] ?? '',
+            'ngay_khoi_hanh' => $ngayKhoiHanh,
+            'ngay_ket_thuc' => $ngayKetThuc,
                 'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
                 'trang_thai' => 'ChoXacNhan',
                 'ghi_chu' => $_POST['ghi_chu'] ?? null
@@ -65,6 +75,27 @@ class BookingController {
             
             $bookingId = $this->bookingModel->insert($data);
             if ($bookingId) {
+                // Tự động tạo lịch khởi hành nếu chưa có
+                if (!empty($ngayKhoiHanh)) {
+                    $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh);
+                    if (!$lichKhoiHanh) {
+                        // Tạo lịch khởi hành mới
+                        $lichKhoiHanhData = [
+                            'tour_id' => $tourId,
+                            'ngay_khoi_hanh' => $ngayKhoiHanh,
+                            'ngay_ket_thuc' => $ngayKetThuc,
+                            'gio_xuat_phat' => null,
+                            'gio_ket_thuc' => null,
+                            'diem_tap_trung' => '',
+                            'so_cho' => 50, // Mặc định
+                            'hdv_id' => null,
+                            'trang_thai' => 'SapKhoiHanh',
+                            'ghi_chu' => 'Tạo tự động từ booking #' . $bookingId
+                        ];
+                        $this->lichKhoiHanhModel->insert($lichKhoiHanhData);
+                    }
+                }
+                
                 header("Location: index.php?act=booking/show&id=$bookingId");
                 exit();
             } else {
@@ -228,9 +259,13 @@ class BookingController {
             exit();
         }
         
+        $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? null;
+        $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
+        
         $data = [
             'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
-            'ngay_khoi_hanh' => $_POST['ngay_khoi_hanh'] ?? null,
+            'ngay_khoi_hanh' => $ngayKhoiHanh,
+            'ngay_ket_thuc' => $ngayKetThuc,
             'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : 0,
             'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
             'ghi_chu' => $_POST['ghi_chu'] ?? null
@@ -274,16 +309,79 @@ class BookingController {
             exit();
         }
         
-        $result = $this->bookingModel->delete($id);
-        
-        if ($result) {
-            $_SESSION['success'] = 'Xóa booking thành công.';
-        } else {
-            $_SESSION['error'] = 'Không thể xóa booking.';
+        // GET: Hiển thị form xác nhận mật khẩu
+        if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+            $booking = $this->bookingModel->getBookingWithDetails($id);
+            if (!$booking) {
+                $_SESSION['error'] = 'Booking không tồn tại.';
+                header('Location: index.php?act=admin/quanLyBooking');
+                exit();
+            }
+            require 'views/admin/xac_nhan_xoa_booking.php';
+            exit();
         }
         
-        header('Location: index.php?act=admin/quanLyBooking');
-        exit();
+        // POST: Xác nhận mật khẩu và xóa
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $matKhau = $_POST['mat_khau'] ?? '';
+            $lyDoXoa = $_POST['ly_do_xoa'] ?? '';
+            
+            // Kiểm tra mật khẩu admin
+            $adminId = $_SESSION['user_id'] ?? 0;
+            $admin = $this->nguoiDungModel->findById($adminId);
+            
+            if (!$admin || !password_verify($matKhau, $admin['mat_khau'])) {
+                $_SESSION['error'] = 'Mật khẩu không đúng.';
+                header('Location: index.php?act=booking/delete&id=' . $id);
+                exit();
+            }
+            
+            // Lấy thông tin booking trước khi xóa
+            $booking = $this->bookingModel->getBookingWithDetails($id);
+            if (!$booking) {
+                $_SESSION['error'] = 'Booking không tồn tại.';
+                header('Location: index.php?act=admin/quanLyBooking');
+                exit();
+            }
+            
+            // Lưu thông tin booking vào JSON trước khi xóa
+            $thongTinBooking = json_encode([
+                'booking_id' => $booking['booking_id'],
+                'tour_id' => $booking['tour_id'],
+                'ten_tour' => $booking['ten_tour'] ?? 'N/A',
+                'khach_hang_id' => $booking['khach_hang_id'],
+                'ten_khach_hang' => $booking['ho_ten'] ?? 'N/A',
+                'so_nguoi' => $booking['so_nguoi'] ?? 0,
+                'tong_tien' => $booking['tong_tien'] ?? 0,
+                'ngay_dat' => $booking['ngay_dat'] ?? null,
+                'ngay_khoi_hanh' => $booking['ngay_khoi_hanh'] ?? null,
+                'ngay_ket_thuc' => $booking['ngay_ket_thuc'] ?? null,
+                'trang_thai' => $booking['trang_thai'] ?? 'N/A',
+                'ghi_chu' => $booking['ghi_chu'] ?? null
+            ], JSON_UNESCAPED_UNICODE);
+            
+            // Xóa booking
+            $result = $this->bookingModel->delete($id);
+            
+            if ($result) {
+                // Lưu vào lịch sử xóa
+                $this->deletionHistoryModel->insert([
+                    'booking_id' => $id,
+                    'tour_id' => $booking['tour_id'] ?? null,
+                    'khach_hang_id' => $booking['khach_hang_id'] ?? null,
+                    'nguoi_xoa_id' => $adminId,
+                    'ly_do_xoa' => $lyDoXoa,
+                    'thong_tin_booking' => $thongTinBooking
+                ]);
+                
+                $_SESSION['success'] = 'Xóa booking thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể xóa booking.';
+            }
+            
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
     }
 
     // Kiểm tra quyền cập nhật
@@ -413,6 +511,7 @@ class BookingController {
                     'khach_hang_id' => $khachHang['khach_hang_id'],
                     'ngay_dat' => date('Y-m-d'),
                     'ngay_khoi_hanh' => $ngayKhoiHanh,
+                    'ngay_ket_thuc' => !empty($_POST['ngay_ket_thuc']) ? $_POST['ngay_ket_thuc'] : $ngayKhoiHanh,
                     'so_nguoi' => $soNguoi,
                     'tong_tien' => $tongTien,
                     'trang_thai' => 'ChoXacNhan',
@@ -422,6 +521,28 @@ class BookingController {
                 $bookingId = $this->bookingModel->insert($bookingData);
                 if (!$bookingId) {
                     throw new Exception('Không thể tạo booking.');
+                }
+
+                // Tự động tạo lịch khởi hành nếu chưa có
+                if (!empty($ngayKhoiHanh)) {
+                    $ngayKetThuc = !empty($_POST['ngay_ket_thuc']) ? $_POST['ngay_ket_thuc'] : $ngayKhoiHanh;
+                    $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh);
+                    if (!$lichKhoiHanh) {
+                        // Tạo lịch khởi hành mới
+                        $lichKhoiHanhData = [
+                            'tour_id' => $tourId,
+                            'ngay_khoi_hanh' => $ngayKhoiHanh,
+                            'ngay_ket_thuc' => $ngayKetThuc,
+                            'gio_xuat_phat' => null,
+                            'gio_ket_thuc' => null,
+                            'diem_tap_trung' => '',
+                            'so_cho' => 50, // Mặc định
+                            'hdv_id' => null,
+                            'trang_thai' => 'SapKhoiHanh',
+                            'ghi_chu' => 'Tạo tự động từ booking #' . $bookingId
+                        ];
+                        $this->lichKhoiHanhModel->insert($lichKhoiHanhData);
+                    }
                 }
 
                 // Lưu yêu cầu đặc biệt nếu có

@@ -92,6 +92,7 @@
                                             <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichId; ?>">
                                             <input type="hidden" name="tour_id" value="<?php echo $lich['tour_id']; ?>">
                                             <input type="hidden" name="khach_hang_id" value="<?php echo $khachHangId; ?>">
+                                            <input type="hidden" name="booking_id" value="<?php echo (int)$khach['booking_id']; ?>">
                                             <input type="hidden" name="redirect_to" value="hdv/quanLyYeuCauDacBiet">
                                             <textarea name="noi_dung" rows="4" style="width: 100%; min-width: 250px; padding: 6px;" placeholder="Ví dụ: ăn chay, dị ứng, bệnh lý, yêu cầu riêng..."><?php echo htmlspecialchars($khach['yeu_cau_dac_biet'] ?? ''); ?></textarea>
                                             <button type="submit" style="background: #28a745; color: #fff; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">💾 Lưu yêu cầu</button>
