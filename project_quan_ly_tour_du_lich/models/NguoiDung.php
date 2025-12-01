@@ -121,14 +121,38 @@ class NguoiDung
 
     // Cập nhật người dùng
     public function update($id, $data) {
-        $sql = "UPDATE nguoi_dung SET ho_ten = ?, email = ?, vai_tro = ? WHERE id = ?";
+        $fields = [];
+        $params = [];
+        
+        if (isset($data['ho_ten'])) {
+            $fields[] = "ho_ten = ?";
+            $params[] = $data['ho_ten'];
+        }
+        if (isset($data['email'])) {
+            $fields[] = "email = ?";
+            $params[] = $data['email'];
+        }
+        if (isset($data['so_dien_thoai'])) {
+            $fields[] = "so_dien_thoai = ?";
+            $params[] = $data['so_dien_thoai'];
+        }
+        if (isset($data['vai_tro'])) {
+            $fields[] = "vai_tro = ?";
+            $params[] = $data['vai_tro'];
+        }
+        if (isset($data['mat_khau'])) {
+            $fields[] = "mat_khau = ?";
+            $params[] = $data['mat_khau'];
+        }
+        
+        if (empty($fields)) {
+            return false;
+        }
+        
+        $params[] = $id;
+        $sql = "UPDATE nguoi_dung SET " . implode(", ", $fields) . " WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            $data['ho_ten'] ?? '',
-            $data['email'] ?? '',
-            $data['vai_tro'] ?? 'KhachHang',
-            $id
-        ]);
+        return $stmt->execute($params);
     }
 
     // Cập nhật mật khẩu (hash)

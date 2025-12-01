@@ -204,6 +204,11 @@
             </div>
         <?php endif; ?>
 
+        <?php 
+            $tourBookingLink = rtrim(BASE_URL, '/') . '/index.php?act=tour/show&id=' . $tour['tour_id'];
+            $tourQrPath = !empty($tour['qr_code_path']) ? BASE_URL . $tour['qr_code_path'] : null;
+        ?>
+
         <div class="row">
             <!-- Left Column: Info Cards -->
             <div class="col-lg-4 mb-4">
@@ -243,6 +248,37 @@
                         <div>
                             <div class="info-label"><i class="bi bi-people"></i> Số chỗ tối đa</div>
                             <div class="info-value"><?php echo htmlspecialchars($tour['so_cho_toi_da'] ?? 'Không giới hạn'); ?></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- QR & booking link -->
+                <div class="card info-card mb-3">
+                    <div class="card-body text-center">
+                        <h6 class="card-title fw-bold mb-3">
+                            <i class="bi bi-qr-code"></i> Đặt tour online
+                        </h6>
+                        <?php if ($tourQrPath): ?>
+                            <img src="<?php echo $tourQrPath; ?>" alt="QR <?php echo htmlspecialchars($tour['ten_tour']); ?>" class="img-fluid mb-3" style="max-width: 260px;">
+                            <div class="d-grid gap-2">
+                                <a href="<?php echo $tourQrPath; ?>" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">
+                                    <i class="bi bi-download"></i> Tải mã QR
+                                </a>
+                            </div>
+                        <?php else: ?>
+                            <p class="text-muted mb-3">Chưa có mã QR cho tour này.</p>
+                        <?php endif; ?>
+                        <a href="index.php?act=tour/generateQr&id=<?php echo $tour['tour_id']; ?>" class="btn btn-primary btn-sm mt-2">
+                            <i class="bi bi-arrow-repeat"></i> Tạo/Cập nhật mã QR
+                        </a>
+                        <div class="mt-3 text-start">
+                            <label class="info-label mb-1">Link đặt tour</label>
+                            <div class="input-group input-group-sm">
+                                <input type="text" class="form-control" id="shareLinkInput" readonly value="<?php echo htmlspecialchars($tourBookingLink); ?>">
+                                <button class="btn btn-outline-primary" type="button" onclick="copyShareLink('<?php echo htmlspecialchars($tourBookingLink); ?>')">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -513,5 +549,22 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function copyShareLink(link) {
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(link)
+                    .then(() => alert('Đã sao chép link đặt tour.'))
+                    .catch(() => alert('Không thể sao chép link.'));
+            } else {
+                const tempInput = document.createElement('input');
+                tempInput.value = link;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                alert('Đã sao chép link đặt tour.');
+            }
+        }
+    </script>
 </body>
 </html>

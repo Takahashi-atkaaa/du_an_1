@@ -92,6 +92,20 @@
     </style>
 </head>
 <body class="bg-light">
+<?php
+$serviceTypeOptions = [
+    'Xe' => 'Xe vận chuyển',
+    'KhachSan' => 'Khách sạn',
+    'VeMayBay' => 'Vé máy bay',
+    'Ve' => 'Vé tàu / xe khách',
+    'NhaHang' => 'Nhà hàng',
+    'DiemThamQuan' => 'Điểm tham quan',
+    'Visa' => 'Visa',
+    'BaoHiem' => 'Bảo hiểm',
+    'Khac' => 'Khác'
+];
+$catalogServicesMap = $catalogServicesMap ?? [];
+?>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container-fluid">
@@ -113,7 +127,7 @@
                 </ul>
             </div>
         </div>
-    </nav>
+        </nav>
 
     <div class="container-fluid px-4 py-4">
         <!-- Page Header -->
@@ -131,14 +145,14 @@
                                     default => 'bg-secondary'
                                 };
                             ?>">
-                                <?php
-                                $statusLabels = [
-                                    'SapKhoiHanh' => 'Sắp khởi hành',
-                                    'DangChay' => 'Đang chạy',
-                                    'HoanThanh' => 'Hoàn thành'
-                                ];
-                                echo $statusLabels[$lichKhoiHanh['trang_thai']] ?? $lichKhoiHanh['trang_thai'];
-                                ?>
+                        <?php
+                        $statusLabels = [
+                            'SapKhoiHanh' => 'Sắp khởi hành',
+                            'DangChay' => 'Đang chạy',
+                            'HoanThanh' => 'Hoàn thành'
+                        ];
+                        echo $statusLabels[$lichKhoiHanh['trang_thai']] ?? $lichKhoiHanh['trang_thai'];
+                        ?>
                             </span>
                         </div>
                         <h1 class="display-6 fw-bold mb-2">
@@ -148,9 +162,15 @@
                             <?php echo htmlspecialchars($lichKhoiHanh['ten_tour'] ?? 'N/A'); ?>
                         </p>
                     </div>
-                    <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
-                        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="index.php?act=lichKhoiHanh/edit&id=<?php echo $lichKhoiHanh['id']; ?>" 
+                           class="btn btn-warning">
+                            <i class="bi bi-pencil-square"></i> Sửa lịch
+                        </a>
+                        <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
+                            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
@@ -169,7 +189,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
-
+            
         <div class="row">
             <!-- Left Column: Info -->
             <div class="col-lg-4">
@@ -270,6 +290,11 @@
                         </button>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="customer-tab" data-bs-toggle="pill" data-bs-target="#customer" type="button">
+                            <i class="bi bi-person-lines-fill"></i> Danh sách khách
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <button class="nav-link" id="service-tab" data-bs-toggle="pill" data-bs-target="#service" type="button">
                             <i class="bi bi-gear"></i> Dịch vụ
                         </button>
@@ -286,28 +311,28 @@
                                 <i class="bi bi-person-plus"></i> Thêm nhân sự mới
                             </h6>
                             <form method="POST" action="index.php?act=lichKhoiHanh/phanBoNhanSu">
-                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Nhân sự <span class="text-danger">*</span></label>
                                         <select name="nhan_su_id" class="form-select" required>
-                                            <option value="">-- Chọn nhân sự --</option>
-                                            <?php foreach ($nhanSuList as $ns): ?>
-                                                <option value="<?php echo $ns['nhan_su_id']; ?>">
-                                                    <?php echo htmlspecialchars($ns['ho_ten'] ?? 'N/A'); ?> - <?php echo htmlspecialchars($ns['vai_tro'] ?? ''); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
+                                <option value="">-- Chọn nhân sự --</option>
+                                <?php foreach ($nhanSuList as $ns): ?>
+                                    <option value="<?php echo $ns['nhan_su_id']; ?>">
+                                        <?php echo htmlspecialchars($ns['ho_ten'] ?? 'N/A'); ?> - <?php echo htmlspecialchars($ns['vai_tro'] ?? ''); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Vai trò <span class="text-danger">*</span></label>
                                         <select name="vai_tro" class="form-select" required>
                                             <option value="HDV">Hướng dẫn viên</option>
-                                            <option value="TaiXe">Tài xế</option>
-                                            <option value="HauCan">Hậu cần</option>
-                                            <option value="DieuHanh">Điều hành</option>
-                                            <option value="Khac">Khác</option>
-                                        </select>
+                                <option value="TaiXe">Tài xế</option>
+                                <option value="HauCan">Hậu cần</option>
+                                <option value="DieuHanh">Điều hành</option>
+                                <option value="Khac">Khác</option>
+                            </select>
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label small fw-semibold">Ghi chú</label>
@@ -319,7 +344,7 @@
                                         </button>
                                     </div>
                                 </div>
-                            </form>
+            </form>
                         </div>
 
                         <!-- Staff List -->
@@ -328,22 +353,22 @@
                                 <i class="bi bi-people"></i> Danh sách nhân sự đã phân bổ
                             </div>
                             <div class="card-body p-0">
-                                <?php if (!empty($phanBoNhanSu)): ?>
+            <?php if (!empty($phanBoNhanSu)): ?>
                                     <div class="table-responsive">
                                         <table class="table table-custom">
-                                            <thead>
-                                                <tr>
-                                                    <th>Nhân sự</th>
-                                                    <th>Vai trò</th>
+                    <thead>
+                        <tr>
+                            <th>Nhân sự</th>
+                            <th>Vai trò</th>
                                                     <th>Liên hệ</th>
-                                                    <th>Trạng thái</th>
+                            <th>Trạng thái</th>
                                                     <th>Xác nhận lúc</th>
-                                                    <th>Thao tác</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($phanBoNhanSu as $pb): ?>
-                                                    <tr>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($phanBoNhanSu as $pb): ?>
+                            <tr>
                                                         <td>
                                                             <div class="fw-semibold"><?php echo htmlspecialchars($pb['ho_ten'] ?? 'N/A'); ?></div>
                                                         </td>
@@ -361,13 +386,13 @@
                                                                 ?>
                                                             </span>
                                                         </td>
-                                                        <td>
+                                <td>
                                                             <small>
                                                                 <div><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($pb['email'] ?? 'N/A'); ?></div>
                                                                 <div><i class="bi bi-phone"></i> <?php echo htmlspecialchars($pb['so_dien_thoai'] ?? 'N/A'); ?></div>
                                                             </small>
-                                                        </td>
-                                                        <td>
+                                </td>
+                                <td>
                                                             <span class="badge <?php 
                                                                 echo match($pb['trang_thai']) {
                                                                     'ChoXacNhan' => 'bg-warning text-dark',
@@ -377,36 +402,203 @@
                                                                     default => 'bg-secondary'
                                                                 };
                                                             ?>">
-                                                                <?php
-                                                                $statusLabels = [
-                                                                    'ChoXacNhan' => 'Chờ xác nhận',
-                                                                    'DaXacNhan' => 'Đã xác nhận',
-                                                                    'TuChoi' => 'Từ chối',
-                                                                    'Huy' => 'Hủy'
-                                                                ];
-                                                                echo $statusLabels[$pb['trang_thai']] ?? $pb['trang_thai'];
-                                                                ?>
+                                    <?php
+                                    $statusLabels = [
+                                        'ChoXacNhan' => 'Chờ xác nhận',
+                                        'DaXacNhan' => 'Đã xác nhận',
+                                        'TuChoi' => 'Từ chối',
+                                        'Huy' => 'Hủy'
+                                    ];
+                                    echo $statusLabels[$pb['trang_thai']] ?? $pb['trang_thai'];
+                                    ?>
                                                             </span>
                                                         </td>
                                                         <td>
                                                             <small><?php echo $pb['thoi_gian_xac_nhan'] ? date('d/m/Y H:i', strtotime($pb['thoi_gian_xac_nhan'])) : 'N/A'; ?></small>
-                                                        </td>
-                                                        <td>
-                                                            <a href="index.php?act=lichKhoiHanh/deleteNhanSu&id=<?php echo $pb['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                </td>
+                                <td>
+                                    <a href="index.php?act=lichKhoiHanh/deleteNhanSu&id=<?php echo $pb['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
                                                                class="btn btn-sm btn-outline-danger"
                                                                onclick="return confirm('Xóa phân bổ này?');">
                                                                 <i class="bi bi-trash"></i>
                                                             </a>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
                                     </div>
-                                <?php else: ?>
+            <?php else: ?>
                                     <div class="text-center py-5 text-muted">
                                         <i class="bi bi-people fs-1 opacity-25"></i>
                                         <p class="mt-3">Chưa có nhân sự nào được phân bổ</p>
+                                    </div>
+            <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Danh sách khách -->
+                    <div class="tab-pane fade" id="customer" role="tabpanel">
+                        
+                        <!-- Add Customer Form -->
+                        <div class="add-form-card">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-person-plus"></i> Thêm khách mới
+                            </h6>
+                            <form method="POST" action="index.php?act=lichKhoiHanh/themKhachChiTiet">
+                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Booking <span class="text-danger">*</span></label>
+                                        <select name="booking_id" class="form-select" required>
+                                            <option value="">-- Chọn booking --</option>
+                                            <?php foreach ($bookingList as $b): ?>
+                                                <option value="<?php echo $b['booking_id']; ?>">
+                                                    Booking #<?php echo $b['booking_id']; ?> - <?php echo htmlspecialchars($b['ho_ten'] ?? 'N/A'); ?> (<?php echo $b['so_nguoi']; ?> người)
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Họ tên <span class="text-danger">*</span></label>
+                                        <input type="text" name="ho_ten" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số CMND/CCCD</label>
+                                        <input type="text" name="so_cmnd" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số Passport</label>
+                                        <input type="text" name="so_passport" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Ngày sinh</label>
+                                        <input type="date" name="ngay_sinh" class="form-control">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Giới tính</label>
+                                        <select name="gioi_tinh" class="form-select">
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nu">Nữ</option>
+                                            <option value="Khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Quốc tịch</label>
+                                        <input type="text" name="quoc_tich" class="form-control" value="Việt Nam">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số điện thoại</label>
+                                        <input type="text" name="so_dien_thoai" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Email</label>
+                                        <input type="email" name="email" class="form-control">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Địa chỉ</label>
+                                        <input type="text" name="dia_chi" class="form-control">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Ghi chú</label>
+                                        <textarea name="ghi_chu" class="form-control" rows="2"></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Thêm khách
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Customer List -->
+                        <div class="section-card card">
+                            <div class="section-header">
+                                <i class="bi bi-person-lines-fill"></i> Danh sách khách chi tiết
+                            </div>
+                            <div class="card-body p-0">
+                                <?php if (!empty($bookingList)): ?>
+                                    <?php foreach ($bookingList as $booking): ?>
+                                        <div class="border-bottom p-3">
+                                            <h6 class="fw-bold mb-2">
+                                                Booking #<?php echo $booking['booking_id']; ?> - 
+                                                <?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?>
+                                                <span class="badge bg-primary ms-2"><?php echo $booking['so_nguoi']; ?> người</span>
+                                            </h6>
+                                            <?php 
+                                            $khachList = $danhSachKhachChiTiet[$booking['booking_id']] ?? [];
+                                            if (!empty($khachList)): ?>
+                                                <div class="table-responsive">
+                                                    <table class="table table-sm table-bordered mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>STT</th>
+                                                                <th>Họ tên</th>
+                                                                <th>CMND/Passport</th>
+                                                                <th>Ngày sinh</th>
+                                                                <th>Giới tính</th>
+                                                                <th>SĐT</th>
+                                                                <th>Trạng thái</th>
+                                                                <th>Thao tác</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php foreach ($khachList as $idx => $khach): ?>
+                                                                <tr>
+                                                                    <td><?php echo $idx + 1; ?></td>
+                                                                    <td><?php echo htmlspecialchars($khach['ho_ten'] ?? 'N/A'); ?></td>
+                                                                    <td>
+                                                                        <?php if ($khach['so_cmnd']): ?>
+                                                                            CMND: <?php echo htmlspecialchars($khach['so_cmnd']); ?><br>
+                                                                        <?php endif; ?>
+                                                                        <?php if ($khach['so_passport']): ?>
+                                                                            Passport: <?php echo htmlspecialchars($khach['so_passport']); ?>
+                                                                        <?php endif; ?>
+                                                                    </td>
+                                                                    <td><?php echo $khach['ngay_sinh'] ? date('d/m/Y', strtotime($khach['ngay_sinh'])) : 'N/A'; ?></td>
+                                                                    <td><?php echo htmlspecialchars($khach['gioi_tinh'] ?? 'N/A'); ?></td>
+                                                                    <td><?php echo htmlspecialchars($khach['so_dien_thoai'] ?? 'N/A'); ?></td>
+                                                                    <td>
+                                                                        <span class="badge <?php 
+                                                                            echo $khach['trang_thai'] === 'DaCheckIn' ? 'bg-success' : 
+                                                                                ($khach['trang_thai'] === 'DaCheckOut' ? 'bg-secondary' : 'bg-warning');
+                                                                        ?>">
+                                                                            <?php 
+                                                                            echo $khach['trang_thai'] === 'DaCheckIn' ? 'Đã check-in' : 
+                                                                                ($khach['trang_thai'] === 'DaCheckOut' ? 'Đã check-out' : 'Chưa check-in');
+                                                                            ?>
+                                                                        </span>
+                                                                    </td>
+                                                                    <td>
+                                                                        <div class="btn-group btn-group-sm">
+                                                                            <a href="index.php?act=lichKhoiHanh/suaKhachChiTiet&id=<?php echo $khach['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                                                               class="btn btn-info" title="Sửa">
+                                                                                <i class="bi bi-pencil"></i>
+                                                                            </a>
+                                                                            <a href="index.php?act=lichKhoiHanh/xoaKhachChiTiet&id=<?php echo $khach['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                                                               class="btn btn-danger" 
+                                                                               onclick="return confirm('Xóa khách này?');"
+                                                                               title="Xóa">
+                                                                                <i class="bi bi-trash"></i>
+                                                                            </a>
+                                                                        </div>
+                                                                    </td>
+                                                                </tr>
+                                                            <?php endforeach; ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            <?php else: ?>
+                                                <p class="text-muted mb-0">Chưa có khách nào trong booking này.</p>
+                                            <?php endif; ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="bi bi-person-x fs-1 opacity-25"></i>
+                                        <p class="mt-3">Chưa có booking nào cho lịch khởi hành này</p>
                                     </div>
                                 <?php endif; ?>
                             </div>
@@ -421,71 +613,74 @@
                                 <i class="bi bi-plus-circle"></i> Thêm dịch vụ mới
                             </h6>
                             <form method="POST" action="index.php?act=lichKhoiHanh/phanBoDichVu">
-                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Loại dịch vụ <span class="text-danger">*</span></label>
-                                        <select name="loai_dich_vu" class="form-select" required>
-                                            <option value="Xe">Xe</option>
-                                            <option value="KhachSan">Khách sạn</option>
-                                            <option value="VeMayBay">Vé máy bay</option>
-                                            <option value="NhaHang">Nhà hàng</option>
-                                            <option value="DiemThamQuan">Điểm tham quan</option>
-                                            <option value="Visa">Visa</option>
-                                            <option value="BaoHiem">Bảo hiểm</option>
-                                            <option value="Khac">Khác</option>
-                                        </select>
+                                        <select name="loai_dich_vu" id="loaiDichVuSelect" class="form-select" required>
+                                <?php foreach ($serviceTypeOptions as $value => $label): ?>
+                                    <option value="<?php echo $value; ?>"><?php echo $label; ?></option>
+                                <?php endforeach; ?>
+                            </select>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Tên dịch vụ <span class="text-danger">*</span></label>
-                                        <input type="text" name="ten_dich_vu" class="form-control" required>
+                                        <input type="text" name="ten_dich_vu" id="tenDichVuInput" class="form-control" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Nhà cung cấp</label>
-                                        <select name="nha_cung_cap_id" class="form-select">
-                                            <option value="">-- Chọn nhà cung cấp --</option>
-                                            <?php foreach ($nhaCungCapList as $ncc): ?>
-                                                <option value="<?php echo $ncc['id_nha_cung_cap']; ?>">
-                                                    <?php echo htmlspecialchars($ncc['ten_don_vi'] ?? 'N/A'); ?>
-                                                </option>
-                                            <?php endforeach; ?>
+                                        <select name="nha_cung_cap_id" id="supplierSelect" class="form-select">
+                                <option value="">-- Chọn nhà cung cấp --</option>
+                                <?php foreach ($nhaCungCapList as $ncc): ?>
+                                    <option value="<?php echo $ncc['id_nha_cung_cap']; ?>">
+                                        <?php echo htmlspecialchars($ncc['ten_don_vi'] ?? 'N/A'); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Dịch vụ có sẵn</label>
+                                        <select id="catalogServiceSelect" class="form-select" disabled>
+                                            <option value="">-- Chọn dịch vụ có sẵn --</option>
                                         </select>
+                                        <div class="form-text">Tự động điền thông tin khi chọn.</div>
+                                        <input type="hidden" name="catalog_service_id" id="catalogServiceIdInput">
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small fw-semibold">Số lượng <span class="text-danger">*</span></label>
-                                        <input type="number" name="so_luong" class="form-control" value="1" min="1" required>
+                                        <input type="number" name="so_luong" id="soLuongInput" class="form-control" value="1" min="1" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label class="form-label small fw-semibold">Đơn vị</label>
-                                        <input type="text" name="don_vi" class="form-control" placeholder="VD: phòng, xe...">
+                                        <input type="text" name="don_vi" id="donViInput" class="form-control" placeholder="VD: phòng, xe...">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Ngày bắt đầu</label>
-                                        <input type="date" name="ngay_bat_dau" class="form-control">
+                                        <input type="date" name="ngay_bat_dau" id="ngayBatDauInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Ngày kết thúc</label>
-                                        <input type="date" name="ngay_ket_thuc" class="form-control">
+                                        <input type="date" name="ngay_ket_thuc" id="ngayKetThucInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Giờ bắt đầu</label>
-                                        <input type="time" name="gio_bat_dau" class="form-control">
+                                        <input type="time" name="gio_bat_dau" id="gioBatDauInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Giờ kết thúc</label>
-                                        <input type="time" name="gio_ket_thuc" class="form-control">
+                                        <input type="time" name="gio_ket_thuc" id="gioKetThucInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Địa điểm</label>
-                                        <input type="text" name="dia_diem" class="form-control">
+                                        <input type="text" name="dia_diem" id="diaDiemInput" class="form-control">
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Giá tiền (VNĐ)</label>
-                                        <input type="number" name="gia_tien" class="form-control" step="1000" min="0">
+                                        <input type="number" name="gia_tien" id="giaTienInput" class="form-control" step="1000" min="0">
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label small fw-semibold">Ghi chú</label>
-                                        <textarea name="ghi_chu" class="form-control" rows="2"></textarea>
+                                        <textarea name="ghi_chu" id="ghiChuInput" class="form-control" rows="2"></textarea>
                                     </div>
                                     <div class="col-12">
                                         <button type="submit" class="btn btn-success">
@@ -493,7 +688,7 @@
                                         </button>
                                     </div>
                                 </div>
-                            </form>
+            </form>
                         </div>
 
                         <!-- Service List -->
@@ -505,24 +700,24 @@
                                 <?php endif; ?>
                             </div>
                             <div class="card-body p-0">
-                                <?php if (!empty($phanBoDichVu)): ?>
+            <?php if (!empty($phanBoDichVu)): ?>
                                     <div class="table-responsive">
                                         <table class="table table-custom">
-                                            <thead>
-                                                <tr>
+                    <thead>
+                        <tr>
                                                     <th>Dịch vụ</th>
-                                                    <th>Nhà cung cấp</th>
-                                                    <th>Số lượng</th>
-                                                    <th>Thời gian</th>
-                                                    <th>Địa điểm</th>
-                                                    <th>Giá tiền</th>
-                                                    <th>Trạng thái</th>
-                                                    <th>Thao tác</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($phanBoDichVu as $pb): ?>
-                                                    <tr>
+                            <th>Nhà cung cấp</th>
+                            <th>Số lượng</th>
+                            <th>Thời gian</th>
+                            <th>Địa điểm</th>
+                            <th>Giá tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($phanBoDichVu as $pb): ?>
+                            <tr>
                                                         <td>
                                                             <div class="d-flex align-items-center gap-2">
                                                                 <div class="service-icon bg-primary bg-opacity-10 text-primary">
@@ -545,56 +740,62 @@
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td><?php echo htmlspecialchars($pb['ten_don_vi'] ?? 'N/A'); ?></td>
-                                                        <td><?php echo $pb['so_luong']; ?> <?php echo htmlspecialchars($pb['don_vi'] ?? ''); ?></td>
-                                                        <td>
+                                <td><?php echo htmlspecialchars($pb['ten_don_vi'] ?? 'N/A'); ?></td>
+                                <td><?php echo $pb['so_luong']; ?> <?php echo htmlspecialchars($pb['don_vi'] ?? ''); ?></td>
+                                <td>
                                                             <small>
-                                                                <?php if ($pb['ngay_bat_dau']): ?>
-                                                                    <?php echo date('d/m/Y', strtotime($pb['ngay_bat_dau'])); ?>
-                                                                    <?php if ($pb['gio_bat_dau']): ?>
+                                    <?php if ($pb['ngay_bat_dau']): ?>
+                                        <?php echo date('d/m/Y', strtotime($pb['ngay_bat_dau'])); ?>
+                                        <?php if ($pb['gio_bat_dau']): ?>
                                                                         <?php echo substr($pb['gio_bat_dau'], 0, 5); ?>
-                                                                    <?php endif; ?>
-                                                                    <?php if ($pb['ngay_ket_thuc'] && $pb['ngay_ket_thuc'] != $pb['ngay_bat_dau']): ?>
+                                        <?php endif; ?>
+                                        <?php if ($pb['ngay_ket_thuc'] && $pb['ngay_ket_thuc'] != $pb['ngay_bat_dau']): ?>
                                                                         <br>- <?php echo date('d/m/Y', strtotime($pb['ngay_ket_thuc'])); ?>
-                                                                    <?php endif; ?>
-                                                                <?php else: ?>
-                                                                    N/A
-                                                                <?php endif; ?>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        N/A
+                                    <?php endif; ?>
                                                             </small>
-                                                        </td>
+                                </td>
                                                         <td><small><?php echo htmlspecialchars($pb['dia_diem'] ?? 'N/A'); ?></small></td>
                                                         <td class="fw-bold text-primary"><?php echo $pb['gia_tien'] ? number_format($pb['gia_tien']) : '0'; ?> VNĐ</td>
-                                                        <td>
-                                                            <form method="POST" action="index.php?act=lichKhoiHanh/updateTrangThaiDichVu" class="d-inline">
-                                                                <input type="hidden" name="id" value="<?php echo $pb['id']; ?>">
-                                                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
-                                                                <select name="trang_thai" class="form-select form-select-sm" onchange="this.form.submit()">
-                                                                    <option value="ChoXacNhan" <?php echo $pb['trang_thai'] == 'ChoXacNhan' ? 'selected' : ''; ?>>Chờ xác nhận</option>
-                                                                    <option value="DaXacNhan" <?php echo $pb['trang_thai'] == 'DaXacNhan' ? 'selected' : ''; ?>>Đã xác nhận</option>
-                                                                    <option value="TuChoi" <?php echo $pb['trang_thai'] == 'TuChoi' ? 'selected' : ''; ?>>Từ chối</option>
-                                                                    <option value="Huy" <?php echo $pb['trang_thai'] == 'Huy' ? 'selected' : ''; ?>>Hủy</option>
-                                                                    <option value="HoanTat" <?php echo $pb['trang_thai'] == 'HoanTat' ? 'selected' : ''; ?>>Hoàn tất</option>
-                                                                </select>
-                                                            </form>
-                                                        </td>
-                                                        <td>
-                                                            <a href="index.php?act=lichKhoiHanh/deleteDichVu&id=<?php echo $pb['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                <td>
+                                    <?php
+                                                            $badgeClass = match($pb['trang_thai'] ?? 'ChoXacNhan') {
+                                                                'DaXacNhan' => 'bg-success',
+                                                                'TuChoi' => 'bg-danger',
+                                                                'Huy' => 'bg-secondary',
+                                                                'HoanTat' => 'bg-primary',
+                                                                default => 'bg-warning text-dark'
+                                                            };
+                                                            $trangThaiText = match($pb['trang_thai'] ?? 'ChoXacNhan') {
+                                        'DaXacNhan' => 'Đã xác nhận',
+                                        'TuChoi' => 'Từ chối',
+                                        'Huy' => 'Hủy',
+                                                                'HoanTat' => 'Hoàn tất',
+                                                                default => 'Chờ xác nhận'
+                                                            };
+                                                            ?>
+                                                            <span class="badge <?php echo $badgeClass; ?>"><?php echo $trangThaiText; ?></span>
+                                </td>
+                                <td>
+                                    <a href="index.php?act=lichKhoiHanh/deleteDichVu&id=<?php echo $pb['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
                                                                class="btn btn-sm btn-outline-danger"
                                                                onclick="return confirm('Xóa phân bổ này?');">
                                                                 <i class="bi bi-trash"></i>
                                                             </a>
-                                                        </td>
-                                                    </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
                                     </div>
-                                <?php else: ?>
+            <?php else: ?>
                                     <div class="text-center py-5 text-muted">
                                         <i class="bi bi-gear fs-1 opacity-25"></i>
                                         <p class="mt-3">Chưa có dịch vụ nào được phân bổ</p>
                                     </div>
-                                <?php endif; ?>
+            <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -604,5 +805,108 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function() {
+        const supplierCatalog = <?php echo json_encode($catalogServicesMap, JSON_UNESCAPED_UNICODE); ?>;
+        const serviceTypeLabels = <?php echo json_encode($serviceTypeOptions, JSON_UNESCAPED_UNICODE); ?>;
+
+        const supplierSelect = document.getElementById('supplierSelect');
+        const catalogSelect = document.getElementById('catalogServiceSelect');
+        if (!supplierSelect || !catalogSelect) {
+            return;
+        }
+
+        const loaiSelect = document.getElementById('loaiDichVuSelect');
+        const tenInput = document.getElementById('tenDichVuInput');
+        const donViInput = document.getElementById('donViInput');
+        const giaTienInput = document.getElementById('giaTienInput');
+        const ghiChuInput = document.getElementById('ghiChuInput');
+        const soLuongInput = document.getElementById('soLuongInput');
+        const catalogServiceIdInput = document.getElementById('catalogServiceIdInput');
+
+        function resetCatalogSelect() {
+            catalogSelect.innerHTML = '<option value="">-- Chọn dịch vụ có sẵn --</option>';
+            catalogSelect.disabled = true;
+            if (catalogServiceIdInput) {
+                catalogServiceIdInput.value = '';
+            }
+        }
+
+        function populateCatalogOptions(supplierId) {
+            resetCatalogSelect();
+            if (!supplierId || !supplierCatalog[supplierId] || supplierCatalog[supplierId].length === 0) {
+                return;
+            }
+            supplierCatalog[supplierId].forEach(service => {
+                const option = document.createElement('option');
+                option.value = service.id;
+                const typeLabel = serviceTypeLabels[service.loai_dich_vu] ?? service.loai_dich_vu ?? '';
+                option.textContent = service.ten_dich_vu + (typeLabel ? ` (${typeLabel})` : '');
+                option.dataset.service = JSON.stringify({
+                    loai: service.loai_dich_vu || '',
+                    ten: service.ten_dich_vu || '',
+                    donVi: service.don_vi_tinh || '',
+                    gia: service.gia_tham_khao || '',
+                    ghiChu: service.mo_ta || '',
+                    soLuong: service.cong_suat_toi_da || ''
+                });
+                catalogSelect.appendChild(option);
+            });
+            catalogSelect.disabled = false;
+        }
+
+        function applyCatalogData(raw) {
+            if (!raw) return;
+            if (loaiSelect && raw.loai) {
+                const hasOption = Array.from(loaiSelect.options).some(opt => opt.value === raw.loai);
+                if (hasOption) {
+                    loaiSelect.value = raw.loai;
+                }
+            }
+            if (tenInput && raw.ten) {
+                tenInput.value = raw.ten;
+            }
+            if (donViInput) {
+                donViInput.value = raw.donVi || '';
+            }
+            if (giaTienInput) {
+                giaTienInput.value = raw.gia || '';
+            }
+            if (ghiChuInput) {
+                ghiChuInput.value = raw.ghiChu || '';
+            }
+            if (soLuongInput && raw.soLuong) {
+                soLuongInput.value = raw.soLuong;
+            }
+        }
+
+        supplierSelect.addEventListener('change', function() {
+            populateCatalogOptions(this.value);
+        });
+
+        catalogSelect.addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            if (!selected || !selected.dataset.service) {
+                if (catalogServiceIdInput) {
+                    catalogServiceIdInput.value = '';
+                }
+                return;
+            }
+            try {
+                const data = JSON.parse(selected.dataset.service);
+                applyCatalogData(data);
+                if (catalogServiceIdInput) {
+                    catalogServiceIdInput.value = selected.value || '';
+                }
+            } catch (error) {
+                console.error('Không thể đọc dữ liệu dịch vụ có sẵn', error);
+            }
+        });
+
+        if (supplierSelect.value) {
+            populateCatalogOptions(supplierSelect.value);
+        }
+    })();
+    </script>
 </body>
 </html>
