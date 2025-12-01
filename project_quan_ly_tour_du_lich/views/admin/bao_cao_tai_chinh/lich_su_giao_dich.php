@@ -91,6 +91,7 @@
                         <th>Số Tiền</th>
                         <th>Mô Tả</th>
                         <th>Người Thực Hiện</th>
+                        <th>Thao tác</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -111,6 +112,11 @@
                                 </td>
                                 <td><?= htmlspecialchars($gd['mo_ta'] ?? '') ?></td>
                                 <td><?= htmlspecialchars($gd['nguoi_thuc_hien'] ?? 'N/A') ?></td>
+                                <td>
+                                    <a class="btn" href="index.php?act=admin/chiTietGiaoDich&id=<?= $gd['id'] ?>">
+                                        <i class="fas fa-eye"></i> Xem chi tiết
+                                    </a>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>

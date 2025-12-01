@@ -8,6 +8,18 @@ require_once 'models/DuToanTour.php';
 require_once 'models/ChiPhiThucTe.php';
 
 class BaoCaoTaiChinhController {
+        // Hiển thị chi tiết một giao dịch
+        public function chiTietGiaoDich() {
+            $id = $_GET['id'] ?? null;
+            if ($id) {
+                $giao_dich = $this->giaoDichModel->findById($id);
+                require 'views/admin/chi_tiet_giao_dich.php';
+            } else {
+                $_SESSION['error'] = 'Không tìm thấy giao dịch.';
+                header('Location: index.php?act=admin/lichSuGiaoDich');
+                exit;
+            }
+        }
     private $giaoDichModel;
     private $tourModel;
     private $bookingModel;
@@ -15,7 +27,7 @@ class BaoCaoTaiChinhController {
     private $lichSuModel;
     private $duToanModel;
     private $chiPhiModel;
-    
+
     public function __construct() {
         $this->giaoDichModel = new GiaoDich();
         $this->tourModel = new Tour();
@@ -24,6 +36,20 @@ class BaoCaoTaiChinhController {
         $this->lichSuModel = new LichSuKhachHang();
         $this->duToanModel = new DuToanTour();
         $this->chiPhiModel = new ChiPhiThucTe();
+    }
+
+    // Hiển thị toàn bộ giao dịch của một tour
+    public function giaoDichTheoTour() {
+        $tourId = $_GET['tour_id'] ?? null;
+        if ($tourId) {
+            $giaoDichs = $this->giaoDichModel->getByTourId($tourId);
+            $tour = $this->tourModel->findById($tourId);
+            require 'views/admin/giao_dich_theo_tour.php';
+        } else {
+            $_SESSION['error'] = 'Không tìm thấy tour.';
+            header('Location: index.php?act=admin/baoCaoTaiChinh');
+            exit;
+        }
     }
     
     // Dashboard tổng quan tài chính

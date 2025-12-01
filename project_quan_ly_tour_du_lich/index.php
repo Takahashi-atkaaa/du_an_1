@@ -23,6 +23,7 @@ require_once __DIR__ . '/controllers/KhachHangController.php';
 require_once __DIR__ . '/controllers/NhaCungCapController.php';
 require_once __DIR__ . '/controllers/LichKhoiHanhController.php';
 require_once __DIR__ . '/controllers/DanhGiaController.php';
+require_once __DIR__ . '/controllers/BaoCaoTaiChinhController.php';
 
 // Models
 require_once __DIR__ . '/models/NguoiDung.php';
@@ -49,6 +50,8 @@ $act = $_GET['act'] ?? 'auth/login';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
+    'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
+    'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
             'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),
         'admin/danhSachKhachBooking' => (new AdminController())->danhSachKhachBooking(),
         'admin/xoaKhachBooking' => (new AdminController())->xoaKhachBooking(),
@@ -113,6 +116,7 @@ match ($act) {
     'admin/xemChiTietNguoiDung' => (new AdminController())->xemChiTietNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
+    'admin/soSanhChiTietChiPhi' => (new AdminController())->soSanhChiTietChiPhi(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),

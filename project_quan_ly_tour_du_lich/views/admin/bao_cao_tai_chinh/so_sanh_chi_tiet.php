@@ -1,7 +1,36 @@
 
 <div class="container mt-4">
     <h2 class="mb-3">So sánh chi tiết dự toán & chi phí thực tế</h2>
-    <table class="table table-bordered table-hover">
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Loại chi phí</th>
+                <th>Dự toán</th>
+                <th>Thực tế</th>
+                <th>Chênh lệch</th>
+                <th>Ghi chú</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($chiPhiSoSanh as $row): ?>
+            <tr class="<?= $row['chenh_lech'] > 0 ? 'over' : 'under' ?>">
+                <td><?= htmlspecialchars($row['loai_chi_phi']) ?></td>
+                <td><?= number_format($row['du_toan']) ?>đ</td>
+                <td><?= number_format($row['thuc_te']) ?>đ</td>
+                <td>
+                    <span class="badge <?= $row['chenh_lech'] > 0 ? 'badge-over' : 'badge-under' ?>">
+                        <?= number_format($row['chenh_lech']) ?>đ
+                    </span>
+                </td>
+                <td><?= htmlspecialchars($row['ghi_chu']) ?></td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+    <div class="mt-4">
+        <a href="?action=bao_cao_tai_chinh" class="btn btn-secondary"><i class="fa fa-arrow-left"></i> Quay lại</a>
+    </div>
+</div>
         <thead class="table-dark">
             <tr>
                 <th>Hạng mục</th>
@@ -15,6 +44,9 @@
             <?php
             $total_du_toan = 0;
             $total_thuc_te = 0;
+            if (!isset($soSanh) || !is_array($soSanh)) {
+                $soSanh = [];
+            }
             foreach ($soSanh as $key => $item) {
                 $total_du_toan += $item['du_toan'];
                 $total_thuc_te += $item['thuc_te'];

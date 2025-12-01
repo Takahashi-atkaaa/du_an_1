@@ -159,10 +159,14 @@
                                         <span class="badge bg-secondary"><?php echo $tk['so_giao_dich']; ?></span>
                                     </td>
                                     <td class="text-center">
-                                        <a href="index.php?act=admin/baoCaoTaiChinh&tour_id=<?php echo $tk['tour_id']; ?>" 
+                                        <a href="index.php?act=admin/giaoDichTheoTour&tour_id=<?php echo $tk['tour_id']; ?>" 
                                            class="btn btn-sm btn-outline-primary">
                                             <i class="bi bi-eye"></i> Chi tiết
                                         </a>
+                                            <a href="index.php?act=admin/soSanhChiTietChiPhi&tour_id=<?php echo $tk['tour_id']; ?>" 
+                                               class="btn btn-sm btn-outline-info ms-1">
+                                                <i class="bi bi-bar-chart-line"></i> So sánh chi phí
+                                            </a>
                                     </td>
                                 </tr>
                                 <?php endforeach; ?>

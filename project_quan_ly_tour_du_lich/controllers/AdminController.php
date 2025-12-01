@@ -1,6 +1,41 @@
 <?php
 
 class AdminController {
+    // Hiển thị so sánh chi tiết chi phí thực tế và dự toán
+    public function soSanhChiTietChiPhi() {
+        require_once __DIR__ . '/../models/DuToanTour.php';
+        require_once __DIR__ . '/../models/ChiPhiThucTe.php';
+        $tour_id = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 1;
+        $duToanModel = new DuToanTour();
+        $chiPhiModel = new ChiPhiThucTe();
+        $duToan = $duToanModel->findByTourId($tour_id);
+        $chiPhis = $chiPhiModel->findByTourId($tour_id);
+        $tongDuToan = $duToan ? $duToan['tong_du_toan'] : 0;
+        $tongChiPhiThucTe = 0;
+        $chiPhiSoSanh = [];
+        if ($duToan && $chiPhis) {
+            // Gom nhóm theo loại chi phí
+            $loaiChiPhiArr = [];
+            foreach ($chiPhis as $cp) {
+                $loai = $cp['loai_chi_phi'];
+                if (!isset($loaiChiPhiArr[$loai])) $loaiChiPhiArr[$loai] = 0;
+                $loaiChiPhiArr[$loai] += $cp['so_tien'];
+                $tongChiPhiThucTe += $cp['so_tien'];
+            }
+            foreach ($loaiChiPhiArr as $loai => $thucTe) {
+                $duToanLoai = $duToanModel->getDuToanLoai($tour_id, $loai);
+                $chiPhiSoSanh[] = [
+                    'loai_chi_phi' => $loai,
+                    'du_toan' => $duToanLoai,
+                    'thuc_te' => $thucTe,
+                    'chenh_lech' => $thucTe - $duToanLoai,
+                    'ghi_chu' => ''
+                ];
+            }
+        }
+        $tour = ['ten_tour' => $duToan ? $duToan['ten_tour'] : ''];
+        require 'views/admin/bao_cao_tai_chinh/so_sanh_chi_tiet.php';
+    }
     // ...existing code...
     public function xemChiTietNguoiDung() {
         require_once 'models/NguoiDung.php';
