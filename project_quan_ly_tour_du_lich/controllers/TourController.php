@@ -298,46 +298,72 @@ class TourController {
     }
 
     private function xuLyUploadHinhAnh(array &$hinhAnhPost, string $inputName): void {
-        if (!isset($_FILES[$inputName]) || !is_array($_FILES[$inputName]['name'])) {
+        if (!isset($_FILES[$inputName])) {
             return;
         }
-
-        $tepTin = $_FILES[$inputName];
-        $thuMucUpload = dirname(__DIR__) . '/public/uploads/tour_images/';
-        if (!is_dir($thuMucUpload)) {
-            if (!mkdir($thuMucUpload, 0777, true) && !is_dir($thuMucUpload)) {
-                $_SESSION['image_upload_error'] = 'Không thể tạo thư mục lưu ảnh.';
-                return;
-            }
+    
+        $files = $_FILES[$inputName];
+    
+        // Chuẩn hóa về dạng mảng (dù upload 1 hay nhiều)
+        $arrFiles = [];
+        foreach ($files['name'] as $i => $name) {
+            $arrFiles[] = [
+                'name'     => $name,
+                'type'     => $files['type'][$i],
+                'tmp_name' => $files['tmp_name'][$i],
+                'error'    => $files['error'][$i],
+                'size'     => $files['size'][$i],
+            ];
         }
-
-        $dinhDangChoPhep = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-
-        foreach ($hinhAnhPost as $index => &$anh) {
-            if (!isset($tepTin['error'][$index]) || $tepTin['error'][$index] !== UPLOAD_ERR_OK) {
-                if (isset($tepTin['error'][$index]) && $tepTin['error'][$index] !== UPLOAD_ERR_NO_FILE) {
-                    $_SESSION['image_upload_error'] = 'Tải ảnh thất bại. Vui lòng thử lại.';
-                }
+    
+        $uploadFolder = dirname(__DIR__) . '/public/uploads/tour_images/';
+        if (!is_dir($uploadFolder) && !mkdir($uploadFolder, 0755, true)) {
+            $_SESSION['image_upload_error'] = 'Không thể tạo thư mục lưu ảnh.';
+            return;
+        }
+    
+        $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+    
+        foreach ($arrFiles as $index => $file) {
+    
+            // Không up ảnh nào ở vị trí này → bỏ qua
+            if ($file['error'] === UPLOAD_ERR_NO_FILE) {
                 continue;
             }
-
-            $extension = strtolower(pathinfo($tepTin['name'][$index], PATHINFO_EXTENSION));
-            if (!in_array($extension, $dinhDangChoPhep, true)) {
+    
+            if ($file['error'] !== UPLOAD_ERR_OK) {
+                $_SESSION['image_upload_error'] = 'Tải ảnh thất bại.';
+                continue;
+            }
+    
+            // Giới hạn size 5MB
+            if ($file['size'] > 5 * 1024 * 1024) {
+                $_SESSION['image_upload_error'] = 'Ảnh vượt quá dung lượng 5MB.';
+                continue;
+            }
+    
+            $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowedExt, true)) {
                 $_SESSION['image_upload_error'] = 'Định dạng ảnh không hợp lệ.';
                 continue;
             }
-
-            $tenMoi = uniqid('tour_', true) . '.' . $extension;
-            $duongDanDayDu = $thuMucUpload . $tenMoi;
-
-            if (move_uploaded_file($tepTin['tmp_name'][$index], $duongDanDayDu)) {
-                $anh['url_anh'] = 'public/uploads/tour_images/' . $tenMoi;
+    
+            $newName = uniqid('tour_', true) . '.' . $ext;
+            $fullPath = $uploadFolder . $newName;
+    
+            // Lưu file
+            if (move_uploaded_file($file['tmp_name'], $fullPath)) {
+                // Gán vào mảng gửi vào
+                // Ví dụ: $hinhAnhPost = [ ['url_anh'=>'...'], ['url_anh'=>'...'] ]
+                // Hoặc chỉ là mảng rỗng để push vào
+                $hinhAnhPost[$index]['url_anh'] = 'public/uploads/tour_images/' . $newName;
+    
             } else {
                 $_SESSION['image_upload_error'] = 'Không thể lưu ảnh lên máy chủ.';
             }
         }
-        unset($anh);
     }
+    
 
     private function chonAnhChinh(array $hinhAnhList) {
         foreach ($hinhAnhList as $anh) {
