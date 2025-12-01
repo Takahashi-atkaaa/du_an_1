@@ -1479,4 +1479,14 @@ class AdminController {
         header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
         exit();
     }
+
+    // Hiển thị lịch sử xóa booking
+    public function lichSuXoaBooking() {
+        require_once 'models/BookingDeletionHistory.php';
+        $deletionHistoryModel = new BookingDeletionHistory();
+        
+        $lichSuXoa = $deletionHistoryModel->getAll();
+        
+        require 'views/admin/lich_su_xoa_booking.php';
+    }
 }

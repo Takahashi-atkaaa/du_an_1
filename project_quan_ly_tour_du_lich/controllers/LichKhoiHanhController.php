@@ -32,6 +32,50 @@ class LichKhoiHanhController {
     // Danh sách lịch khởi hành
     public function index() {
         $lichKhoiHanhList = $this->lichKhoiHanhModel->getAll();
+        
+        // Xử lý filter
+        $filters = [];
+        if (isset($_GET['search']) && !empty($_GET['search'])) {
+            $filters['search'] = trim($_GET['search']);
+            $searchTerm = '%' . $filters['search'] . '%';
+            $lichKhoiHanhList = array_filter($lichKhoiHanhList, function($lich) use ($searchTerm) {
+                return stripos($lich['ten_tour'] ?? '', $searchTerm) !== false ||
+                       stripos($lich['diem_tap_trung'] ?? '', $searchTerm) !== false;
+            });
+        }
+        
+        if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])) {
+            $filters['trang_thai'] = $_GET['trang_thai'];
+            if ($filters['trang_thai'] === 'ChoPhanBo') {
+                // Lọc lịch chưa phân bổ nhân sự
+                $lichKhoiHanhList = array_filter($lichKhoiHanhList, function($lich) {
+                    return ($lich['so_nhan_su'] ?? 0) == 0;
+                });
+            } else {
+                // Lọc theo trạng thái thông thường
+                $lichKhoiHanhList = array_filter($lichKhoiHanhList, function($lich) use ($filters) {
+                    return $lich['trang_thai'] === $filters['trang_thai'] && ($lich['so_nhan_su'] ?? 0) > 0;
+                });
+            }
+        }
+        
+        if (isset($_GET['tu_ngay']) && !empty($_GET['tu_ngay'])) {
+            $filters['tu_ngay'] = $_GET['tu_ngay'];
+            $lichKhoiHanhList = array_filter($lichKhoiHanhList, function($lich) use ($filters) {
+                return $lich['ngay_khoi_hanh'] >= $filters['tu_ngay'];
+            });
+        }
+        
+        if (isset($_GET['den_ngay']) && !empty($_GET['den_ngay'])) {
+            $filters['den_ngay'] = $_GET['den_ngay'];
+            $lichKhoiHanhList = array_filter($lichKhoiHanhList, function($lich) use ($filters) {
+                return $lich['ngay_khoi_hanh'] <= $filters['den_ngay'];
+            });
+        }
+        
+        // Reset array keys sau khi filter
+        $lichKhoiHanhList = array_values($lichKhoiHanhList);
+        
         require 'views/admin/quan_ly_lich_khoi_hanh.php';
     }
 

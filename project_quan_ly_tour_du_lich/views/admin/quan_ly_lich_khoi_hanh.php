@@ -96,7 +96,7 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active" href="index.php?act=admin/quanLyLichKhoiHanh">
+                        <a class="nav-link active" href="index.php?act=lichKhoiHanh/index">
                             <i class="bi bi-calendar-check"></i> Lịch khởi hành
                         </a>
                     </li>
@@ -120,9 +120,9 @@
                         <a href="index.php?act=admin/dashboard" class="btn btn-light">
                             <i class="bi bi-arrow-left"></i> Dashboard
                         </a>
-                        <a href="index.php?act=lichKhoiHanh/create" class="btn btn-warning">
+                        <!-- <a href="index.php?act=lichKhoiHanh/create" class="btn btn-warning">
                             <i class="bi bi-plus-circle"></i> Tạo lịch mới
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
@@ -148,9 +148,10 @@
         <div class="row g-3 mb-4">
             <?php
             $totalSchedules = count($lichKhoiHanhList);
-            $upcomingSchedules = count(array_filter($lichKhoiHanhList, fn($l) => $l['trang_thai'] === 'SapKhoiHanh'));
+            $upcomingSchedules = count(array_filter($lichKhoiHanhList, fn($l) => $l['trang_thai'] === 'SapKhoiHanh' && ($l['so_nhan_su'] ?? 0) > 0));
             $ongoingSchedules = count(array_filter($lichKhoiHanhList, fn($l) => $l['trang_thai'] === 'DangChay'));
             $completedSchedules = count(array_filter($lichKhoiHanhList, fn($l) => $l['trang_thai'] === 'HoanThanh'));
+            $choPhanBo = count(array_filter($lichKhoiHanhList, fn($l) => ($l['so_nhan_su'] ?? 0) == 0));
             ?>
             <div class="col-md-3">
                 <div class="card stats-card border-0 shadow-sm" style="border-left-color: #0d6efd !important;">
@@ -212,13 +213,28 @@
                     </div>
                 </div>
             </div>
+            <div class="col-md-3">
+                <div class="card stats-card border-0 shadow-sm" style="border-left-color: #ffc107 !important;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <p class="text-muted mb-1 small">Đang chờ phân bổ</p>
+                                <h3 class="mb-0 fw-bold text-warning"><?php echo $choPhanBo; ?></h3>
+                            </div>
+                            <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                <i class="bi bi-clock-history text-warning fs-4"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
         <?php endif; ?>
 
         <!-- Filters -->
         <div class="filter-card">
             <form method="get" action="index.php">
-                <input type="hidden" name="act" value="admin/quanLyLichKhoiHanh">
+                <input type="hidden" name="act" value="lichKhoiHanh/index">
                 <div class="row g-3 align-items-end">
                     <div class="col-md-3">
                         <label class="form-label small fw-semibold text-muted">Tìm kiếm</label>
@@ -231,6 +247,7 @@
                         <label class="form-label small fw-semibold text-muted">Trạng thái</label>
                         <select name="trang_thai" class="form-select">
                             <option value="">Tất cả</option>
+                            <option value="ChoPhanBo" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'ChoPhanBo') ? 'selected' : ''; ?>>Đang chờ phân bổ</option>
                             <option value="SapKhoiHanh" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'SapKhoiHanh') ? 'selected' : ''; ?>>Sắp khởi hành</option>
                             <option value="DangChay" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'DangChay') ? 'selected' : ''; ?>>Đang chạy</option>
                             <option value="HoanThanh" <?php echo (isset($filters['trang_thai']) && $filters['trang_thai'] === 'HoanThanh') ? 'selected' : ''; ?>>Hoàn thành</option>
@@ -288,13 +305,9 @@
                                                     <?php echo htmlspecialchars($lich['ten_tour'] ?? 'N/A'); ?>
                                                 </h5>
                                             </div>
-                                            <?php 
-                                            $soNhanSu = isset($lich['so_nhan_su']) ? (int)$lich['so_nhan_su'] : 0;
-                                            $isWaiting = $soNhanSu === 0;
-                                            ?>
                                             <span class="status-badge <?php 
-                                                if ($isWaiting) {
-                                                    echo 'bg-warning text-dark';
+                                                if (($lich['so_nhan_su'] ?? 0) == 0) {
+                                                    echo 'bg-warning text-dark'; // Đang chờ phân bổ
                                                 } else {
                                                     echo match($lich['trang_thai']) {
                                                         'SapKhoiHanh' => 'bg-info text-dark',
@@ -304,18 +317,18 @@
                                                     };
                                                 }
                                             ?>">
-                                                <?php if ($isWaiting): ?>
-                                                    Đang chờ phân bổ
-                                                <?php else: ?>
-                                                    <?php
+                                                <?php
+                                                if (($lich['so_nhan_su'] ?? 0) == 0) {
+                                                    echo 'Đang chờ phân bổ';
+                                                } else {
                                                     $statusLabels = [
                                                         'SapKhoiHanh' => 'Sắp khởi hành',
                                                         'DangChay' => 'Đang chạy',
                                                         'HoanThanh' => 'Hoàn thành'
                                                     ];
                                                     echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
-                                                    ?>
-                                                <?php endif; ?>
+                                                }
+                                                ?>
                                             </span>
                                         </div>
 
@@ -350,21 +363,15 @@
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <div class="d-flex gap-2 align-items-center">
+                                            <div>
                                                 <span class="badge bg-light text-dark border">
                                                     <i class="bi bi-people"></i> <?php echo $lich['so_cho'] ?? 50; ?> chỗ
                                                 </span>
                                             </div>
-                                            <div class="d-flex gap-2">
-                                                <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
-                                                   class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-eye"></i> Xem chi tiết
-                                                </a>
-                                                <a href="index.php?act=lichKhoiHanh/edit&id=<?php echo $lich['id']; ?>" 
-                                                   class="btn btn-outline-secondary btn-sm">
-                                                    <i class="bi bi-pencil"></i> Sửa
-                                                </a>
-                                            </div>
+                                            <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                <i class="bi bi-eye"></i> Xem chi tiết
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -380,9 +387,9 @@
                         <i class="bi bi-calendar-x"></i>
                         <h4 class="mb-3">Chưa có lịch khởi hành nào</h4>
                         <p class="text-muted mb-4">Hãy tạo lịch khởi hành đầu tiên để bắt đầu quản lý tour</p>
-                        <a href="index.php?act=lichKhoiHanh/create" class="btn btn-primary btn-lg">
+                        <!-- <a href="index.php?act=lichKhoiHanh/create" class="btn btn-primary btn-lg">
                             <i class="bi bi-plus-circle"></i> Tạo lịch khởi hành mới
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>

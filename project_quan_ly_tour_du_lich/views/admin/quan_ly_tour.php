@@ -189,10 +189,10 @@
                                                class="btn btn-outline-info" title="Chi tiết tour">
                                                 <i class="bi bi-eye"></i> Chi tiết
                                             </a>
-                                            <a href="<?php echo BASE_URL; ?>index.php?act=admin/danhSachKhachTheoTour&tour_id=<?php echo urlencode($tour['tour_id']); ?>" 
+                                            <!-- <a href="<?php echo BASE_URL; ?>index.php?act=admin/danhSachKhachTheoTour&tour_id=<?php echo urlencode($tour['tour_id']); ?>" 
                                                class="btn btn-outline-success" title="Danh sách khách">
                                                 <i class="bi bi-people"></i> Khách
-                                            </a>
+                                            </a> -->
                                             <a href="<?php echo BASE_URL; ?>index.php?act=tour/clone&id=<?php echo urlencode($tour['tour_id']); ?>" 
                                                class="btn btn-outline-warning" title="Sao chép tour" 
                                                onclick="return confirm('Bạn có muốn sao chép tour này?');">

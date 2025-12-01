@@ -131,6 +131,9 @@
                             <i class="bi bi-calendar-check-fill"></i> Quản Lý Booking
                         </h1>
                         <p class="lead mb-0 opacity-75">Quản lý đặt tour và xử lý booking của khách hàng</p>
+                        <a href="index.php?act=admin/lichSuXoaBooking" class="btn btn-outline-danger btn-sm mt-2">
+                            <i class="bi bi-clock-history"></i> Xem lịch sử xóa booking
+                        </a>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="index.php?act=booking/datTourChoKhach" class="btn btn-warning btn-lg">
@@ -346,8 +349,8 @@
                                                    class="btn btn-sm btn-info" title="Xem chi tiết">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="index.php?act=lichKhoiHanh/chiTietTheoBooking&id=<?php echo $booking['booking_id']; ?>" 
-                                                   class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ theo booking này">
+                                                <a href="index.php?act=tour/phanBoNhanSuLichKhoiHanh&id=<?php echo $booking['tour_id']; ?>" 
+                                                   class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ">
                                                     <i class="bi bi-people-fill"></i>
                                                 </a>
                                                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>

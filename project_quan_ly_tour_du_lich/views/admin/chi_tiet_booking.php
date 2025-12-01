@@ -281,7 +281,7 @@
                 <!-- Thông tin khách hàng -->
                 <div class="info-card card">
                     <div class="card-header">
-                        <i class="bi bi-person-circle"></i> Thông tin Khách hàng
+                        <i class="bi bi-person-circle"></i> Thông tin người đặt
                     </div>
                     <div class="card-body">
                         <div class="info-row">
