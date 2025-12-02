@@ -76,12 +76,12 @@ class BookingController {
             $bookingId = $this->bookingModel->insert($data);
             if ($bookingId) {
                 // Tự động tạo lịch khởi hành nếu chưa có
-                if (!empty($ngayKhoiHanh)) {
+                if (!empty($ngayKhoiHanh) && !empty($tourId)) {
                     $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh);
                     if (!$lichKhoiHanh) {
                         // Tạo lịch khởi hành mới
                         $lichKhoiHanhData = [
-                            'tour_id' => $tourId,
+                            'tour_id' => $tourId, // Đảm bảo tour_id luôn có giá trị
                             'ngay_khoi_hanh' => $ngayKhoiHanh,
                             'ngay_ket_thuc' => $ngayKetThuc,
                             'gio_xuat_phat' => null,
@@ -524,13 +524,13 @@ class BookingController {
                 }
 
                 // Tự động tạo lịch khởi hành nếu chưa có
-                if (!empty($ngayKhoiHanh)) {
+                if (!empty($ngayKhoiHanh) && !empty($tourId)) {
                     $ngayKetThuc = !empty($_POST['ngay_ket_thuc']) ? $_POST['ngay_ket_thuc'] : $ngayKhoiHanh;
                     $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh);
                     if (!$lichKhoiHanh) {
                         // Tạo lịch khởi hành mới
                         $lichKhoiHanhData = [
-                            'tour_id' => $tourId,
+                            'tour_id' => $tourId, // Đảm bảo tour_id luôn có giá trị
                             'ngay_khoi_hanh' => $ngayKhoiHanh,
                             'ngay_ket_thuc' => $ngayKetThuc,
                             'gio_xuat_phat' => null,

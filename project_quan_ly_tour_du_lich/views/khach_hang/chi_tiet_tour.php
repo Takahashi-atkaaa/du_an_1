@@ -3,134 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết Tour</title>
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>public/css/style.css">
+    <title>Chi tiết tour</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; }
+        .tour-header { background: linear-gradient(120deg,#0099ff 60%,#00c6a7 100%); color: #fff; padding: 32px 0; border-radius: 0 0 32px 32px; }
+        .tour-img-main { width:100%; max-height:340px; object-fit:cover; border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.12); }
+        .tour-info-box { background: #fff; border-radius: 16px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px; margin-top: -60px; }
+        .tour-gallery img { width:80px; height:80px; object-fit:cover; border-radius:8px; margin-right:8px; margin-bottom:8px; }
+        .section-title { font-weight: bold; color: #0099ff; margin-top: 32px; }
+        .table th, .table td { vertical-align: middle; }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <a href="<?php echo BASE_URL; ?>index.php?act=tour/index">← Quay lại danh sách</a>
-        <?php if (isset($error) && $error !== '') : ?>
-            <div class="error"><?php echo htmlspecialchars($error); ?></div>
-        <?php elseif (isset($tour) && $tour !== null) : ?>
-            <div class="tour-detail">
-              
-                <h1><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h1>
-                <p><?php echo htmlspecialchars($tour['mo_ta'] ?? ''); ?></p>
-                <p><strong>Loại tour:</strong> <?php echo htmlspecialchars($tour['loai_tour'] ?? ''); ?></p>
-                <p><strong>Giá cơ bản:</strong> <?php echo number_format((float)($tour['gia_co_ban'] ?? 0)); ?> VNĐ/1 Người</p>
-                <p><strong>Trạng thái:</strong> <?php echo htmlspecialchars($tour['trang_thai'] ?? ''); ?></p>
-                <?php if (isset($tour['chinh_sach']) && $tour['chinh_sach'] !== null && $tour['chinh_sach'] !== '') : ?>
-                    <div class="chinh-sach">
-                        <h3>Chính sách</h3>
-                        <div><?php echo nl2br(htmlspecialchars($tour['chinh_sach'])); ?></div>
-                    </div>
-                <?php endif; ?>
-                <a href="<?php echo BASE_URL; ?>index.php?act=booking/create&tour_id=<?php echo isset($tour['tour_id']) ? urlencode($tour['tour_id']) : ''; ?>">Đặt tour</a>
-            </div>
-
-            <div class="tour-extra">
-                <h2>Lịch trình chi tiết</h2>
-                <?php if (isset($lichTrinhList) && count($lichTrinhList) > 0) : ?>
-                    <ul>
-                        <?php foreach ($lichTrinhList as $lichTrinh) : ?>
-                            <li>
-                                <strong>Ngày <?php echo htmlspecialchars($lichTrinh['ngay_thu']); ?>:</strong>
-                                <?php echo htmlspecialchars($lichTrinh['dia_diem']); ?> -
-                                <?php echo htmlspecialchars($lichTrinh['hoat_dong']); ?>
-                            </li>
+    <div class="tour-header text-center">
+        <h1 class="display-5 fw-bold mb-2"><?php echo htmlspecialchars($tour['ten_tour'] ?? 'Tên tour'); ?></h1>
+        <div class="lead mb-2">Loại tour: <b><?php echo htmlspecialchars($tour['loai_tour'] ?? ''); ?></b></div>
+        <div>Giá chỉ từ <span class="fw-bold fs-4 text-warning"><?php echo number_format($tour['gia_tour'] ?? $tour['gia_co_ban'] ?? 0); ?>đ</span></div>
+    </div>
+    <div class="container tour-info-box">
+        <div class="row">
+            <div class="col-md-6">
+                <img src="<?php echo htmlspecialchars($tour['hinh_anh'] ?? 'https://images.unsplash.com/photo-1465156799763-2c087c332922?auto=format&fit=crop&w=800&q=80'); ?>" class="tour-img-main mb-3" alt="Ảnh tour">
+                <div class="tour-gallery d-flex flex-wrap">
+                    <?php if (!empty($hinhAnhList)): ?>
+                        <?php foreach ($hinhAnhList as $ha): ?>
+                            <img src="<?php echo htmlspecialchars($ha['url_anh']); ?>" alt="Hình ảnh tour">
                         <?php endforeach; ?>
-                    </ul>
-                <?php else : ?>
-                    <p>Chưa có lịch trình chi tiết.</p>
-                <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             </div>
-
-            <div class="tour-extra">
-                <h2>Lịch khởi hành</h2>
-                <?php if (isset($lichKhoiHanhList) && count($lichKhoiHanhList) > 0) : ?>
-                    <table border="1" cellpadding="6" cellspacing="0">
-                        <thead>
-                            <tr>
-                                <th>Ngày khởi hành</th>
-                                <th>Ngày kết thúc</th>
-                                <th>Điểm tập trung</th>
-                                <th>Trạng thái</th>
-                            </tr>
-                        </thead>
+            <div class="col-md-6">
+                <h3 class="section-title">Mô tả tour</h3>
+                <div class="mb-3"> <?php echo nl2br(htmlspecialchars($tour['mo_ta'] ?? 'Chưa có mô tả.')); ?> </div>
+                <h4 class="section-title">Thông tin khởi hành</h4>
+                <?php if (!empty($lichKhoiHanhList)): ?>
+                    <table class="table table-bordered table-sm bg-white">
+                        <thead><tr><th>Ngày khởi hành</th><th>Ngày kết thúc</th><th>Điểm tập trung</th><th>Trạng thái</th></tr></thead>
                         <tbody>
-                            <?php foreach ($lichKhoiHanhList as $lichKhoiHanh) : ?>
-                                <tr>
-                                    <td><?php echo htmlspecialchars($lichKhoiHanh['ngay_khoi_hanh']); ?></td>
-                                    <td><?php echo htmlspecialchars($lichKhoiHanh['ngay_ket_thuc']); ?></td>
-                                    <td><?php echo htmlspecialchars($lichKhoiHanh['diem_tap_trung']); ?></td>
-                                    <td><?php echo htmlspecialchars($lichKhoiHanh['trang_thai']); ?></td>
-                                </tr>
-                            <?php endforeach; ?>
+                        <?php foreach ($lichKhoiHanhList as $lk): ?>
+                            <tr>
+                                <td><?php echo date('d/m/Y', strtotime($lk['ngay_khoi_hanh'])); ?></td>
+                                <td><?php echo date('d/m/Y', strtotime($lk['ngay_ket_thuc'])); ?></td>
+                                <td><?php echo htmlspecialchars($lk['diem_tap_trung']); ?></td>
+                                <td><?php echo htmlspecialchars($lk['trang_thai']); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
                         </tbody>
                     </table>
-                <?php else : ?>
-                    <p>Chưa có lịch khởi hành nào.</p>
+                <?php else: ?>
+                    <div class="text-muted">Chưa có lịch khởi hành.</div>
                 <?php endif; ?>
-            </div>
-
-            <div class="tour-extra">
-                <h2>Thông tin Hướng dẫn viên</h2>
-                <?php if (isset($hdvInfo) && $hdvInfo !== null && isset($hdvInfo['ho_ten']) && $hdvInfo['ho_ten'] !== '') : ?>
-                    <div class="hdv-info">
-                    <strong>Nhân sự ID:</strong> <?php echo htmlspecialchars($hdvInfo['nhan_su_id']); ?>
-                        <p><strong>Họ tên:</strong> <?php echo htmlspecialchars($hdvInfo['ho_ten']); ?></p>
-                        <p><strong>Email:</strong> <?php echo htmlspecialchars($hdvInfo['email'] ?? ''); ?></p>
-                        <p><strong>Số điện thoại:</strong> <?php echo htmlspecialchars($hdvInfo['so_dien_thoai'] ?? ''); ?></p>
-                        <p><strong>Chứng chỉ:</strong> <?php echo htmlspecialchars($hdvInfo['chung_chi'] ?? ''); ?></p>
-                        <p><strong>Ngôn ngữ:</strong> <?php echo htmlspecialchars($hdvInfo['ngon_ngu'] ?? ''); ?></p>
-                        <p><strong>Kinh nghiệm:</strong> <?php echo htmlspecialchars($hdvInfo['kinh_nghiem'] ?? ''); ?></p>
-                        <p><strong>Sức khỏe:</strong> <?php echo htmlspecialchars($hdvInfo['suc_khoe'] ?? ''); ?></p>
-                  
+                <h4 class="section-title">Hướng dẫn viên</h4>
+                <?php if (!empty($tour['hdv_info'])): ?>
+                    <div class="mb-2">
+                        <b><?php echo htmlspecialchars($tour['hdv_info']['ho_ten'] ?? ''); ?></b> - <?php echo htmlspecialchars($tour['hdv_info']['email'] ?? ''); ?>, SĐT: <?php echo htmlspecialchars($tour['hdv_info']['so_dien_thoai'] ?? ''); ?>
                     </div>
-                <?php else : ?>
-                    <p>Chưa có thông tin hướng dẫn viên cho tour này.</p>
+                <?php else: ?>
+                    <div class="text-muted">Chưa có thông tin hướng dẫn viên.</div>
                 <?php endif; ?>
             </div>
-
-            <div class="tour-extra">
-                <h2>Hình ảnh tour</h2>
-                <?php if (isset($hinhAnhList) && count($hinhAnhList) > 0) : ?>
-                    <div class="tour-images">
-                        <?php foreach ($hinhAnhList as $anh) : ?>
-                            <figure>
-                                <img src="<?php echo htmlspecialchars(BASE_URL . $anh['url_anh']); ?>" alt="<?php echo htmlspecialchars($anh['mo_ta'] ?? 'Hình ảnh tour'); ?>" style="max-width: 240px;">
-                                <?php if (isset($anh['mo_ta']) && $anh['mo_ta'] !== '') : ?>
-                                    <figcaption><?php echo htmlspecialchars($anh['mo_ta']); ?></figcaption>
-                                <?php endif; ?>
-                            </figure>
-                        <?php endforeach; ?>
-                    </div>
-                <?php else : ?>
-                    <p>Chưa có hình ảnh nào.</p>
-                <?php endif; ?>
-            </div>
-
-            <div class="tour-extra">
-                <h2>Yêu cầu đặc biệt của khách</h2>
-                <?php if (isset($yeuCauList) && count($yeuCauList) > 0) : ?>
-                    <ul>
-                        <?php foreach ($yeuCauList as $yeuCau) : ?>
-                            <li>
-                                <strong>ID khách hàng:</strong> <?php echo htmlspecialchars($yeuCau['khach_hang_id']); ?> -
-                                <?php echo htmlspecialchars($yeuCau['noi_dung']); ?>
-                            </li>
-                        <?php endforeach; ?>
-                    </ul>
-                <?php else : ?>
-                    <p>Chưa có yêu cầu đặc biệt.</p>
-                <?php endif; ?>
-            </div>
-
-            <div class="tour-extra">
-             
-            </div>
+        </div>
+        <h3 class="section-title">Lịch trình chi tiết</h3>
+        <?php if (!empty($lichTrinhList)): ?>
+            <table class="table table-bordered table-sm bg-white">
+                <thead><tr><th>Ngày</th><th>Địa điểm</th><th>Hoạt động</th></tr></thead>
+                <tbody>
+                <?php foreach ($lichTrinhList as $lt): ?>
+                    <tr>
+                        <td><?php echo $lt['ngay_thu']; ?></td>
+                        <td><?php echo htmlspecialchars($lt['dia_diem']); ?></td>
+                        <td><?php echo htmlspecialchars($lt['hoat_dong']); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php else: ?>
+            <div class="text-muted">Chưa cập nhật lịch trình.</div>
         <?php endif; ?>
+        <?php if (!empty($tour['nhat_ky'])): ?>
+            <h4 class="section-title">Nhật ký tour</h4>
+            <ul>
+                <?php foreach ($tour['nhat_ky'] as $nk): ?>
+                    <li><?php echo htmlspecialchars($nk['noi_dung']); ?> (<?php echo date('d/m/Y', strtotime($nk['ngay_ghi'])); ?>)</li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+        <?php if (!empty($tour['yeu_cau_dac_biet'])): ?>
+            <h4 class="section-title">Yêu cầu đặc biệt</h4>
+            <ul>
+                <?php foreach ($tour['yeu_cau_dac_biet'] as $yc): ?>
+                    <li><?php echo htmlspecialchars($yc['mo_ta']); ?> (Mức độ: <?php echo htmlspecialchars($yc['muc_do_uu_tien']); ?>)</li>
+                <?php endforeach; ?>
+            </ul>
+        <?php endif; ?>
+        <div class="mt-4">
+            <a href="index.php?act=khachHang/datTour&id=<?php echo $tour['tour_id'] ?? $tour['id']; ?>" class="btn btn-warning btn-lg">Đặt tour ngay</a>
+            <a href="index.php?act=khachHang/dashboard" class="btn btn-outline-secondary ms-2">Quay lại trang chủ</a>
+        </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 

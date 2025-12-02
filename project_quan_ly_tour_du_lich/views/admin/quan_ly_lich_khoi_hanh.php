@@ -369,6 +369,7 @@
                                                 </span>
                                             </div>
                                             <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
+                                            
                                                class="btn btn-outline-primary btn-sm">
                                                 <i class="bi bi-eye"></i> Xem chi tiết
                                             </a>

@@ -167,9 +167,9 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                            class="btn btn-warning">
                             <i class="bi bi-pencil-square"></i> Sửa lịch
                         </a>
-                        <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
-                            <i class="bi bi-arrow-left"></i> Quay lại danh sách
-                        </a>
+                    <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
+                        <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                    </a>
                     </div>
                 </div>
             </div>
@@ -600,7 +600,7 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                         <i class="bi bi-person-x fs-1 opacity-25"></i>
                                         <p class="mt-3">Chưa có booking nào cho lịch khởi hành này</p>
                                     </div>
-                                <?php endif; ?>
+            <?php endif; ?>
                             </div>
                         </div>
                     </div>

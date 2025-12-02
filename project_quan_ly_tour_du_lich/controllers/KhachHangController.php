@@ -369,6 +369,120 @@ class KhachHangController {
         require 'views/khach_hang/gui_yeu_cau_ho_tro.php';
     }
     
+    // Đặt tour & thanh toán nhanh từ trang khách hàng
+    public function thanhToanTour() {
+        require_once 'models/Tour.php';
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        require_once 'models/GiaoDich.php';
+        require_once 'models/NguoiDung.php';
+
+        $tourModel = new Tour();
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $giaoDichModel = new GiaoDich();
+        $nguoiDungModel = new NguoiDung();
+
+        // Lấy thông tin user & khách hàng hiện tại
+        $userId = $_SESSION['user_id'] ?? 0;
+        if (!$userId) {
+            $_SESSION['error'] = 'Vui lòng đăng nhập để đặt tour.';
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+
+        $khachHang = $khachHangModel->findByUserId($userId);
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng. Vui lòng cập nhật hồ sơ trước khi đặt tour.';
+            header('Location: index.php?act=khachHang/capNhatThongTin');
+            exit();
+        }
+
+        $nguoiDung = $nguoiDungModel->findById($userId);
+
+        // Lấy tour cần đặt
+        $tourId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Thiếu thông tin tour cần đặt.';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+
+        $tour = $tourModel->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Tour không tồn tại hoặc đã bị xóa.';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+
+        // Xử lý khi khách bấm "Xác nhận đã thanh toán & Đặt tour"
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $soLuong = isset($_POST['so_luong']) ? (int)$_POST['so_luong'] : 1;
+            if ($soLuong <= 0) {
+                $soLuong = 1;
+            }
+
+            // Lấy giá tour (ưu tiên giá_tour nếu có, fallback về gia_co_ban)
+            $giaCoBan = 0;
+            if (isset($tour['gia_tour']) && $tour['gia_tour'] !== null) {
+                $giaCoBan = (float)$tour['gia_tour'];
+            } elseif (isset($tour['gia_co_ban']) && $tour['gia_co_ban'] !== null) {
+                $giaCoBan = (float)$tour['gia_co_ban'];
+            }
+
+            $tongTien = $giaCoBan * $soLuong;
+
+            try {
+                // Tạo booking mới
+                $bookingData = [
+                    'tour_id' => $tourId,
+                    'khach_hang_id' => $khachHang['khach_hang_id'],
+                    'ngay_dat' => date('Y-m-d'),
+                    'ngay_khoi_hanh' => null,   // Khách đặt & thanh toán nhanh, có thể bổ sung sau
+                    'ngay_ket_thuc' => null,
+                    'so_nguoi' => $soLuong,
+                    'tong_tien' => $tongTien,
+                    'trang_thai' => 'DaCoc',
+                    'ghi_chu' => 'Khách hàng đặt tour và thanh toán online từ trang khách hàng'
+                ];
+
+                $bookingId = $bookingModel->insert($bookingData);
+                if (!$bookingId) {
+                    throw new Exception('Không thể tạo booking. Vui lòng thử lại sau.');
+                }
+
+                // Lưu giao dịch thanh toán
+                $giaoDichData = [
+                    'tour_id' => $tourId,
+                    'loai' => 'Thu',
+                    'so_tien' => $tongTien,
+                    'mo_ta' => "Thanh toán booking #{$bookingId} - {$tour['ten_tour']}",
+                    'ngay_giao_dich' => date('Y-m-d')
+                ];
+                $giaoDichModel->insert($giaoDichData);
+
+                // Cập nhật trạng thái booking (ghi lịch sử)
+                $bookingModel->updateTrangThai(
+                    $bookingId,
+                    'DaCoc',
+                    $userId,
+                    'Khách hàng xác nhận đã thanh toán khi đặt tour'
+                );
+
+                $_SESSION['success'] = 'Đặt tour và thanh toán thành công! Cảm ơn bạn đã tin tưởng dịch vụ của chúng tôi.';
+                header('Location: index.php?act=khachHang/hoaDon&booking_id=' . $bookingId);
+                exit();
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+                header('Location: index.php?act=khachHang/thanhToanTour&id=' . $tourId);
+                exit();
+            }
+        }
+
+        // GET: hiển thị form thanh toán tour
+        require 'views/khach_hang/thanh_toan_tour.php';
+    }
+    
     // Thanh toán online
     public function thanhToan() {
         require_once 'models/Booking.php';

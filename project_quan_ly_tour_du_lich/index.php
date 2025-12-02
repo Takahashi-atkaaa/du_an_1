@@ -23,6 +23,7 @@ require_once __DIR__ . '/controllers/KhachHangController.php';
 require_once __DIR__ . '/controllers/NhaCungCapController.php';
 require_once __DIR__ . '/controllers/LichKhoiHanhController.php';
 require_once __DIR__ . '/controllers/DanhGiaController.php';
+require_once __DIR__ . '/controllers/BaoCaoTaiChinhController.php';
 
 // Models
 require_once __DIR__ . '/models/NguoiDung.php';
@@ -111,10 +112,8 @@ match ($act) {
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
-    'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/lichSuXoaBooking' => (new AdminController())->lichSuXoaBooking(),
-    'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
@@ -123,6 +122,24 @@ match ($act) {
     'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),
     'admin/deleteNhatKyTour' => (new AdminController())->deleteNhatKyTour(),
     'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
+    'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
+    // Báo cáo tài chính
+    'admin/baoCaoTaiChinh' => (new BaoCaoTaiChinhController())->dashboard(),
+    'admin/lichSuGiaoDich' => (new BaoCaoTaiChinhController())->lichSuGiaoDich(),
+    'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
+    'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
+    'admin/congNo' => (new BaoCaoTaiChinhController())->congNo(),
+    'admin/congNoKhachHang' => (new BaoCaoTaiChinhController())->congNoKhachHang(),
+    'admin/congNoNhaCungCap' => (new BaoCaoTaiChinhController())->congNoNhaCungCap(),
+    'admin/laiLoTour' => (new BaoCaoTaiChinhController())->laiLoTour(),
+    'admin/duToanTour' => (new BaoCaoTaiChinhController())->duToanTour(),
+    'admin/formDuToan' => (new BaoCaoTaiChinhController())->formDuToan(),
+    'admin/chiPhiThucTe' => (new BaoCaoTaiChinhController())->chiPhiThucTe(),
+    'admin/formChiPhi' => (new BaoCaoTaiChinhController())->formChiPhi(),
+    'admin/duyetChiPhi' => (new BaoCaoTaiChinhController())->duyetChiPhi(),
+    'admin/tuChoiChiPhi' => (new BaoCaoTaiChinhController())->tuChoiChiPhi(),
+    'admin/soSanhDuToan' => (new BaoCaoTaiChinhController())->soSanhDuToan(),
+    'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
     'hdv/tours' => (new HDVController())->tours(),
