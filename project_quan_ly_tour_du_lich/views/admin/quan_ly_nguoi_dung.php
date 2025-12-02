@@ -4,215 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Người dùng - Admin</title>
-
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family: "Segoe UI", Arial, sans-serif; }
-
-        body {
-            background:#f4f6f9;
-        }
-
-        .admin-container {
-            width:90%;
-            max-width:1200px;
-            margin:30px auto;
-            background:#fff;
-            padding:20px;
-            border-radius:10px;
-            box-shadow:0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        h1 {
-            font-size:26px;
-            margin-bottom:10px;
-            color:#222;
-            font-weight:700;
-        }
-
-        a.back {
-            color:#007bff;
-            text-decoration:none;
-            font-size:14px;
-            display:inline-block;
-            margin-bottom:20px;
-        }
-        a.back:hover {
-            text-decoration:underline;
-        }
-
-        table {
-            width:100%;
-            border-collapse: collapse;
-            margin-top:15px;
-        }
-
-        th {
-            background:#007bff;
-            color:white;
-            padding:12px;
-            text-align:left;
-            font-size:15px;
-        }
-
-        td {
-            padding:12px;
-            font-size:14px;
-            border-bottom:1px solid #e5e5e5;
-        }
-
-        tr:hover {
-            background:#f6faff;
-        }
-
-        .status.active {
-            color:#28a745;
-            font-weight:600;
-        }
-        .status.inactive {
-            color:#dc3545;
-            font-weight:600;
-        }
-
-        .btn-detail {
-            padding:6px 12px;
-            border:none;
-            background:#28a745;
-            color:#fff;
-            border-radius:5px;
-            cursor:pointer;
-            font-size:13px;
-        }
-        .btn-detail:hover {
-            opacity:0.9;
-        }
-
-        /* ======= MODAL ======= */
-        .modal {
-            display:none;
-            position:fixed;
-            top:0; left:0;
-            width:100%;
-            height:100%;
-            background:rgba(0,0,0,0.55);
-            justify-content:center;
-            align-items:center;
-            z-index:9999;
-        }
-
-        .modal-content {
-            width:420px;
-            background:#fff;
-            padding:20px 25px;
-            border-radius:10px;
-            box-shadow:0 5px 20px rgba(0,0,0,0.3);
-            animation: fadeIn 0.25s ease;
-        }
-
-        @keyframes fadeIn {
-            from { transform:scale(0.8); opacity:0; }
-            to { transform:scale(1); opacity:1; }
-        }
-
-        .close-btn {
-            float:right;
-            font-size:22px;
-            font-weight:bold;
-            cursor:pointer;
-        }
-        .close-btn:hover { color:red; }
-
-        .detail-item {
-            margin-bottom:10px;
-            font-size:15px;
-        }
-
-        .detail-item strong {
-            min-width:120px;
-            display:inline-block;
-            color:#333;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 </head>
 
 <body>
-<div class="admin-container">
-
-    <h1>Quản lý Người dùng</h1>
-    <a href="index.php?act=admin/dashboard" class="back">← Quay lại Dashboard</a>
-
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Họ tên</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-
-        <tbody>
-        <?php if (!empty($users)): ?>
-            <?php foreach ($users as $user): ?>
-                <tr>
-                    <td><?= $user['id'] ?></td>
-                    <td><?= $user['ho_ten'] ?></td>
-
-                    <td>
-                        <?= $user['trang_thai'] ?>
-                    </td>
-
-                    <td>
-                        <button class="btn-detail"
-                            onclick='openDetailModal(<?= json_encode($user) ?>)'>
-                            Xem chi tiết
-                        </button>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <tr><td colspan="4" style="text-align:center;">Không có người dùng nào.</td></tr>
-        <?php endif; ?>
-        </tbody>
-    </table>
-</div>
-
-
-<!-- ========== MODAL ========== -->
-<div id="detailModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-
-        <h3 style="margin-bottom:15px;">Chi tiết người dùng</h3>
-
-        <p class="detail-item"><strong>ID:</strong> <span id="m_id"></span></p>
-        <p class="detail-item"><strong>Tên đăng nhập:</strong> <span id="m_username"></span></p>
-        <p class="detail-item"><strong>Họ tên:</strong> <span id="m_name"></span></p>
-        <p class="detail-item"><strong>Vai trò:</strong> <span id="m_role"></span></p>
-        <p class="detail-item"><strong>Email:</strong> <span id="m_email"></span></p>
-        <p class="detail-item"><strong>Số điện thoại:</strong> <span id="m_phone"></span></p>
-        <p class="detail-item"><strong>Trạng thái:</strong> <span id="m_status"></span></p>
+<div class="container mt-4">
+    <div class="p-4 mb-4 rounded" style="background: linear-gradient(90deg, #4f8cff 0%, #6a82fb 100%); color: #fff; position: relative;">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <i class="bi bi-people-fill" style="font-size:2.5rem;"></i>
+                <div>
+                    <h2 class="mb-0 fw-bold">Quản lý Người dùng</h2>
+                    <div class="fs-5">Theo dõi và quản lý tất cả tài khoản hệ thống</div>
+                </div>
+            </div>
+            <a href="index.php?act=admin/dashboard" class="btn btn-light fw-bold"><i class="bi bi-arrow-left"></i> Dashboard</a>
+        </div>
+    </div>
+    <form method="get" action="index.php" class="row g-3 mb-4 align-items-end bg-white p-3 rounded shadow-sm">
+        <input type="hidden" name="act" value="admin/quanLyNguoiDung">
+        <div class="col-md-3">
+            <label class="form-label fw-semibold">Tìm kiếm</label>
+            <input type="text" name="search" class="form-control" placeholder="Tên, email, số điện thoại...">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Tháng tạo</label>
+            <input type="month" name="search_month" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Ngày tạo</label>
+            <input type="date" name="search_date" class="form-control">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label fw-semibold">Vai trò</label>
+            <select name="search_role" class="form-select">
+                <option value="">-- Vai trò --</option>
+                <option value="Admin">Admin</option>
+                <option value="KhachHang">Khách hàng</option>
+                <option value="HDV">Hướng dẫn viên</option>
+                <option value="NhaCungCap">Nhà cung cấp</option>
+                <option value="Khac">Khác</option>
+            </select>
+        </div>
+        <div class="col-md-3 text-end">
+            <button type="submit" class="btn btn-primary px-4 fw-bold"><i class="bi bi-funnel"></i> Lọc dữ liệu</button>
+        </div>
+    </form>
+    <div class="card shadow-sm rounded">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>ID</th>
+                        <th>Họ tên</th>
+                        <th>Email</th>
+                        <th>SĐT</th>
+                        <th>Vai trò</th>
+                        <th>Ngày tạo</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (!empty($nguoiDungList)):
+                        $search = $_GET['search'] ?? '';
+                        $firstRow = true;
+                        foreach ($nguoiDungList as $nd): ?>
+                        <?php
+                        $isHighlighted = false;
+                        if ($search !== '' && $firstRow) {
+                            $isHighlighted = true;
+                        }
+                        ?>
+                        <tr<?= $isHighlighted ? ' style="background-color: #d4edda;"' : '' ?> >
+                            <td class="fw-bold text-primary"><?= $nd['id'] ?></td>
+                            <td><?= htmlspecialchars($nd['ho_ten']) ?></td>
+                            <td><?= htmlspecialchars($nd['email']) ?></td>
+                            <td><?= htmlspecialchars($nd['so_dien_thoai']) ?></td>
+                            <td><span class="badge bg-info text-dark"><?= htmlspecialchars($nd['vai_tro']) ?></span></td>
+                            <td><?= htmlspecialchars($nd['ngay_tao']) ?></td>
+                            <td>
+                                <a href="index.php?act=admin/xemChiTietNguoiDung&id=<?= $nd['id'] ?>" class="btn btn-sm btn-info" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
+                            </td>
+                        </tr>
+                        <?php $firstRow = false; ?>
+                    <?php endforeach; else: ?>
+                        <tr><td colspan="7" class="text-center py-4">Không có người dùng nào!</td></tr>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
-
-
-<script>
-function openDetailModal(user) {
-    document.getElementById("m_id").innerText = user.id;
-    document.getElementById("m_username").innerText = user.ten_dang_nhap;
-    document.getElementById("m_name").innerText = user.ho_ten;
-    document.getElementById("m_role").innerText = user.vai_tro;
-    document.getElementById("m_email").innerText = user.email;
-    document.getElementById("m_phone").innerText = user.so_dien_thoai;
-    document.getElementById("m_status").innerText =
-        user.trang_thai;
-
-    document.getElementById("detailModal").style.display = "flex";
-}
-
-function closeModal() {
-    document.getElementById("detailModal").style.display = "none";
-}
-</script>
-
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+>>>>>>> new
 </body>
 </html>

@@ -12,12 +12,14 @@ class KhachHangController {
         require_once 'models/KhachHang.php';
         require_once 'models/ThongBao.php';
         require_once 'models/Tour.php';
-        
+        require_once 'models/DanhGia.php';
+
         $bookingModel = new Booking();
         $khachHangModel = new KhachHang();
         $thongBaoModel = new ThongBao();
         $tourModel = new Tour();
-        
+        $danhGiaModel = new DanhGia();
+
         // Lấy thông tin khách hàng
         $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
         if (!$khachHang) {
@@ -25,14 +27,14 @@ class KhachHangController {
             header('Location: index.php?act=auth/profile');
             exit();
         }
-        
+
         // Lấy booking của khách hàng
         $bookings = $bookingModel->getByKhachHangId($khachHang['khach_hang_id']);
-        
+
         // Lấy thông báo chưa đọc
         $thongBaoChuaDoc = $thongBaoModel->countChuaDoc($_SESSION['user_id']);
         $thongBaoList = $thongBaoModel->getByNguoiDung($_SESSION['user_id'], 5);
-        
+
         // Lấy tour sắp tới (booking có ngày khởi hành >= hôm nay)
         $tourSapToi = [];
         $today = date('Y-m-d');
@@ -42,13 +44,39 @@ class KhachHangController {
                 $tourSapToi[] = $booking;
             }
         }
-        
+
         // Thống kê
         $tongBooking = count($bookings);
         $bookingChoXacNhan = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'ChoXacNhan'));
         $bookingDaCoc = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'DaCoc'));
         $bookingHoanTat = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'HoanTat'));
-        
+
+        // Lấy danh sách tour từ DB và phân loại
+        $allTours = $tourModel->getAll();
+        $tourTrongNuoc = [];
+        $tourQuocTe = [];
+        $tourTheoYeuCau = [];
+        foreach ($allTours as $tour) {
+            switch ($tour['loai_tour']) {
+                case 'TrongNuoc':
+                    $tourTrongNuoc[] = $tour;
+                    break;
+                case 'QuocTe':
+                    $tourQuocTe[] = $tour;
+                    break;
+                case 'TheoYeuCau':
+                    $tourTheoYeuCau[] = $tour;
+                    break;
+            }
+        }
+
+        // Lấy 3 đánh giá tốt nhất từ DB
+        // Lấy 3 đánh giá tốt nhất (điểm >= 4 trên thang 5)
+        $danhGiaTot = $danhGiaModel->filter([
+            'diem_min' => 4
+        ]);
+        $danhGiaTot = array_slice($danhGiaTot, 0, 3);
+
         require 'views/khach_hang/dashboard.php';
     }
     

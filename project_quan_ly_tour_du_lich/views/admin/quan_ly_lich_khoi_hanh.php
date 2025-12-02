@@ -368,10 +368,16 @@
                                                     <i class="bi bi-people"></i> <?php echo $lich['so_cho'] ?? 50; ?> chỗ
                                                 </span>
                                             </div>
-                                            <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
-                                               class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-eye"></i> Xem chi tiết
-                                            </a>
+                                            <div class="d-flex gap-2">
+                                                <a href="index.php?act=lichKhoiHanh/chiTiet&id=<?php echo $lich['id']; ?>" 
+                                                   class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i> Xem chi tiết
+                                                </a>
+                                                <a href="index.php?act=admin/danhSachKhachLichKhoiHanh&lich_khoi_hanh_id=<?php echo $lich['id']; ?>" 
+                                                   class="btn btn-outline-success btn-sm">
+                                                    <i class="bi bi-people"></i> Xem danh sách khách
+                                                </a>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

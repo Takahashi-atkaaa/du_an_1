@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Booking</title>
+    <title>Quản lý Booking & Khách Booking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -130,7 +130,7 @@
                         <h1 class="display-5 fw-bold mb-2">
                             <i class="bi bi-calendar-check-fill"></i> Quản Lý Booking
                         </h1>
-                        <p class="lead mb-0 opacity-75">Quản lý đặt tour và xử lý booking của khách hàng</p>
+                        <p class="lead mb-0 opacity-75">Quản lý booking, danh sách khách hàng từng booking, và xử lý đặt tour cho khách hàng</p>
                         <a href="index.php?act=admin/lichSuXoaBooking" class="btn btn-outline-danger btn-sm mt-2">
                             <i class="bi bi-clock-history"></i> Xem lịch sử xóa booking
                         </a>
@@ -353,9 +353,12 @@
                                                    class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ">
                                                     <i class="bi bi-people-fill"></i>
                                                 </a>
+                                                <a href="index.php?act=admin/danhSachKhachBooking&booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-success" title="Xem danh sách khách booking">
+                                                    <i class="bi bi-people"></i>
+                                                </a>
                                                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
                                                     <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
-                                                       class="btn btn-sm btn-primary" title="Sửa">
+se="Sửa">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                 <?php endif; ?>
