@@ -78,6 +78,12 @@ class Tour
         ]);
     }
 
+    public function updateQrCodePath($tourId, $path) {
+        $sql = "UPDATE tour SET qr_code_path = ? WHERE tour_id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$path, (int)$tourId]);
+    }
+
     // Xóa tour
     public function delete($id) {
         // Xóa tất cả các bản ghi liên quan trước khi xóa tour

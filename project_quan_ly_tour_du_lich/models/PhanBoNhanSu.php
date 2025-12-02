@@ -9,6 +9,14 @@ class PhanBoNhanSu
         $this->conn = connectDB();
     }
 
+    // Lấy phân bổ theo ID
+    public function findById($id) {
+        $sql = "SELECT * FROM phan_bo_nhan_su WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$id]);
+        return $stmt->fetch();
+    }
+
     // Lấy phân bổ nhân sự theo lịch khởi hành
     public function getByLichKhoiHanh($lichKhoiHanhId) {
         $sql = "SELECT pbn.*, 

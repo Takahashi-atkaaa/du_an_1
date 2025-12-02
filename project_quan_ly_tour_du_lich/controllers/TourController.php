@@ -119,8 +119,13 @@ class TourController {
                     $this->model->conn->commit();
                 }
 
-                // Redirect với thông báo thành công
-                $_SESSION['success'] = 'Tạo tour thành công!';
+                $qrCreated = $this->generateTourQrFile($tourId);
+                $successMessage = 'Tạo tour thành công!';
+                if (!$qrCreated) {
+                    $successMessage .= ' (Chưa tạo được mã QR tự động, vui lòng tạo lại trong trang chi tiết tour).';
+                }
+
+                $_SESSION['success'] = $successMessage;
                 header('Location: index.php?act=admin/quanLyTour');
                 exit();
             
@@ -245,8 +250,12 @@ class TourController {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : null;
         if ($id) {
             try {
+                $tour = $this->model->findById($id);
                 $result = $this->model->delete($id);
                 if ($result) {
+                    if ($tour && !empty($tour['qr_code_path'])) {
+                        deleteFile($tour['qr_code_path']);
+                    }
                     $_SESSION['success'] = 'Xóa tour thành công.';
                 } else {
                     $_SESSION['error'] = 'Không thể xóa tour.';
@@ -258,6 +267,33 @@ class TourController {
             $_SESSION['error'] = 'ID tour không hợp lệ.';
         }
         header('Location: index.php?act=admin/quanLyTour');
+        exit();
+    }
+
+    public function generateQr() {
+        requireRole('Admin');
+        $tourId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Tour không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Không tìm thấy tour.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+
+        $result = $this->generateTourQrFile($tourId);
+        if ($result) {
+            $_SESSION['success'] = 'Đã cập nhật mã QR cho tour.';
+        } else {
+            $_SESSION['error'] = 'Không thể tạo mã QR. Vui lòng thử lại sau.';
+        }
+
+        header('Location: index.php?act=admin/chiTietTour&id=' . $tourId);
         exit();
     }
 
@@ -310,6 +346,44 @@ class TourController {
             }
         }
         return null;
+    }
+
+    private function getTourBookingLink($tourId) {
+        return rtrim(BASE_URL, '/') . '/index.php?act=tour/show&id=' . $tourId;
+    }
+
+    private function generateTourQrFile($tourId) {
+        $tour = $this->model->findById($tourId);
+        if (!$tour) {
+            return false;
+        }
+
+        $qrDir = PATH_ROOT . 'public/uploads/qr/';
+        if (!is_dir($qrDir) && !mkdir($qrDir, 0777, true)) {
+            return false;
+        }
+
+        $fileName = 'tour_' . $tourId . '_' . time() . '.png';
+        $filePath = $qrDir . $fileName;
+        $bookingUrl = $this->getTourBookingLink($tourId);
+        $qrService = 'https://api.qrserver.com/v1/create-qr-code/?size=480x480&data=' . urlencode($bookingUrl);
+        $context = stream_context_create(['http' => ['timeout' => 10]]);
+        $qrImage = @file_get_contents($qrService, false, $context);
+
+        if ($qrImage === false || file_put_contents($filePath, $qrImage) === false) {
+            if (file_exists($filePath)) {
+                @unlink($filePath);
+            }
+            return false;
+        }
+
+        if (!empty($tour['qr_code_path'])) {
+            deleteFile($tour['qr_code_path']);
+        }
+
+        $relativePath = 'public/uploads/qr/' . $fileName;
+        $this->model->updateQrCodePath($tourId, $relativePath);
+        return $relativePath;
     }
 
     // Tạo lịch khởi hành cho tour
@@ -592,6 +666,85 @@ class TourController {
         $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($tourId);
         $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
         $anhChinh = $this->chonAnhChinh($hinhAnhList);
+    }
+
+    // Clone tour - Sao chép tour cũ để tạo tour mới
+    public function clone() {
+        $tourId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'ID tour không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+        
+        $originalTour = $this->model->findById($tourId);
+        if (!$originalTour) {
+            $_SESSION['error'] = 'Tour không tồn tại.';
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+        
+        try {
+            if (method_exists($this->model->conn, 'beginTransaction')) {
+                $this->model->conn->beginTransaction();
+            }
+            
+            // Tạo tour mới với thông tin từ tour gốc
+            $newTourData = [
+                'ten_tour' => $originalTour['ten_tour'] . ' (Bản sao)',
+                'loai_tour' => $originalTour['loai_tour'] ?? 'TrongNuoc',
+                'mo_ta' => $originalTour['mo_ta'] ?? '',
+                'gia_co_ban' => $originalTour['gia_co_ban'] ?? 0,
+                'chinh_sach' => $originalTour['chinh_sach'] ?? null,
+                'id_nha_cung_cap' => $originalTour['id_nha_cung_cap'] ?? null,
+                'tao_boi' => $_SESSION['user_id'] ?? null,
+                'trang_thai' => 'HoatDong'
+            ];
+            
+            $inserted = $this->model->insert($newTourData);
+            if (!$inserted) {
+                throw new Exception('Không thể tạo tour mới.');
+            }
+            
+            $newTourId = (int)$this->model->getLastInsertId();
+            
+            // Clone lịch trình
+            $lichTrinhList = $this->model->getLichTrinhByTourId($tourId);
+            foreach ($lichTrinhList as $lichTrinh) {
+                $this->model->insertLichTrinh($newTourId, [
+                    'ngay_thu' => $lichTrinh['ngay_thu'],
+                    'dia_diem' => $lichTrinh['dia_diem'],
+                    'hoat_dong' => $lichTrinh['hoat_dong']
+                ]);
+            }
+            
+            // Clone hình ảnh (chỉ copy đường dẫn, không copy file)
+            $hinhAnhList = $this->model->getHinhAnhByTourId($tourId);
+            foreach ($hinhAnhList as $hinhAnh) {
+                $this->model->insertHinhAnh($newTourId, [
+                    'url_anh' => $hinhAnh['url_anh'],
+                    'mo_ta' => $hinhAnh['mo_ta']
+                ]);
+            }
+            
+            if (method_exists($this->model->conn, 'commit')) {
+                $this->model->conn->commit();
+            }
+            
+            $_SESSION['success'] = 'Đã sao chép tour thành công. Bạn có thể chỉnh sửa tour mới.';
+            header('Location: index.php?act=tour/update&id=' . $newTourId);
+            exit();
+            
+        } catch (Exception $e) {
+            if (method_exists($this->model->conn, 'rollBack') && $this->model->conn->inTransaction()) {
+                $this->model->conn->rollBack();
+            }
+            
+            $_SESSION['error'] = 'Lỗi khi sao chép tour: ' . $e->getMessage();
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
     }
 
 }

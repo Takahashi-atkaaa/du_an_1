@@ -1,6 +1,172 @@
 <?php
 
 class AdminController {
+    // Hiển thị so sánh chi tiết chi phí thực tế và dự toán
+    public function soSanhChiTietChiPhi() {
+        require_once __DIR__ . '/../models/DuToanTour.php';
+        require_once __DIR__ . '/../models/ChiPhiThucTe.php';
+        $tour_id = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 1;
+        $duToanModel = new DuToanTour();
+        $chiPhiModel = new ChiPhiThucTe();
+        $duToan = $duToanModel->findByTourId($tour_id);
+        $chiPhis = $chiPhiModel->findByTourId($tour_id);
+        $tongDuToan = $duToan ? $duToan['tong_du_toan'] : 0;
+        $tongChiPhiThucTe = 0;
+        $chiPhiSoSanh = [];
+        if ($duToan && $chiPhis) {
+            // Gom nhóm theo loại chi phí
+            $loaiChiPhiArr = [];
+            foreach ($chiPhis as $cp) {
+                $loai = $cp['loai_chi_phi'];
+                if (!isset($loaiChiPhiArr[$loai])) $loaiChiPhiArr[$loai] = 0;
+                $loaiChiPhiArr[$loai] += $cp['so_tien'];
+                $tongChiPhiThucTe += $cp['so_tien'];
+            }
+            foreach ($loaiChiPhiArr as $loai => $thucTe) {
+                $duToanLoai = $duToanModel->getDuToanLoai($tour_id, $loai);
+                $chiPhiSoSanh[] = [
+                    'loai_chi_phi' => $loai,
+                    'du_toan' => $duToanLoai,
+                    'thuc_te' => $thucTe,
+                    'chenh_lech' => $thucTe - $duToanLoai,
+                    'ghi_chu' => ''
+                ];
+            }
+        }
+        $tour = ['ten_tour' => $duToan ? $duToan['ten_tour'] : ''];
+        require 'views/admin/bao_cao_tai_chinh/so_sanh_chi_tiet.php';
+    }
+    // ...existing code...
+    public function xemChiTietNguoiDung() {
+        require_once 'models/NguoiDung.php';
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $nguoiDungModel = new NguoiDung();
+        $nguoiDung = $nguoiDungModel->findById($id);
+        require 'views/admin/chi_tiet_nguoi_dung.php';
+    }
+    // ...existing code...
+                    // Xóa khách khỏi booking
+                    public function xoaKhachBooking() {
+                        require_once 'models/Booking.php';
+                        require_once 'models/KhachHang.php';
+                        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+                        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
+                        if ($bookingId > 0 && $khachHangId > 0) {
+                            $bookingModel = new Booking();
+                            $sql = "DELETE FROM booking_khach_hang WHERE booking_id = ? AND khach_hang_id = ?";
+                            $stmt = $bookingModel->conn->prepare($sql);
+                            $stmt->execute([$bookingId, $khachHangId]);
+                        }
+                        // Nếu là AJAX thì trả về JSON, nếu không thì reload lại trang hiện tại
+                        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
+                            echo json_encode(['success' => true]);
+                            exit;
+                        } else {
+                            // Reload lại trang hiện tại
+                            echo '<script>window.location.reload();</script>';
+                            exit;
+                        }
+                    }
+
+                    // Sửa thông tin khách hàng của booking
+                    public function suaKhachBooking() {
+                        require_once 'models/Booking.php';
+                        require_once 'models/KhachHang.php';
+                        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+                        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
+                        $khachHangModel = new KhachHang();
+                        $bookingModel = new Booking();
+                        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $khachHangId > 0) {
+                            $tenKhachHang = $_POST['ho_ten'] ?? '';
+                            $gmail = $_POST['email'] ?? '';
+                            $soDienThoai = $_POST['so_dien_thoai'] ?? '';
+                            $diaChi = $_POST['dia_chi'] ?? '';
+                            $ngaySinh = $_POST['ngay_sinh'] ?? null;
+                            $gioiTinh = $_POST['gioi_tinh'] ?? null;
+                            if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
+                                $gioiTinh = null;
+                            }
+                            $sql = "UPDATE khach_hang SET ten_khach_hang = ?, gmail = ?, so_dien_thoai = ?, dia_chi = ?, gioi_tinh = ?, ngay_sinh = ? WHERE khach_hang_id = ?";
+                            $stmt = $khachHangModel->conn->prepare($sql);
+                            $stmt->execute([$tenKhachHang, $gmail, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh, $khachHangId]);
+                            echo '<script>window.location.href = "index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId . '";</script>';
+                            exit;
+                        }
+                        // Lấy thông tin khách để hiển thị form sửa
+                        $khach = $khachHangModel->findById($khachHangId);
+                        require 'views/admin/sua_khach_booking.php';
+                    }
+                // Xử lý thêm khách hàng vào booking
+                public function themKhachBooking() {
+                    require_once 'models/Booking.php';
+                    require_once 'models/KhachHang.php';
+                    $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+                    $hoTen = $_POST['ho_ten'] ?? '';
+                    $email = $_POST['email'] ?? '';
+                    $soDienThoai = $_POST['so_dien_thoai'] ?? '';
+                    $diaChi = $_POST['dia_chi'] ?? '';
+                    $ngaySinh = $_POST['ngay_sinh'] ?? null;
+                    $gioiTinh = $_POST['gioi_tinh'] ?? null;
+                    if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
+                        $gioiTinh = null;
+                    }
+                    $diemDanh = $_POST['diem_danh'] ?? 'co_mat';
+                    if ($bookingId > 0 && $hoTen && $email && $soDienThoai) {
+                        $khachHangModel = new KhachHang();
+                        // Chèn trực tiếp vào bảng khach_hang
+                        $sqlInsertKH = "INSERT INTO khach_hang (ten_khach_hang, gmail, so_dien_thoai, dia_chi, gioi_tinh, ngay_sinh) VALUES (?, ?, ?, ?, ?, ?)";
+                        $stmtInsertKH = $khachHangModel->conn->prepare($sqlInsertKH);
+                        $stmtInsertKH->execute([$hoTen, $email, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh]);
+                        $khachHangId = $khachHangModel->conn->lastInsertId();
+                        // Thêm khách vào bảng booking_khach_hang
+                        $sqlInsertBK = "INSERT INTO booking_khach_hang (booking_id, khach_hang_id, diem_danh) VALUES (?, ?, ?)";
+                        $stmtInsertBK = $khachHangModel->conn->prepare($sqlInsertBK);
+                        $stmtInsertBK->execute([$bookingId, $khachHangId, $diemDanh]);
+                    }
+                    // Quay lại trang danh sách khách booking
+                    header('Location: index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId);
+                    exit;
+                }
+            // Hiển thị danh sách booking của tour
+    // Hiển thị danh sách khách hàng của booking
+    public function danhSachKhachBooking() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $booking = null;
+        $khachList = [];
+        if ($bookingId > 0) {
+            $booking = $bookingModel->findById($bookingId);
+            // Lấy danh sách khách của booking từ bảng booking_khach_hang và khach_hang
+            $sql = "SELECT kh.*, bk.diem_danh, bk.id as booking_khach_id FROM booking_khach_hang bk JOIN khach_hang kh ON bk.khach_hang_id = kh.khach_hang_id WHERE bk.booking_id = ?";
+            $stmt = $bookingModel->conn->prepare($sql);
+            $stmt->execute([$bookingId]);
+            $khachList = $stmt->fetchAll();
+        }
+        require 'views/admin/danh_sach_khach_booking.php';
+    }
+        // Route: admin/danhSachKhachTour
+        public function danhSachKhachTour() {
+            $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+            $tourModel = new Tour();
+            $lichKhoiHanhModel = new LichKhoiHanh();
+            $bookingModel = new Booking();
+            $checkinModel = new TourCheckin();
+            $roomModel = new HotelRoomAssignment();
+            $tour = null;
+            $bookingList = [];
+            if ($tourId > 0) {
+                $tour = $tourModel->findById($tourId);
+                // Lấy tất cả booking của tour này
+                $sql = "SELECT b.*, nd.ho_ten as khach_ho_ten, nd.email, nd.so_dien_thoai, tc.id as checkin_id, tc.trang_thai as checkin_status FROM booking b LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id LEFT JOIN tour_checkin tc ON b.booking_id = tc.booking_id WHERE b.tour_id = ? ORDER BY b.ngay_dat DESC";
+                $stmt = $bookingModel->conn->prepare($sql);
+                $stmt->execute([$tourId]);
+                $bookingList = $stmt->fetchAll();
+            }
+            require 'views/admin/danh_sach_khach.php';
+        }
     
     public function __construct() {
         requireRole('Admin');
@@ -13,7 +179,32 @@ class AdminController {
     
     public function quanLyTour() {
         $tourModel = new Tour();
+        
+        // Lọc theo loại tour
+        $loaiTour = $_GET['loai_tour'] ?? '';
+        $trangThai = $_GET['trang_thai'] ?? '';
+        $search = trim($_GET['search'] ?? '');
+        
+        if (!empty($loaiTour) || !empty($trangThai) || !empty($search)) {
+            $conditions = [];
+            if (!empty($loaiTour)) {
+                $conditions['loai_tour'] = $loaiTour;
+            }
+            if (!empty($trangThai)) {
+                $conditions['trang_thai'] = $trangThai;
+            }
+            $tours = $tourModel->find($conditions);
+            
+            // Lọc theo tìm kiếm nếu có
+            if (!empty($search)) {
+                $tours = array_filter($tours, function($tour) use ($search) {
+                    return stripos($tour['ten_tour'] ?? '', $search) !== false;
+                });
+            }
+        } else {
         $tours = $tourModel->getAll();
+        }
+        
         require 'views/admin/quan_ly_tour.php';
     }
     
@@ -43,6 +234,59 @@ class AdminController {
         require 'views/admin/chi_tiet_tour_admin.php';
     }
     public function quanLyNguoiDung() {
+        require_once 'models/NguoiDung.php';
+        $nguoiDungModel = new NguoiDung();
+        $search = $_GET['search'] ?? '';
+        $searchMonth = $_GET['search_month'] ?? '';
+        $searchDate = $_GET['search_date'] ?? '';
+        $searchRole = $_GET['search_role'] ?? '';
+        $nguoiDungList = $nguoiDungModel->getAll();
+        $highlightedUser = null;
+        // Tìm kiếm theo tên/email/sđt
+        if ($search !== '') {
+            foreach ($nguoiDungList as $key => $nd) {
+                if (
+                    stripos($nd['ho_ten'], $search) !== false ||
+                    stripos($nd['email'], $search) !== false ||
+                    stripos($nd['so_dien_thoai'], $search) !== false
+                ) {
+                    $highlightedUser = $nd;
+                    unset($nguoiDungList[$key]);
+                    $nguoiDungList = array_merge([$highlightedUser], $nguoiDungList);
+                    break;
+                }
+            }
+        }
+        // Lọc chính xác theo tháng tạo: chỉ hiển thị đúng tháng được chọn
+        if ($searchMonth !== '') {
+            $filteredList = [];
+            foreach ($nguoiDungList as $nd) {
+                if (strpos($nd['ngay_tao'], $searchMonth) === 0) {
+                    $filteredList[] = $nd;
+                }
+            }
+            $nguoiDungList = $filteredList;
+        }
+        // Lọc chính xác theo ngày tạo
+        if ($searchDate !== '') {
+            $filteredList = [];
+            foreach ($nguoiDungList as $nd) {
+                if (strpos($nd['ngay_tao'], $searchDate) === 0) {
+                    $filteredList[] = $nd;
+                }
+            }
+            $nguoiDungList = $filteredList;
+        }
+        // Lọc theo vai trò
+        if ($searchRole !== '') {
+            $filteredList = [];
+            foreach ($nguoiDungList as $nd) {
+                if ($nd['vai_tro'] === $searchRole) {
+                    $filteredList[] = $nd;
+                }
+            }
+            $nguoiDungList = $filteredList;
+        }
         require 'views/admin/quan_ly_nguoi_dung.php';
     }
     
@@ -65,16 +309,211 @@ class AdminController {
     }
     
     public function baoCaoTaiChinh() {
+        $giaoDichModel = new GiaoDich();
+        $tourModel = new Tour();
+        
+        // Lọc theo thời gian
+        $startDate = $_GET['start_date'] ?? null;
+        $endDate = $_GET['end_date'] ?? null;
+        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
+        
+        // Thống kê tổng hợp
+        $thongKeTongHop = $giaoDichModel->getThongKeTongHop($startDate, $endDate);
+        
+        // Thống kê theo từng tour
+        $thongKeTheoTour = $giaoDichModel->getThongKeTheoTour($startDate, $endDate);
+        
+        // Chi tiết giao dịch
+        $giaoDichList = [];
+        if ($tourId > 0) {
+            $giaoDichList = $giaoDichModel->getByTourId($tourId);
+            $thongKeTour = $giaoDichModel->getThongKeByTour($tourId);
+        } else {
+            $giaoDichList = $giaoDichModel->getAll();
+        }
+        
+        // Danh sách tour để filter
+        $tours = $tourModel->getAll();
+        
         require 'views/admin/bao_cao_tai_chinh.php';
     }
     public function addNhacungcap() {
-        require 'views/admin/nha_cung_cap.php';
+        $nhaCungCapModel = new NhaCungCap();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $tenDonVi = trim($_POST['ten_don_vi'] ?? '');
+            $loaiDichVu = $_POST['loai_dich_vu'] ?? null;
+            $diaChi = $_POST['dia_chi'] ?? null;
+            $lienHe = $_POST['lien_he'] ?? null;
+            $moTa = $_POST['mo_ta'] ?? null;
+            
+            if ($tenDonVi === '') {
+                $_SESSION['error'] = 'Tên đơn vị không được để trống';
+            } else {
+                try {
+                    $data = [
+                        'ten_don_vi' => $tenDonVi,
+                        'loai_dich_vu' => $loaiDichVu,
+                        'dia_chi' => $diaChi,
+                        'lien_he' => $lienHe,
+                        'mo_ta' => $moTa
+                    ];
+                    $nhaCungCapModel->create($data);
+                    $_SESSION['success'] = 'Thêm nhà cung cấp thành công';
+                } catch (Exception $e) {
+                    $_SESSION['error'] = 'Không thể thêm nhà cung cấp: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        header('Location: index.php?act=admin/nhaCungCap');
+        exit();
     }
     
     public function nhaCungCap() {
         $nhaCungCapModel = new NhaCungCap();
         $nhaCungCapList = $nhaCungCapModel->getAll();
+        
+        $selectedId = $_GET['id'] ?? $_GET['ncc_id'] ?? ($nhaCungCapList[0]['id_nha_cung_cap'] ?? null);
+        $selectedLoai = $_GET['loai'] ?? null;
+        $selectedSupplier = null;
+        $serviceTypeSummary = [];
+        $supplierStats = [];
+        $supplierServices = [];
+        $serviceTypes = [];
+        
+        if ($selectedId) {
+            $selectedSupplier = $nhaCungCapModel->findById($selectedId);
+            if ($selectedSupplier) {
+                $serviceTypeSummary = $nhaCungCapModel->getServiceTypeSummary($selectedId);
+                $supplierStats = $nhaCungCapModel->getSupplierStats($selectedId);
+                $serviceTypes = $nhaCungCapModel->getDistinctServiceTypes($selectedId);
+                $supplierServices = $nhaCungCapModel->getSupplierServices($selectedId, $selectedLoai ?: null, 100);
+            }
+        }
+        
         require 'views/admin/nha_cung_cap.php';
+    }
+    
+    public function updateNhaCungCap() {
+        $nhaCungCapModel = new NhaCungCap();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id_nha_cung_cap'] ?? 0;
+            $tenDonVi = $_POST['ten_don_vi'] ?? '';
+            $loaiDichVu = $_POST['loai_dich_vu'] ?? null;
+            $diaChi = $_POST['dia_chi'] ?? null;
+            $lienHe = $_POST['lien_he'] ?? null;
+            $moTa = $_POST['mo_ta'] ?? null;
+            
+            if ($id <= 0) {
+                $_SESSION['error'] = 'ID nhà cung cấp không hợp lệ';
+            } elseif (empty($tenDonVi)) {
+                $_SESSION['error'] = 'Tên đơn vị không được để trống';
+            } else {
+                try {
+                    $data = [
+                        'ten_don_vi' => $tenDonVi,
+                        'loai_dich_vu' => $loaiDichVu,
+                        'dia_chi' => $diaChi,
+                        'lien_he' => $lienHe,
+                        'mo_ta' => $moTa
+                    ];
+                    $nhaCungCapModel->update($id, $data);
+                    $_SESSION['success'] = 'Cập nhật nhà cung cấp thành công';
+                } catch (Exception $e) {
+                    $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
+                }
+            }
+        }
+        
+        header('Location: index.php?act=admin/nhaCungCap');
+        exit();
+    }
+    
+    // Xem chi tiết dịch vụ
+    public function chiTietDichVu() {
+        $nhaCungCapModel = new NhaCungCap();
+        $dichVuId = $_GET['id'] ?? 0;
+        $nccId = $_GET['ncc_id'] ?? null;
+        
+        if ($dichVuId <= 0) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Admin có thể xem tất cả dịch vụ, không cần kiểm tra nhaCungCapId
+        $dichVu = $nhaCungCapModel->getDichVuById($dichVuId);
+        
+        if (!$dichVu) {
+            $_SESSION['error'] = 'Không tìm thấy dịch vụ';
+            header('Location: index.php?act=admin/nhaCungCap' . ($nccId ? '&id=' . $nccId : ''));
+            exit();
+        }
+        
+        // Lấy thông tin nhà cung cấp nếu chưa có
+        if ($dichVu['nha_cung_cap_id'] && !$nccId) {
+            $nccId = $dichVu['nha_cung_cap_id'];
+        }
+        
+        require 'views/admin/chi_tiet_dich_vu.php';
+    }
+
+    public function supplierServiceAction() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/nhaCungCap');
+            exit();
+        }
+
+        $serviceId = (int)($_POST['dich_vu_id'] ?? 0);
+        $action = $_POST['action'] ?? '';
+        $nccId = (int)($_POST['ncc_id'] ?? 0);
+        $redirect = 'index.php?act=admin/nhaCungCap';
+        if ($nccId) {
+            $redirect .= '&id=' . $nccId;
+        }
+
+        if ($serviceId <= 0 || $action === '') {
+            $_SESSION['error'] = 'Dịch vụ hoặc hành động không hợp lệ';
+            header('Location: ' . $redirect);
+            exit();
+        }
+
+        $nhaCungCapModel = new NhaCungCap();
+
+        try {
+            switch ($action) {
+                case 'approve':
+                    $giaTien = (int)($_POST['gia_tien'] ?? 0);
+                    if ($giaTien <= 0) {
+                        throw new Exception('Giá tiền phải lớn hơn 0');
+                    }
+                    $nhaCungCapModel->xacNhanDichVu($serviceId, $giaTien);
+                    $_SESSION['success'] = 'Đã xác nhận dịch vụ';
+                    break;
+                case 'reject':
+                    $ghiChu = trim($_POST['ghi_chu'] ?? '');
+                    $nhaCungCapModel->tuChoiDichVu($serviceId, $ghiChu ?: null);
+                    $_SESSION['success'] = 'Đã từ chối dịch vụ';
+                    break;
+                case 'update_price':
+                    $giaTien = (int)($_POST['gia_tien'] ?? 0);
+                    if ($giaTien <= 0) {
+                        throw new Exception('Giá tiền phải lớn hơn 0');
+                    }
+                    $nhaCungCapModel->capNhatGiaDichVu($serviceId, $giaTien);
+                    $_SESSION['success'] = 'Đã cập nhật giá dịch vụ';
+                    break;
+                default:
+                    $_SESSION['error'] = 'Hành động không được hỗ trợ';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Không thể xử lý: ' . $e->getMessage();
+        }
+
+        header('Location: ' . $redirect);
+        exit();
     }
     public function danhGia() {
         require 'views/admin/danh_gia.php';
