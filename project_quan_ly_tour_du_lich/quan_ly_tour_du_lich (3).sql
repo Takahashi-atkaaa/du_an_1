@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Nov 25, 2025 at 07:56 PM
+-- Generation Time: Dec 02, 2025 at 05:40 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -33,6 +33,7 @@ CREATE TABLE `booking` (
   `khach_hang_id` int(11) DEFAULT NULL,
   `ngay_dat` date DEFAULT NULL,
   `ngay_khoi_hanh` date DEFAULT NULL,
+  `ngay_ket_thuc` date DEFAULT NULL,
   `so_nguoi` int(11) DEFAULT NULL,
   `tong_tien` decimal(15,2) DEFAULT NULL,
   `trang_thai` enum('ChoXacNhan','DaCoc','HoanTat','Huy') DEFAULT NULL,
@@ -43,11 +44,35 @@ CREATE TABLE `booking` (
 -- Dumping data for table `booking`
 --
 
-INSERT INTO `booking` (`booking_id`, `tour_id`, `khach_hang_id`, `ngay_dat`, `ngay_khoi_hanh`, `so_nguoi`, `tong_tien`, `trang_thai`, `ghi_chu`) VALUES
-(3, 3, 3, '2025-11-22', '2025-12-07', 1, 4200000.00, 'ChoXacNhan', 'Khách đơn, cần hỗ trợ đặc biệt'),
-(4, 3, 4, '2025-11-22', '2025-12-21', 43, 180600000.00, 'ChoXacNhan', 'cxvxcv | Công ty/Tổ chức: ấds'),
-(5, 3, 4, '2025-11-22', '2026-11-21', 15, 63000000.00, 'ChoXacNhan', 'fdgdf | Công ty/Tổ chức: scgsfg'),
-(6, 4, 4, '2025-11-22', '2026-03-13', 32, 272000000.00, 'DaCoc', 'cố lên e | Công ty/Tổ chức: fpoly');
+INSERT INTO `booking` (`booking_id`, `tour_id`, `khach_hang_id`, `ngay_dat`, `ngay_khoi_hanh`, `ngay_ket_thuc`, `so_nguoi`, `tong_tien`, `trang_thai`, `ghi_chu`) VALUES
+(7, 6, 5, '2025-11-27', '2025-11-28', '2025-11-28', 10, 329900000.00, 'Huy', 'sâsasasaasas | Công ty/Tổ chức: sdfsdf'),
+(10, 6, 5, '2025-12-01', '2025-12-03', '2025-12-05', 10, 329900000.00, 'ChoXacNhan', ''),
+(11, 6, 5, '2025-12-01', '2025-12-03', '2025-12-06', 10, 329900000.00, 'ChoXacNhan', '');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `booking_deletion_history`
+--
+
+CREATE TABLE `booking_deletion_history` (
+  `id` int(11) NOT NULL,
+  `booking_id` int(11) DEFAULT NULL COMMENT 'ID booking đã bị xóa',
+  `tour_id` int(11) DEFAULT NULL COMMENT 'ID tour',
+  `khach_hang_id` int(11) DEFAULT NULL COMMENT 'ID khách hàng',
+  `nguoi_xoa_id` int(11) DEFAULT NULL COMMENT 'ID người dùng đã xóa',
+  `ly_do_xoa` text DEFAULT NULL COMMENT 'Lý do xóa',
+  `thong_tin_booking` text DEFAULT NULL COMMENT 'Thông tin booking dạng JSON',
+  `thoi_gian_xoa` timestamp NULL DEFAULT current_timestamp() COMMENT 'Thời gian xóa'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Lịch sử xóa booking';
+
+--
+-- Dumping data for table `booking_deletion_history`
+--
+
+INSERT INTO `booking_deletion_history` (`id`, `booking_id`, `tour_id`, `khach_hang_id`, `nguoi_xoa_id`, `ly_do_xoa`, `thong_tin_booking`, `thoi_gian_xoa`) VALUES
+(1, 8, 5, 5, 5, '', '{\"booking_id\":8,\"tour_id\":5,\"ten_tour\":\" NAGOYA – PHÚ SĨ – TOKYO\",\"khach_hang_id\":5,\"ten_khach_hang\":\"tung anh\",\"so_nguoi\":12,\"tong_tien\":\"329900000.00\",\"ngay_dat\":\"2025-12-01\",\"ngay_khoi_hanh\":\"2025-12-02\",\"ngay_ket_thuc\":\"2025-12-04\",\"trang_thai\":\"ChoXacNhan\",\"ghi_chu\":\"bê đê\"}', '2025-11-30 19:27:26'),
+(2, 9, 5, 5, 5, '', '{\"booking_id\":9,\"tour_id\":5,\"ten_tour\":\" NAGOYA – PHÚ SĨ – TOKYO\",\"khach_hang_id\":5,\"ten_khach_hang\":\"tung anh\",\"so_nguoi\":10,\"tong_tien\":\"329900000.00\",\"ngay_dat\":\"2025-12-01\",\"ngay_khoi_hanh\":\"2025-12-02\",\"ngay_ket_thuc\":\"2025-12-05\",\"trang_thai\":\"Huy\",\"ghi_chu\":\"ăn thịt chó\"}', '2025-11-30 22:15:13');
 
 -- --------------------------------------------------------
 
@@ -70,7 +95,8 @@ CREATE TABLE `booking_history` (
 --
 
 INSERT INTO `booking_history` (`id`, `booking_id`, `trang_thai_cu`, `trang_thai_moi`, `nguoi_thay_doi_id`, `ghi_chu`, `thoi_gian`) VALUES
-(4, 6, 'ChoXacNhan', 'DaCoc', 5, '', '2025-11-22 00:10:38');
+(5, 7, 'ChoXacNhan', 'DaCoc', 5, '', '2025-11-27 00:10:29'),
+(6, 7, 'DaCoc', 'Huy', 5, '', '2025-11-29 00:25:48');
 
 -- --------------------------------------------------------
 
@@ -277,6 +303,13 @@ CREATE TABLE `diem_checkin` (
   `ngay_tao` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Dumping data for table `diem_checkin`
+--
+
+INSERT INTO `diem_checkin` (`id`, `tour_id`, `ten_diem`, `loai_diem`, `thoi_gian_du_kien`, `ghi_chu`, `thu_tu`, `ngay_tao`) VALUES
+(6, 5, 'sân bay nội bài', 'tap_trung', '2025-12-02 08:35:00', 'đủ', 1, '2025-12-01 08:36:07');
+
 -- --------------------------------------------------------
 
 --
@@ -341,7 +374,10 @@ CREATE TABLE `hinh_anh_tour` (
 INSERT INTO `hinh_anh_tour` (`id`, `tour_id`, `url_anh`, `mo_ta`) VALUES
 (5, 3, 'images/dalat1.jpg', 'Vườn hoa Đà Lạt'),
 (6, 3, 'images/dalat2.jpg', 'Thác Datanla'),
-(7, 5, 'public/uploads/tour_images/tour_6925a4cddadde8.80437085.jpeg', '');
+(7, 5, 'public/uploads/tour_images/tour_6925a4cddadde8.80437085.jpeg', ''),
+(8, 6, 'public/uploads/tour_images/tour_6925a4cddadde8.80437085.jpeg', ''),
+(11, 7, 'public/uploads/tour_images/tour_692d1eb4756f63.76252915.jpeg', 'Vườn hoa Đà Lạt'),
+(12, 7, 'public/uploads/tour_images/tour_692d1eb4757c66.17239161.jpeg', 'Thác Datanla');
 
 -- --------------------------------------------------------
 
@@ -388,7 +424,9 @@ CREATE TABLE `khach_hang` (
 INSERT INTO `khach_hang` (`khach_hang_id`, `nguoi_dung_id`, `dia_chi`, `gioi_tinh`, `ngay_sinh`) VALUES
 (2, 8, '123 Đường Lê Lợi, Quận 1, TP.HCM', 'Nam', '1990-05-15'),
 (3, 9, '456 Đường Nguyễn Huệ, Quận 3, TP.HCM', 'Nữ', '1985-08-20'),
-(4, 12, 'dsfdf', 'Nam', '1999-02-12');
+(4, 12, 'dsfdf', 'Nam', '1999-02-12'),
+(5, 13, NULL, NULL, NULL),
+(6, 14, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -415,10 +453,8 @@ CREATE TABLE `lich_khoi_hanh` (
 --
 
 INSERT INTO `lich_khoi_hanh` (`id`, `tour_id`, `ngay_khoi_hanh`, `gio_xuat_phat`, `ngay_ket_thuc`, `gio_ket_thuc`, `diem_tap_trung`, `so_cho`, `hdv_id`, `trang_thai`, `ghi_chu`) VALUES
-(3, 3, '2025-12-07', '07:00:00', '2025-12-10', '19:00:00', 'Bến xe Miền Đông', 45, 2, 'SapKhoiHanh', 'Lịch khởi hành tour Đà Lạt'),
-(4, 4, '2025-11-24', '07:00:00', '2025-11-26', '17:00:00', '', 50, 2, 'SapKhoiHanh', ''),
-(5, 5, '2025-11-25', '21:45:00', '2025-11-30', '20:45:00', 'sân bay nội bài', 50, NULL, 'SapKhoiHanh', ''),
-(6, 5, '2025-11-26', '00:41:00', '2025-11-30', '01:41:00', 'sân bay nội bài', 50, 3, 'SapKhoiHanh', '');
+(9, 5, '2025-12-02', NULL, '2025-12-05', NULL, '', 50, NULL, 'SapKhoiHanh', 'Tạo tự động từ booking #9'),
+(10, NULL, '2025-12-02', '07:00:00', '2025-12-05', '17:00:00', '', 50, NULL, 'SapKhoiHanh', 'Tạo tự động từ booking #10');
 
 -- --------------------------------------------------------
 
@@ -490,7 +526,16 @@ INSERT INTO `lich_trinh_tour` (`id`, `tour_id`, `ngay_thu`, `dia_diem`, `hoat_do
 (12, 5, 2, '📅 Ngày 2: Nagoya – Thành phố cảng', 'Hoạt động:\r\n\r\nTham quan Lâu đài Nagoya.\r\n\r\nKhám phá khu phố Sakae, mua sắm.\r\n\r\nThưởng thức món Tebasaki nổi tiếng.'),
 (13, 5, 3, '📅 Ngày 3: Nagoya – Núi Phú Sĩ', 'Địa điểm: Phú Sĩ – Kawaguchiko\r\nHoạt động:\r\n\r\nDi chuyển đến khu vực núi Phú Sĩ.\r\n\r\nTham quan trạm 5 (nếu thời tiết cho phép).\r\n\r\nChụp ảnh hồ Kawaguchi.\r\n\r\nTrải nghiệm tắm onsen.'),
 (14, 5, 4, '📅 Ngày 4: Làng cổ Oshino Hakkai', 'Địa điểm: Kyoto\r\nHoạt động:\r\n\r\nChùa Vàng Kinkaku-ji.\r\n\r\nChùa Thanh Thủy Kiyomizu-dera.\r\n\r\nDạo phố Gion – nơi geisha sinh sống.'),
-(15, 5, 5, '📅 Ngày 6: Kyoto – Trà đạo', 'Địa điểm: Kyoto\r\nHoạt động:\r\n\r\nTham gia trải nghiệm trà đạo.\r\n\r\nTham quan rừng tre Arashiyama.\r\n\r\nMua quà lưu niệm tại Nishiki Market.');
+(15, 5, 5, '📅 Ngày 6: Kyoto – Trà đạo', 'Địa điểm: Kyoto\r\nHoạt động:\r\n\r\nTham gia trải nghiệm trà đạo.\r\n\r\nTham quan rừng tre Arashiyama.\r\n\r\nMua quà lưu niệm tại Nishiki Market.'),
+(16, 6, 1, '📅 Ngày 1: Hà Nội – Tokyo (Narita)', '\r\n\r\nHướng dẫn viên đón đoàn tại Nội Bài, làm thủ tục bay sang Nhật.\r\n\r\nHạ cánh tại sân bay Narita, về khách sạn nhận phòng.'),
+(17, 6, 2, '📅 Ngày 2: Nagoya – Thành phố cảng', 'Hoạt động:\r\n\r\nTham quan Lâu đài Nagoya.\r\n\r\nKhám phá khu phố Sakae, mua sắm.\r\n\r\nThưởng thức món Tebasaki nổi tiếng.'),
+(18, 6, 3, '📅 Ngày 3: Nagoya – Núi Phú Sĩ', 'Địa điểm: Phú Sĩ – Kawaguchiko\r\nHoạt động:\r\n\r\nDi chuyển đến khu vực núi Phú Sĩ.\r\n\r\nTham quan trạm 5 (nếu thời tiết cho phép).\r\n\r\nChụp ảnh hồ Kawaguchi.\r\n\r\nTrải nghiệm tắm onsen.'),
+(19, 6, 4, '📅 Ngày 4: Làng cổ Oshino Hakkai', 'Địa điểm: Kyoto\r\nHoạt động:\r\n\r\nChùa Vàng Kinkaku-ji.\r\n\r\nChùa Thanh Thủy Kiyomizu-dera.\r\n\r\nDạo phố Gion – nơi geisha sinh sống.'),
+(20, 6, 5, '📅 Ngày 6: Kyoto – Trà đạo', 'Địa điểm: Kyoto\r\nHoạt động:\r\n\r\nTham gia trải nghiệm trà đạo.\r\n\r\nTham quan rừng tre Arashiyama.\r\n\r\nMua quà lưu niệm tại Nishiki Market.'),
+(25, 7, 1, 'Sài Gòn - Đà Lạt', 'Khởi hành từ Sài Gòn - Đến Đà Lạt - Tham quan vườn hoa thành phố'),
+(26, 7, 2, 'Đà Lạt', 'Tham quan thác Datanla - Vườn hoa - Chợ đêm Đà Lạt'),
+(27, 7, 3, 'Đà Lạt', 'Tham quan đồi chè Cầu Đất - Làng hoa Vạn Thành - Nghỉ ngơi'),
+(28, 7, 4, 'Đà Lạt - Sài Gòn', 'Tham quan chợ Đà Lạt - Trở về Sài Gòn - Kết thúc tour');
 
 -- --------------------------------------------------------
 
@@ -524,7 +569,9 @@ INSERT INTO `nguoi_dung` (`id`, `ten_dang_nhap`, `mat_khau`, `ho_ten`, `avatar`,
 (9, 'khach02', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Phạm Thị Bình', NULL, 'khach02@email.com', '0945678901', 'KhachHang', 0, 'HoatDong', '2025-11-22 05:49:46'),
 (10, 'ncc01', '1\r\n', 'Công ty ABC Travel', NULL, 'ncc01@tour.com', '0956789012', 'NhaCungCap', 0, 'HoatDong', '2025-11-22 05:49:46'),
 (11, 'ncc02', '$2y$10$LwBeRXp5X5mPuzoaG1iDsu.zCDObUWlPY5kIHGpFkHf4MoOpdlwoO', 'Khách sạn XYZ', NULL, 'ncc02@tour.com', '0967890123', 'NhaCungCap', 0, 'HoatDong', '2025-11-22 05:49:46'),
-(12, 'test100@gmail.com', '$2y$10$C7j97g4U0zJVfSH3jRzmGOqnKRxVQzsAV2D9jwIqz2dYWL.6keI4u', 'hdv33', NULL, 'test100@gmail.com', '12312321', 'KhachHang', 0, 'HoatDong', '2025-11-21 23:53:25');
+(12, 'test100@gmail.com', '$2y$10$C7j97g4U0zJVfSH3jRzmGOqnKRxVQzsAV2D9jwIqz2dYWL.6keI4u', 'hdv33', NULL, 'test100@gmail.com', '12312321', 'KhachHang', 0, 'HoatDong', '2025-11-21 23:53:25'),
+(13, 'vana@gmail.com', '$2y$10$NXbFI2lrPgI2L4kQVOpRh.qMhRxkFQegdHpWM9Kdg5ddVaeqcRC42', 'tung anh', NULL, 'vana@gmail.com', '43435', 'HDV', 0, 'HoatDong', '2025-11-25 20:38:21'),
+(14, 'thaichimto1@gmail.com', '$2y$10$2Perginy3C2qDTKmS0DUWu7/HDDeQZUdNHPGwDAL2.qhZHYRfGO2O', 'aaaaa', NULL, 'thaichimto1@gmail.com', '43435', 'KhachHang', 0, 'HoatDong', '2025-11-27 01:09:25');
 
 -- --------------------------------------------------------
 
@@ -553,7 +600,8 @@ CREATE TABLE `nhan_su` (
 
 INSERT INTO `nhan_su` (`nhan_su_id`, `nguoi_dung_id`, `vai_tro`, `loai_hdv`, `chuyen_tuyen`, `danh_gia_tb`, `so_tour_da_dan`, `trang_thai_lam_viec`, `chung_chi`, `ngon_ngu`, `kinh_nghiem`, `suc_khoe`) VALUES
 (2, 6, 'HDV', 'NoiDia', 'Miền Bắc, Miền Trung', 5.00, 1, 'SanSang', 'Chứng chỉ nghiệp vụ hướng dẫn viên du lịch', 'Tiếng Việt, Tiếng Anh', '5 năm kinh nghiệm dẫn tour nội địa', 'Tốt'),
-(3, 7, 'HDV', 'QuocTe', 'Đông Nam Á, Châu Âu', 4.75, 20, 'SanSang', 'Chứng chỉ HDV quốc tế, IELTS 7.0', 'Tiếng Việt, Tiếng Anh, Tiếng Thái', '7 năm kinh nghiệm dẫn tour quốc tế', 'Tốt');
+(3, 7, 'HDV', 'QuocTe', 'Đông Nam Á, Châu Âu', 4.75, 20, 'SanSang', 'Chứng chỉ HDV quốc tế, IELTS 7.0', 'Tiếng Việt, Tiếng Anh, Tiếng Thái', '7 năm kinh nghiệm dẫn tour quốc tế', 'Tốt'),
+(4, 13, 'HDV', 'TongHop', NULL, 0.00, 0, 'SanSang', 'Có chứng chỉ', 'Anh Trung Nhật Hàn', '100 năm làm HDV', 'Tốt');
 
 -- --------------------------------------------------------
 
@@ -569,6 +617,7 @@ CREATE TABLE `nhat_ky_tour` (
   `tieu_de` varchar(255) DEFAULT NULL COMMENT 'Tiêu đề nhật ký',
   `noi_dung` text DEFAULT NULL,
   `cach_xu_ly` text DEFAULT NULL COMMENT 'Cách xử lý sự cố',
+  `thoi_tiet` varchar(255) DEFAULT NULL,
   `hinh_anh` text DEFAULT NULL COMMENT 'JSON array chứa đường dẫn hình ảnh',
   `ngay_ghi` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -577,10 +626,10 @@ CREATE TABLE `nhat_ky_tour` (
 -- Dumping data for table `nhat_ky_tour`
 --
 
-INSERT INTO `nhat_ky_tour` (`id`, `tour_id`, `nhan_su_id`, `loai_nhat_ky`, `tieu_de`, `noi_dung`, `cach_xu_ly`, `hinh_anh`, `ngay_ghi`) VALUES
-(5, 4, 2, 'hanh_trinh', 'dsfds', 'fdsfdsfd', '', NULL, '2025-11-25 00:00:00'),
-(6, 4, 2, 'su_co', 'á', 'aaaaa', '', NULL, '2025-11-25 00:00:00'),
-(7, 3, 2, 'su_co', 'xzzx', 'xzxzx', 'xzxz', NULL, '2025-11-25 00:00:00');
+INSERT INTO `nhat_ky_tour` (`id`, `tour_id`, `nhan_su_id`, `loai_nhat_ky`, `tieu_de`, `noi_dung`, `cach_xu_ly`, `thoi_tiet`, `hinh_anh`, `ngay_ghi`) VALUES
+(5, 4, 2, 'hanh_trinh', 'dsfds', 'fdsfdsfd', '', NULL, NULL, '2025-11-25 00:00:00'),
+(6, 4, 2, 'su_co', 'á', 'aaaaa', '', NULL, NULL, '2025-11-25 00:00:00'),
+(7, 3, 2, 'su_co', 'xzzx', 'xzxzx', 'xzxz', NULL, NULL, '2025-11-25 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -639,14 +688,7 @@ CREATE TABLE `phan_bo_dich_vu` (
 --
 
 INSERT INTO `phan_bo_dich_vu` (`id`, `lich_khoi_hanh_id`, `nha_cung_cap_id`, `loai_dich_vu`, `ten_dich_vu`, `so_luong`, `don_vi`, `ngay_bat_dau`, `ngay_ket_thuc`, `gio_bat_dau`, `gio_ket_thuc`, `dia_diem`, `gia_tien`, `ghi_chu`, `trang_thai`, `thoi_gian_xac_nhan`, `created_at`, `updated_at`) VALUES
-(3, 3, 3, 'KhachSan', 'dsfsdf', 1, '/phòng', NULL, NULL, NULL, NULL, NULL, 150000.00, 'dfdgfd', 'DaXacNhan', '2025-11-25 12:48:49', '2025-11-25 10:43:30', '2025-11-25 11:48:49'),
-(5, 3, 3, 'Xe', 'xe', 10, 'xe', '2025-11-25', '2025-11-25', '20:07:00', '20:07:00', '', 150000.00, '', 'DaXacNhan', '2025-11-25 20:18:24', '2025-11-25 13:07:43', '2025-11-25 13:18:24'),
-(6, 5, 3, 'VeMayBay', 'vé máy bay', 1, 'vé', NULL, NULL, NULL, NULL, NULL, 1500000.00, '', 'DaXacNhan', '2025-11-25 20:29:53', '2025-11-25 13:24:05', '2025-11-25 13:29:53'),
-(7, 3, 3, 'VeMayBay', 'vé máy bay', 1, 'vé', NULL, NULL, NULL, NULL, NULL, 1500000.00, '', 'DaXacNhan', '2025-11-26 00:34:45', '2025-11-25 13:40:42', '2025-11-25 17:34:45'),
-(9, 5, 3, 'NhaHang', 'nhà hàng 5 sao', 1, 'suất', NULL, NULL, NULL, NULL, NULL, 5000000.00, '', 'DaXacNhan', '2025-11-26 00:39:16', '2025-11-25 17:38:03', '2025-11-25 17:39:16'),
-(10, 6, 3, 'VeMayBay', 'vé máy bay 44', 1, '', NULL, NULL, NULL, NULL, '', 0.00, '', 'TuChoi', '2025-11-26 00:57:07', '2025-11-25 17:55:45', '2025-11-25 17:57:07'),
-(11, 6, 3, 'NhaHang', 'nhà hàng 5 sao', 1, 'suất', NULL, NULL, NULL, NULL, NULL, 600000.00, '', 'DaXacNhan', '2025-11-26 01:00:25', '2025-11-25 17:59:37', '2025-11-25 18:00:25'),
-(12, 6, 3, 'VeMayBay', 'vé máy bay', 5, 'vé', NULL, NULL, NULL, NULL, '', 1500000.00, '', 'DaXacNhan', '2025-11-26 01:01:18', '2025-11-25 18:01:03', '2025-11-25 18:01:18');
+(16, 10, 3, 'VeMayBay', 'vé máy bay', 1, 'vé', NULL, NULL, NULL, NULL, NULL, 1500000.00, '', 'DaXacNhan', '2025-12-01 09:30:22', '2025-12-01 02:29:50', '2025-12-01 02:30:22');
 
 -- --------------------------------------------------------
 
@@ -693,10 +735,8 @@ CREATE TABLE `phan_bo_nhan_su` (
 --
 
 INSERT INTO `phan_bo_nhan_su` (`id`, `lich_khoi_hanh_id`, `nhan_su_id`, `vai_tro`, `ghi_chu`, `trang_thai`, `thoi_gian_xac_nhan`, `created_at`) VALUES
-(4, 4, 2, 'HDV', 'xá', 'ChoXacNhan', NULL, '2025-11-24 02:12:23'),
-(5, 5, 2, 'HDV', '', 'ChoXacNhan', NULL, '2025-11-25 12:46:14'),
-(6, 6, 3, 'HDV', '', 'ChoXacNhan', NULL, '2025-11-25 17:42:29'),
-(7, 6, 2, 'HDV', '', 'ChoXacNhan', NULL, '2025-11-25 18:00:46');
+(12, 10, 2, 'HDV', '', 'DaXacNhan', '2025-12-01 03:15:38', '2025-12-01 02:14:12'),
+(13, 10, 2, 'HDV', '', 'DaXacNhan', '2025-12-01 03:25:40', '2025-12-01 02:24:40');
 
 -- --------------------------------------------------------
 
@@ -767,7 +807,9 @@ CREATE TABLE `tour` (
 INSERT INTO `tour` (`tour_id`, `ten_tour`, `loai_tour`, `mo_ta`, `gia_co_ban`, `chinh_sach`, `id_nha_cung_cap`, `tao_boi`, `trang_thai`, `qr_code_path`) VALUES
 (3, 'Sài Gòn - Đà Lạt 4N3Đ', 'TrongNuoc', 'Tham quan thành phố ngàn hoa, vườn hoa, thác nước, đồi chè', 4200000.00, 'Hủy trước 10 ngày: hoàn 90%. Hủy trước 5 ngày: hoàn 70%', 2, 5, 'HoatDong', NULL),
 (4, 'Bangkok - Pattaya 5N4Đ', 'QuocTe', 'Khám phá thủ đô Thái Lan, tham quan cung điện, chùa vàng, vui chơi tại Pattaya', 8500000.00, 'Hủy trước 14 ngày: hoàn 80%. Hủy trước 7 ngày: hoàn 50%', 2, 5, 'HoatDong', 'public/uploads/qr/tour_4_1764082361.png'),
-(5, ' NAGOYA – PHÚ SĨ – TOKYO', 'QuocTe', 'Tham quan những danh thắng nổi tiếng là biểu tượng của đất nước Mặt trời mọc: núi Phú Sĩ, làng cổ Oshino Hakkai, Chùa Asakusa Kannon, Chùa\r\nThanh Thuỷ (di sản văn hoá UNESCO)…\r\nTrải nghiệm một chặng tàu siêu tốc Shinkansen – niềm tự hào của người Nhật\r\nThưởng thức món bò Kobe trứ danh.\r\nTrải nghiệm tắm onsen phục hồi sức khoẻ tại chân núi Phú Sĩ\r\nTặng một bữa ăn có món bò Kobe/Wagyu trứ danh Nhật Bản\r\nTặng trải nghiệm cua tuyết và kem matcha phủ vàng tại Phú Sĩ.\r\nTặng trải nghiệm mặc trang phục truyền thống, check in tại Cố đô Kyoto\r\nThưởng thức Geisha Show – màn trình diễn tinh tế kết hợp âm nhạc, vũ đạo và nghệ thuật trà đạo, tôn vinh vẻ đẹp truyền thống Nhật Bản.\r\n', 32990000.00, NULL, NULL, 5, 'HoatDong', 'public/uploads/qr/tour_5_1764087033.png');
+(5, ' NAGOYA – PHÚ SĨ – TOKYO', 'QuocTe', 'Tham quan những danh thắng nổi tiếng là biểu tượng của đất nước Mặt trời mọc: núi Phú Sĩ, làng cổ Oshino Hakkai, Chùa Asakusa Kannon, Chùa\r\nThanh Thuỷ (di sản văn hoá UNESCO)…\r\nTrải nghiệm một chặng tàu siêu tốc Shinkansen – niềm tự hào của người Nhật\r\nThưởng thức món bò Kobe trứ danh.\r\nTrải nghiệm tắm onsen phục hồi sức khoẻ tại chân núi Phú Sĩ\r\nTặng một bữa ăn có món bò Kobe/Wagyu trứ danh Nhật Bản\r\nTặng trải nghiệm cua tuyết và kem matcha phủ vàng tại Phú Sĩ.\r\nTặng trải nghiệm mặc trang phục truyền thống, check in tại Cố đô Kyoto\r\nThưởng thức Geisha Show – màn trình diễn tinh tế kết hợp âm nhạc, vũ đạo và nghệ thuật trà đạo, tôn vinh vẻ đẹp truyền thống Nhật Bản.\r\n', 32990000.00, NULL, NULL, 5, 'HoatDong', 'public/uploads/qr/tour_5_1764087033.png'),
+(6, ' NAGOYA – PHÚ SĨ – TOKYO (Bản sao)', 'QuocTe', 'Tham quan những danh thắng nổi tiếng là biểu tượng của đất nước Mặt trời mọc: núi Phú Sĩ, làng cổ Oshino Hakkai, Chùa Asakusa Kannon, Chùa\r\nThanh Thuỷ (di sản văn hoá UNESCO)…\r\nTrải nghiệm một chặng tàu siêu tốc Shinkansen – niềm tự hào của người Nhật\r\nThưởng thức món bò Kobe trứ danh.\r\nTrải nghiệm tắm onsen phục hồi sức khoẻ tại chân núi Phú Sĩ\r\nTặng một bữa ăn có món bò Kobe/Wagyu trứ danh Nhật Bản\r\nTặng trải nghiệm cua tuyết và kem matcha phủ vàng tại Phú Sĩ.\r\nTặng trải nghiệm mặc trang phục truyền thống, check in tại Cố đô Kyoto\r\nThưởng thức Geisha Show – màn trình diễn tinh tế kết hợp âm nhạc, vũ đạo và nghệ thuật trà đạo, tôn vinh vẻ đẹp truyền thống Nhật Bản.\r\n', 32990000.00, NULL, NULL, 5, 'HoatDong', 'public/uploads/qr/tour_6_1764124071.png'),
+(7, 'Sài Gòn - Đà Lạt 4N3Đ (Bản sao)', 'TrongNuoc', 'Tham quan thành phố ngàn hoa, vườn hoa, thác nước, đồi chè', 4200000.00, NULL, NULL, 5, 'HoatDong', NULL);
 
 -- --------------------------------------------------------
 
@@ -796,6 +838,15 @@ CREATE TABLE `tour_checkin` (
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Dumping data for table `tour_checkin`
+--
+
+INSERT INTO `tour_checkin` (`id`, `booking_id`, `khach_hang_id`, `lich_khoi_hanh_id`, `ho_ten`, `so_cmnd`, `so_passport`, `ngay_sinh`, `gioi_tinh`, `quoc_tich`, `dia_chi`, `so_dien_thoai`, `email`, `checkin_time`, `checkout_time`, `trang_thai`, `ghi_chu`, `created_at`, `updated_at`) VALUES
+(5, 10, 5, 10, 'tung anh', '2222', '2222', '1999-11-11', 'Nam', 'Việt Nam', 'wfwdfds', '43435', 'dasriiccds2@outlook.com', NULL, NULL, 'ChuaCheckIn', 'dsd', '2025-12-01 02:14:42', '2025-12-01 02:14:42'),
+(6, 10, 5, 10, 'tung anh', '2222', '22222', '1989-12-12', 'Nam', 'Việt Nam', '', '', '', NULL, NULL, 'ChuaCheckIn', '', '2025-12-01 02:15:02', '2025-12-01 02:15:02'),
+(7, 11, 5, 10, 'hdv33', '222222', '22222', '1989-12-19', 'Nam', 'Việt Nam', '', '343', 'test10210@gmail.com', NULL, NULL, 'ChuaCheckIn', '', '2025-12-01 02:25:11', '2025-12-01 02:25:11');
 
 -- --------------------------------------------------------
 
@@ -857,8 +908,9 @@ CREATE TABLE `yeu_cau_dac_biet` (
 --
 
 INSERT INTO `yeu_cau_dac_biet` (`id`, `booking_id`, `loai_yeu_cau`, `tieu_de`, `mo_ta`, `muc_do_uu_tien`, `trang_thai`, `ghi_chu_hdv`, `nguoi_tao_id`, `nguoi_xu_ly_id`, `ngay_tao`, `ngay_cap_nhat`) VALUES
-(3, 5, 'khac', 'Yêu cầu đặc biệt', 'dfghfd', 'trung_binh', 'moi', NULL, NULL, NULL, '2025-11-22 12:57:11', '2025-11-22 12:57:11'),
-(4, 6, 'khac', 'Yêu cầu đặc biệt', 'bị câm', 'trung_binh', 'moi', NULL, NULL, NULL, '2025-11-22 13:09:54', '2025-11-22 13:09:54');
+(5, 7, 'khac', 'Yêu cầu đặc biệt', 'bê đe', 'trung_binh', 'moi', NULL, NULL, NULL, '2025-11-27 13:08:37', '2025-11-27 13:08:37'),
+(8, 10, 'khac', 'Yêu cầu đặc biệt', 'dị ứng hải sản', 'trung_binh', 'moi', NULL, NULL, NULL, '2025-12-01 09:13:41', '2025-12-01 09:13:41'),
+(9, 11, 'khac', 'Yêu cầu đặc biệt', 'mới đi tù về', 'trung_binh', 'moi', NULL, NULL, NULL, '2025-12-01 09:24:24', '2025-12-01 09:24:24');
 
 -- --------------------------------------------------------
 
@@ -889,6 +941,17 @@ ALTER TABLE `booking`
   ADD PRIMARY KEY (`booking_id`),
   ADD KEY `tour_id` (`tour_id`),
   ADD KEY `khach_hang_id` (`khach_hang_id`);
+
+--
+-- Indexes for table `booking_deletion_history`
+--
+ALTER TABLE `booking_deletion_history`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_booking_id` (`booking_id`),
+  ADD KEY `idx_tour_id` (`tour_id`),
+  ADD KEY `idx_khach_hang_id` (`khach_hang_id`),
+  ADD KEY `idx_nguoi_xoa_id` (`nguoi_xoa_id`),
+  ADD KEY `idx_thoi_gian_xoa` (`thoi_gian_xoa`);
 
 --
 -- Indexes for table `booking_history`
@@ -1132,13 +1195,19 @@ ALTER TABLE `yeu_cau_dac_biet`
 -- AUTO_INCREMENT for table `booking`
 --
 ALTER TABLE `booking`
-  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `booking_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT for table `booking_deletion_history`
+--
+ALTER TABLE `booking_deletion_history`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `booking_history`
 --
 ALTER TABLE `booking_history`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `checkin_khach`
@@ -1174,7 +1243,7 @@ ALTER TABLE `dich_vu_nha_cung_cap`
 -- AUTO_INCREMENT for table `diem_checkin`
 --
 ALTER TABLE `diem_checkin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `giao_dich_tai_chinh`
@@ -1192,7 +1261,7 @@ ALTER TABLE `hieu_suat_hdv`
 -- AUTO_INCREMENT for table `hinh_anh_tour`
 --
 ALTER TABLE `hinh_anh_tour`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `hotel_room_assignment`
@@ -1204,13 +1273,13 @@ ALTER TABLE `hotel_room_assignment`
 -- AUTO_INCREMENT for table `khach_hang`
 --
 ALTER TABLE `khach_hang`
-  MODIFY `khach_hang_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `khach_hang_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `lich_khoi_hanh`
 --
 ALTER TABLE `lich_khoi_hanh`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `lich_lam_viec_hdv`
@@ -1228,19 +1297,19 @@ ALTER TABLE `lich_su_yeu_cau`
 -- AUTO_INCREMENT for table `lich_trinh_tour`
 --
 ALTER TABLE `lich_trinh_tour`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `nguoi_dung`
 --
 ALTER TABLE `nguoi_dung`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `nhan_su`
 --
 ALTER TABLE `nhan_su`
-  MODIFY `nhan_su_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `nhan_su_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `nhat_ky_tour`
@@ -1258,7 +1327,7 @@ ALTER TABLE `nha_cung_cap`
 -- AUTO_INCREMENT for table `phan_bo_dich_vu`
 --
 ALTER TABLE `phan_bo_dich_vu`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `phan_bo_history`
@@ -1270,7 +1339,7 @@ ALTER TABLE `phan_bo_history`
 -- AUTO_INCREMENT for table `phan_bo_nhan_su`
 --
 ALTER TABLE `phan_bo_nhan_su`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `phan_hoi_danh_gia`
@@ -1288,19 +1357,19 @@ ALTER TABLE `thong_bao_hdv`
 -- AUTO_INCREMENT for table `tour`
 --
 ALTER TABLE `tour`
-  MODIFY `tour_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `tour_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `tour_checkin`
 --
 ALTER TABLE `tour_checkin`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `yeu_cau_dac_biet`
 --
 ALTER TABLE `yeu_cau_dac_biet`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- Constraints for dumped tables

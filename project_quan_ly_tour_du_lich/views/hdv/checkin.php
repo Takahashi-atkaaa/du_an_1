@@ -85,9 +85,9 @@
                     </h3>
                     <?php if (isset($tour) && $tour): ?>
                     <p class="mb-0 opacity-75">
-                        <?php echo htmlspecialchars($tour['ten_tour']); ?>
+                        <?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?>
                         <span class="mx-2">•</span>
-                        <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'])); ?>
+                        <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'] ?? 'now')); ?>
                     </p>
                     <?php endif; ?>
                 </div>
@@ -123,8 +123,8 @@
                     <option value="">-- Chọn tour --</option>
                     <?php if(isset($tours_list)) foreach($tours_list as $t): ?>
                     <option value="<?php echo $t['id']; ?>">
-                        <?php echo htmlspecialchars($t['ten_tour']); ?> 
-                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'])); ?>)
+                        <?php echo htmlspecialchars($t['ten_tour'] ?? ''); ?> 
+                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'] ?? 'now')); ?>)
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -151,8 +151,8 @@
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center mb-1">
-                                            <span class="badge bg-secondary me-2"><?php echo $diem['thu_tu']; ?></span>
-                                            <strong><?php echo htmlspecialchars($diem['ten_diem']); ?></strong>
+                                            <span class="badge bg-secondary me-2"><?php echo $diem['thu_tu'] ?? ''; ?></span>
+                                            <strong><?php echo htmlspecialchars($diem['ten_diem'] ?? ''); ?></strong>
                                         </div>
                                         <div class="small text-muted">
                                             <span class="checkpoint-type type-<?php echo $diem['loai_diem']; ?>">
@@ -262,7 +262,7 @@
                                         <td>
                                             <strong><?php echo htmlspecialchars($khach['ho_ten'] ?? 'N/A'); ?></strong>
                                             <?php if (!empty($khach['checkin_note'])): ?>
-                                            <br><small class="text-muted"><?php echo htmlspecialchars($khach['checkin_note']); ?></small>
+                                            <br><small class="text-muted"><?php echo htmlspecialchars($khach['checkin_note'] ?? ''); ?></small>
                                             <?php endif; ?>
                                         </td>
                                         <td>

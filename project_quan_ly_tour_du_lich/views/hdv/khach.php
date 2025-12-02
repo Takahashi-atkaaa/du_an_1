@@ -55,7 +55,7 @@
                         <i class="bi bi-people"></i> Danh sách Khách
                     </h3>
                     <?php if ($tour): ?>
-                    <p class="mb-0 opacity-75"><?php echo htmlspecialchars($tour['ten_tour']); ?></p>
+                    <p class="mb-0 opacity-75"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></p>
                     <?php endif; ?>
                 </div>
                 <a href="index.php?act=hdv/dashboard" class="btn btn-light">
@@ -75,8 +75,8 @@
                     <option value="">-- Chọn tour --</option>
                     <?php foreach($tours_list as $t): ?>
                     <option value="<?php echo $t['id']; ?>">
-                        <?php echo htmlspecialchars($t['ten_tour']); ?> 
-                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'])); ?>)
+                        <?php echo htmlspecialchars($t['ten_tour'] ?? ''); ?> 
+                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'] ?? 'now')); ?>)
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -89,12 +89,12 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-1"><?php echo htmlspecialchars($tour['ten_tour']); ?></h5>
+                        <h5 class="mb-1"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h5>
                         <div class="text-muted">
                             <i class="bi bi-calendar3"></i> 
-                            <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'])); ?>
+                            <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'] ?? 'now')); ?>
                             -
-                            <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'])); ?>
+                            <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'] ?? 'now')); ?>
                         </div>
                     </div>
                     <div>
@@ -133,10 +133,10 @@
                             </td>
                             <td>
                                 <?php if (!empty($khach['so_cmnd'])): ?>
-                                    CMND: <?php echo htmlspecialchars($khach['so_cmnd']); ?><br>
+                                    CMND: <?php echo htmlspecialchars($khach['so_cmnd'] ?? ''); ?><br>
                                 <?php endif; ?>
                                 <?php if (!empty($khach['so_passport'])): ?>
-                                    Passport: <?php echo htmlspecialchars($khach['so_passport']); ?>
+                                    Passport: <?php echo htmlspecialchars($khach['so_passport'] ?? ''); ?>
                                 <?php endif; ?>
                                 <?php if (empty($khach['so_cmnd']) && empty($khach['so_passport'])): ?>
                                     <span class="text-muted">Chưa cập nhật</span>
@@ -156,17 +156,17 @@
                             </td>
                             <td>
                                 <?php if (!empty($khach['email'])): ?>
-                                    <small><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($khach['email']); ?></small><br>
+                                    <small><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($khach['email'] ?? ''); ?></small><br>
                                 <?php endif; ?>
                                 <?php if (!empty($khach['so_dien_thoai'])): ?>
-                                    <small><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($khach['so_dien_thoai']); ?></small>
+                                    <small><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($khach['so_dien_thoai'] ?? ''); ?></small>
                                 <?php endif; ?>
                                 <?php if (empty($khach['email']) && empty($khach['so_dien_thoai'])): ?>
                                     <span class="text-muted">N/A</span>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php echo !empty($khach['dia_chi']) ? htmlspecialchars($khach['dia_chi']) : 'N/A'; ?>
+                                <?php echo !empty($khach['dia_chi']) ? htmlspecialchars($khach['dia_chi'] ?? '') : 'N/A'; ?>
                             </td>
                             <td>
                                 <?php

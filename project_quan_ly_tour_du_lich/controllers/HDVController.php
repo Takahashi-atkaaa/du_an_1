@@ -605,7 +605,9 @@ class HDVController {
         
         // Lấy chi tiết tour và kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
         $nhanSuId = $nhanSu['nhan_su_id'];
-        $sql = "SELECT DISTINCT lkh.*, t.* 
+        $sql = "SELECT DISTINCT 
+                    lkh.*,
+                    t.ten_tour, t.loai_tour, t.mo_ta
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id
                 LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
@@ -619,6 +621,25 @@ class HDVController {
             $_SESSION['error'] = 'Không tìm thấy tour hoặc bạn không có quyền truy cập tour này. Tour phải được xác nhận trước khi xem.';
             header('Location: index.php?act=hdv/tours');
             exit();
+        }
+        
+        // Nếu không có ten_tour, thử lấy trực tiếp từ bảng tour bằng tour_id
+        if (empty($tour['ten_tour']) && !empty($tour['tour_id'])) {
+            $sql2 = "SELECT ten_tour, loai_tour, mo_ta FROM tour WHERE tour_id = ? LIMIT 1";
+            $stmt2 = $this->nhanSuModel->conn->prepare($sql2);
+            $stmt2->execute([$tour['tour_id']]);
+            $tourInfo = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if ($tourInfo) {
+                if (!empty($tourInfo['ten_tour'])) {
+                    $tour['ten_tour'] = $tourInfo['ten_tour'];
+                }
+                if (empty($tour['loai_tour']) && !empty($tourInfo['loai_tour'])) {
+                    $tour['loai_tour'] = $tourInfo['loai_tour'];
+                }
+                if (empty($tour['mo_ta']) && !empty($tourInfo['mo_ta'])) {
+                    $tour['mo_ta'] = $tourInfo['mo_ta'];
+                }
+            }
         }
         
         require 'views/hdv/tour_detail.php';
