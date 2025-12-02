@@ -67,13 +67,12 @@ class AdminController {
 
         require 'views/admin/chi_tiet_tour_admin.php';
     }
+    
     public function quanLyNguoiDung() {
-           require_once 'models/NguoiDung.php';
+        require_once __DIR__ . '/../models/NguoiDung.php';
     $nguoiDungModel = new NguoiDung();
-
-    // Lấy toàn bộ người dùng
     $users = $nguoiDungModel->getAll();
-        require 'views/admin/quan_ly_nguoi_dung.php';
+        require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
     }
     
     public function quanLyBooking() {
@@ -150,39 +149,13 @@ class AdminController {
         exit();
     }
     
-    public function baoCaoTaiChinh() {
-        $giaoDichModel = new GiaoDich();
-        $tourModel = new Tour();
-        
-        // Lọc theo thời gian
-        $startDate = $_GET['start_date'] ?? null;
-        $endDate = $_GET['end_date'] ?? null;
-        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
-        
-        // Thống kê tổng hợp
-        $thongKeTongHop = $giaoDichModel->getThongKeTongHop($startDate, $endDate);
-        
-        // Thống kê theo từng tour
-        $thongKeTheoTour = $giaoDichModel->getThongKeTheoTour($startDate, $endDate);
-        
-        // Chi tiết giao dịch
-        $giaoDichList = [];
-        if ($tourId > 0) {
-            $giaoDichList = $giaoDichModel->getByTourId($tourId);
-            $thongKeTour = $giaoDichModel->getThongKeByTour($tourId);
-        } else {
-            $giaoDichList = $giaoDichModel->getAll();
-        }
-        
-        // Danh sách tour để filter
-        $tours = $tourModel->getAll();
-        
-        require 'views/admin/bao_cao_tai_chinh.php';
-    }
     public function addNhacungcap() {
         $nhaCungCapModel = new NhaCungCap();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nguoiDungId = isset($_POST['nguoi_dung_id']) && $_POST['nguoi_dung_id'] !== '' 
+                ? (int)$_POST['nguoi_dung_id'] 
+                : null;
             $tenDonVi = trim($_POST['ten_don_vi'] ?? '');
             $loaiDichVu = $_POST['loai_dich_vu'] ?? null;
             $diaChi = $_POST['dia_chi'] ?? null;
@@ -196,6 +169,7 @@ class AdminController {
                     $data = [
                         'ten_don_vi' => $tenDonVi,
                         'loai_dich_vu' => $loaiDichVu,
+                        'nguoi_dung_id' => $nguoiDungId,
                         'dia_chi' => $diaChi,
                         'lien_he' => $lienHe,
                         'mo_ta' => $moTa
@@ -215,6 +189,23 @@ class AdminController {
     public function nhaCungCap() {
         $nhaCungCapModel = new NhaCungCap();
         $nhaCungCapList = $nhaCungCapModel->getAll();
+        
+        // Danh sách tài khoản có vai trò Nhà cung cấp để admin gán nhanh
+        $nguoiDungModel = new NguoiDung();
+        $supplierUsers = [];
+        try {
+            // Chỉ lấy các tài khoản vai trò NhaCungCap CHƯA gắn với bất kỳ nhà cung cấp nào
+            $sql = "SELECT nd.id, nd.ho_ten, nd.email, nd.so_dien_thoai
+                    FROM nguoi_dung nd
+                    LEFT JOIN nha_cung_cap ncc ON nd.id = ncc.nguoi_dung_id
+                    WHERE nd.vai_tro = 'NhaCungCap' AND ncc.id_nha_cung_cap IS NULL
+                    ORDER BY nd.ngay_tao DESC";
+            $stmt = $nguoiDungModel->conn->prepare($sql);
+            $stmt->execute();
+            $supplierUsers = $stmt->fetchAll();
+        } catch (Exception $e) {
+            $supplierUsers = [];
+        }
         
         $selectedId = $_GET['id'] ?? $_GET['ncc_id'] ?? ($nhaCungCapList[0]['id_nha_cung_cap'] ?? null);
         $selectedLoai = $_GET['loai'] ?? null;

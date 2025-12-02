@@ -478,8 +478,27 @@ $statusMap = [
                     <div class="modal-body">
                         <div class="row g-3">
                             <div class="col-md-6">
+                                <label class="form-label">Tài khoản nhà cung cấp (đã đăng ký)</label>
+                                <select class="form-select" name="nguoi_dung_id" id="supplierUserSelect">
+                                    <option value="">-- Không gắn tài khoản --</option>
+                                    <?php if (!empty($supplierUsers)): ?>
+                                        <?php foreach ($supplierUsers as $user): ?>
+                                            <option 
+                                                value="<?php echo $user['id']; ?>"
+                                                data-name="<?php echo htmlspecialchars($user['ho_ten'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                                data-phone="<?php echo htmlspecialchars($user['so_dien_thoai'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                                            >
+                                                <?php echo htmlspecialchars($user['ho_ten'] ?? ''); ?> 
+                                                (<?php echo htmlspecialchars($user['email'] ?? ''); ?>)
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                                <small class="text-muted">Chọn tài khoản có vai trò <strong>Nhà cung cấp</strong> để gắn với đối tác.</small>
+                            </div>
+                            <div class="col-md-6">
                                 <label class="form-label">Tên đơn vị *</label>
-                                <input type="text" class="form-control" name="ten_don_vi" required>
+                                <input type="text" class="form-control" name="ten_don_vi" id="tenDonViInput" required>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Loại dịch vụ</label>
@@ -495,7 +514,7 @@ $statusMap = [
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Liên hệ</label>
-                                <input type="text" class="form-control" name="lien_he">
+                                <input type="text" class="form-control" name="lien_he" id="lienHeInput">
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Mô tả dịch vụ / năng lực</label>
@@ -511,6 +530,30 @@ $statusMap = [
             </div>
         </div>
     </div>
+
+    <script>
+        (function() {
+            const selectEl = document.getElementById('supplierUserSelect');
+            if (!selectEl) return;
+            const tenDonViInput = document.getElementById('tenDonViInput');
+            const lienHeInput = document.getElementById('lienHeInput');
+
+            selectEl.addEventListener('change', function () {
+                const option = this.options[this.selectedIndex];
+                if (!option || !option.value) {
+                    return;
+                }
+                const name = option.getAttribute('data-name') || '';
+                const phone = option.getAttribute('data-phone') || '';
+                if (tenDonViInput && !tenDonViInput.value) {
+                    tenDonViInput.value = name;
+                }
+                if (lienHeInput && !lienHeInput.value && phone) {
+                    lienHeInput.value = phone;
+                }
+            });
+        })();
+    </script>
 
     <?php foreach ($nhaCungCapList as $ncc): ?>
         <!-- Modal xem -->

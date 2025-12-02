@@ -1,4 +1,6 @@
-<!DOCTYPE html>
+<?php
+
+?><!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
@@ -86,10 +88,6 @@
                         <p class="mb-1"><strong>Tour:</strong> <?php echo htmlspecialchars($booking['ten_tour'] ?? ''); ?></p>
                         <p class="mb-1"><strong>Loại tour:</strong> <?php echo htmlspecialchars($booking['loai_tour'] ?? ''); ?></p>
                         <p class="mb-1"><strong>Ngày khởi hành:</strong> <?php echo !empty($booking['ngay_khoi_hanh']) ? date('d/m/Y', strtotime($booking['ngay_khoi_hanh'])) : 'Chưa xác định'; ?></p>
-                        <p class="mb-1"><strong>Ngày kết thúc:</strong> <?php 
-                            $endDate = $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'];
-                            echo !empty($endDate) ? date('d/m/Y', strtotime($endDate)) : 'Chưa xác định';
-                        ?></p>
                         <p class="mb-0"><strong>Số người:</strong> <?php echo $booking['so_nguoi'] ?? 0; ?> người</p>
                     </div>
                 </div>
@@ -240,3 +238,5 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+
+

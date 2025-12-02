@@ -264,7 +264,7 @@ class Booking
         $sql = "SELECT b.*, 
                 t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
                 t.trang_thai as tour_trang_thai,
-                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_xuat_phat as gio_khoi_hanh, lkh.diem_tap_trung
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.tour_id
                 LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND b.ngay_khoi_hanh = lkh.ngay_khoi_hanh
@@ -280,7 +280,7 @@ class Booking
         $sql = "SELECT b.*, 
                 t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
                 t.trang_thai as tour_trang_thai,
-                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_xuat_phat as gio_khoi_hanh, lkh.diem_tap_trung
                 FROM booking b
                 LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
                 LEFT JOIN tour t ON b.tour_id = t.tour_id
