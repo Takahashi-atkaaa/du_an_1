@@ -1569,6 +1569,73 @@ INSERT INTO giao_dich_tai_chinh (id, tour_id, loai, so_tien, ngay_giao_dich, mo_
 
 SELECT * FROM tour;
 
+CREATE TABLE IF NOT EXISTS cong_no_hdv (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  hdv_id INT NOT NULL,
+  tour_id INT NOT NULL,
+  so_tien DECIMAL(15,2) NOT NULL,
+  loai_cong_no ENUM('PhaiTra','DaTra') DEFAULT 'PhaiTra',
+  mo_ta TEXT,
+  ngay_cong_no DATE DEFAULT NULL,
+  FOREIGN KEY (hdv_id) REFERENCES nhan_su(nhan_su_id) ON DELETE CASCADE,
+  FOREIGN KEY (tour_id) REFERENCES tour(tour_id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=UTF8MB4_UNICODE_CI;
+
+
+CREATE TABLE IF NOT EXISTS lich_su_thanh_toan_hdv (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cong_no_hdv_id INT NOT NULL,
+  so_tien DECIMAL(15,2) NOT NULL,
+  ngay_thanh_toan DATE DEFAULT NULL,
+  ghi_chu TEXT,
+  FOREIGN KEY (cong_no_hdv_id) REFERENCES cong_no_hdv(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Bảng công nợ nhà cung cấp
+CREATE TABLE cong_no_nha_cung_cap (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nha_cung_cap_id INT NOT NULL,
+    so_tien DECIMAL(15,2) NOT NULL,
+    han_thanh_toan DATE,
+    trang_thai ENUM('ChuaThanhToan', 'DaThanhToan', 'QuaHan') DEFAULT 'ChuaThanhToan',
+    ghi_chu TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (nha_cung_cap_id) REFERENCES nha_cung_cap(id_nha_cung_cap)
+);
+
+-- Bảng lịch sử thanh toán nhà cung cấp
+CREATE TABLE lich_su_thanh_toan_ncc (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cong_no_ncc_id INT NOT NULL,
+    so_tien_thanh_toan DECIMAL(15,2) NOT NULL,
+    ngay_thanh_toan DATE,
+    ghi_chu TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cong_no_ncc_id) REFERENCES cong_no_nha_cung_cap(id)
+);
+
+
+-- Thêm dữ liệu mẫu cho bảng tour
+INSERT INTO tour (tour_id, ten_tour, mo_ta, gia_co_ban, trang_thai) VALUES
+(3, 'Tour Đà Lạt', 'Tham quan Đà Lạt 4 ngày 3 đêm', 4200000, 'HoatDong');
+
+-- booking_id: 3, khách hàng: 3, tour: 3, tổng tiền: 4.200.000, trạng thái: ChoXacNhan
+INSERT INTO booking (booking_id, tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi, tong_tien, trang_thai, ghi_chu)
+VALUES (7, 3, 3, '2025-11-28', '2025-12-10', 2, 4200000.00, 'ChoXacNhan', 'Khách cần hỗ trợ thanh toán');
+
+-- booking_id: 8, khách hàng: 4, tour: 4, tổng tiền: 10.000.000, trạng thái: DaCoc
+INSERT INTO booking (booking_id, tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi, tong_tien, trang_thai, ghi_chu)
+VALUES (8, 4, 4, '2025-11-29', '2025-12-15', 1, 10000000.00, 'DaCoc', 'Khách đã đặt cọc');
+
+       
+INSERT INTO cong_no_nha_cung_cap (id, nha_cung_cap_id, so_tien, ghi_chu)
+VALUES (1, 3, 5000000.00, 'Còn nợ tiền khách sạn Đà Lạt'),
+       (2, 3, 1500000.00, 'Còn nợ tiền vé máy bay');
+       
+INSERT INTO cong_no_hdv (id, hdv_id, tour_id, so_tien, mo_ta)
+VALUES (1, 2, 3, 2000000.00, 'HDV chưa thanh toán phí dẫn tour Đà Lạt'),
+       (2, 3, 4, 3500000.00, 'HDV còn nợ phí tour Hà Nội');
+
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;

@@ -8,6 +8,132 @@ require_once 'models/DuToanTour.php';
 require_once 'models/ChiPhiThucTe.php';
 
 class BaoCaoTaiChinhController {
+                // Hiển thị nhắc hạn thu nợ/công nợ phải trả
+                public function nhacHanCongNo() {
+        $today = date('Y-m-d');
+        $nhacHanCongNo = [];
+
+        // Nhắc hạn công nợ khách hàng
+        $bookings = $this->bookingModel->getAll();
+        foreach ($bookings as $booking) {
+            if (!empty($booking['han_thanh_toan'])) {
+                $is_qua_han = $today > $booking['han_thanh_toan'];
+                $is_sap_han = !$is_qua_han && (strtotime($booking['han_thanh_toan']) - strtotime($today) <= 3*24*3600);
+                if ($is_qua_han || $is_sap_han) {
+                    $khach = $this->khachHangModel->findById($booking['khach_hang_id']);
+                    $tour = $this->tourModel->findById($booking['tour_id']);
+                    $nhacHanCongNo[] = [
+                        'doi_tuong' => 'Khách hàng ' . ($khach['ho_ten'] ?? $booking['khach_hang_id']),
+                        'noi_dung' => 'Đến hạn thanh toán hợp đồng tour ' . ($tour['ten_tour'] ?? $booking['tour_id']),
+                        'han' => $booking['han_thanh_toan'],
+                        'is_qua_han' => $is_qua_han,
+                        'is_sap_han' => $is_sap_han
+                    ];
+                }
+            }
+        }
+
+        // Nhắc hạn công nợ nhà cung cấp
+        $sqlNCC = "SELECT c.*, ncc.ten_don_vi FROM cong_no_nha_cung_cap c JOIN nha_cung_cap ncc ON c.nha_cung_cap_id = ncc.id_nha_cung_cap";
+        $stmtNCC = $this->giaoDichModel->conn->prepare($sqlNCC);
+        $stmtNCC->execute();
+        $rowsNCC = $stmtNCC->fetchAll();
+        foreach ($rowsNCC as $row) {
+            if (!empty($row['han_thanh_toan'])) {
+                $is_qua_han = $today > $row['han_thanh_toan'];
+                $is_sap_han = !$is_qua_han && (strtotime($row['han_thanh_toan']) - strtotime($today) <= 3*24*3600);
+                if ($is_qua_han || $is_sap_han) {
+                    $nhacHanCongNo[] = [
+                        'doi_tuong' => 'Nhà cung cấp ' . $row['ten_don_vi'],
+                        'noi_dung' => 'Đến hạn thanh toán dịch vụ: ' . ($row['ghi_chu'] ?? ''),
+                        'han' => $row['han_thanh_toan'],
+                        'is_qua_han' => $is_qua_han,
+                        'is_sap_han' => $is_sap_han
+                    ];
+                }
+            }
+        }
+
+        // Nhắc hạn công nợ HDV
+        $sqlHDV = "SELECT c.*, nd.ho_ten FROM cong_no_hdv c JOIN nhan_su h ON c.hdv_id = h.nhan_su_id JOIN nguoi_dung nd ON h.nguoi_dung_id = nd.id";
+        $stmtHDV = $this->giaoDichModel->conn->prepare($sqlHDV);
+        $stmtHDV->execute();
+        $rowsHDV = $stmtHDV->fetchAll();
+        foreach ($rowsHDV as $row) {
+            if (!empty($row['han_thanh_toan'])) {
+                $is_qua_han = $today > $row['han_thanh_toan'];
+                $is_sap_han = !$is_qua_han && (strtotime($row['han_thanh_toan']) - strtotime($today) <= 3*24*3600);
+                if ($is_qua_han || $is_sap_han) {
+                    $nhacHanCongNo[] = [
+                        'doi_tuong' => 'HDV ' . $row['ho_ten'],
+                        'noi_dung' => 'Đến hạn thanh toán phí tour: ' . ($row['ghi_chu'] ?? ''),
+                        'han' => $row['han_thanh_toan'],
+                        'is_qua_han' => $is_qua_han,
+                        'is_sap_han' => $is_sap_han
+                    ];
+                }
+            }
+        }
+
+        require 'views/admin/nhac_han_cong_no.php';
+                }
+            // Hiển thị công nợ khách hàng
+            public function congNoKhachHang() {
+                // Lấy danh sách booking
+                $bookings = $this->bookingModel->getAll();
+                $congNoKhachHang = [];
+                foreach ($bookings as $booking) {
+                    $khach = $this->khachHangModel->findById($booking['khach_hang_id']);
+                    $tour = $this->tourModel->findById($booking['tour_id']);
+                    // Tổng số tiền đã thanh toán: lấy từ giao_dich_tai_chinh theo tour_id và loai = 'Thu', lọc theo khach_hang_id
+                    $sql = "SELECT SUM(gdtc.so_tien) as da_thanh_toan FROM giao_dich_tai_chinh gdtc 
+                            INNER JOIN booking b ON gdtc.tour_id = b.tour_id 
+                            WHERE b.booking_id = ? AND gdtc.loai = 'Thu' AND b.khach_hang_id = ?";
+                    $stmt = $this->giaoDichModel->conn->prepare($sql);
+                    $stmt->execute([$booking['booking_id'], $booking['khach_hang_id']]);
+                    $daThanhToan = (float)($stmt->fetch()['da_thanh_toan'] ?? 0);
+                    $cong_no = max(0, (float)$booking['tong_tien'] - $daThanhToan);
+                    // Lịch sử thanh toán: lấy từ giao_dich_tai_chinh theo tour_id, loai = 'Thu', lọc theo khach_hang_id
+                    $sql2 = "SELECT gdtc.ngay_giao_dich as ngay, gdtc.so_tien FROM giao_dich_tai_chinh gdtc 
+                              INNER JOIN booking b ON gdtc.tour_id = b.tour_id 
+                              WHERE b.booking_id = ? AND gdtc.loai = 'Thu' AND b.khach_hang_id = ? 
+                              ORDER BY gdtc.ngay_giao_dich ASC";
+                    $stmt2 = $this->giaoDichModel->conn->prepare($sql2);
+                    $stmt2->execute([$booking['booking_id'], $booking['khach_hang_id']]);
+                    $lich_su = $stmt2->fetchAll();
+                    $congNoKhachHang[] = [
+                        'ten_khach_hang' => $khach['ho_ten'] ?? 'N/A',
+                        'ten_tour' => $tour['ten_tour'] ?? 'N/A',
+                        'cong_no' => $cong_no,
+                        'lich_su_thanh_toan' => $lich_su
+                    ];
+                }
+                require 'views/admin/cong_no_khach_hang.php';
+            }
+
+            // Hiển thị công nợ nhà cung cấp
+            public function congNoNhaCungCap() {
+                // Lấy danh sách công nợ NCC
+                $sql = "SELECT c.*, ncc.ten_don_vi FROM cong_no_nha_cung_cap c JOIN nha_cung_cap ncc ON c.nha_cung_cap_id = ncc.id_nha_cung_cap";
+                $stmt = $this->giaoDichModel->conn->prepare($sql);
+                $stmt->execute();
+                $rows = $stmt->fetchAll();
+                $congNoNhaCungCap = [];
+                foreach ($rows as $row) {
+                    // Lịch sử thanh toán NCC
+                    $sql2 = "SELECT ngay_thanh_toan as ngay, so_tien_thanh_toan as so_tien FROM lich_su_thanh_toan_ncc WHERE cong_no_ncc_id = ? ORDER BY ngay_thanh_toan ASC";
+                    $stmt2 = $this->giaoDichModel->conn->prepare($sql2);
+                    $stmt2->execute([$row['id']]);
+                    $lich_su = $stmt2->fetchAll();
+                    $congNoNhaCungCap[] = [
+                        'ten_nha_cung_cap' => $row['ten_don_vi'],
+                        'ten_dich_vu' => $row['ghi_chu'] ?? '',
+                        'cong_no' => $row['so_tien'],
+                        'lich_su_thanh_toan' => $lich_su
+                    ];
+                }
+                require 'views/admin/cong_no_nha_cung_cap.php';
+            }
         // Hiển thị chi tiết một giao dịch
         public function chiTietGiaoDich() {
             $id = $_GET['id'] ?? null;
@@ -122,8 +248,27 @@ class BaoCaoTaiChinhController {
     
     // Báo cáo công nợ
     public function congNo() {
-        // Công nợ HDV: tổng chi phí của từng tour gán cho HDV phụ trách
-        $congNoHDV = $this->getCongNoHDV();
+        // Công nợ HDV: lấy từ bảng công nợ HDV thực tế
+        $sql = "SELECT c.*, nd.ho_ten as ten_hdv, t.ten_tour FROM cong_no_hdv c JOIN nhan_su ns ON c.hdv_id = ns.nhan_su_id JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id JOIN tour t ON c.tour_id = t.tour_id";
+        $stmt = $this->giaoDichModel->conn->prepare($sql);
+        $stmt->execute();
+        $rows = $stmt->fetchAll();
+        $congNoHDV = [];
+        foreach ($rows as $row) {
+            // Lịch sử thanh toán HDV
+            $sql2 = "SELECT ngay_thanh_toan as ngay, so_tien as so_tien FROM lich_su_thanh_toan_hdv WHERE cong_no_hdv_id = ? ORDER BY ngay_thanh_toan ASC";
+            $stmt2 = $this->giaoDichModel->conn->prepare($sql2);
+            $stmt2->execute([$row['id']]);
+            $lich_su = $stmt2->fetchAll();
+            $congNoHDV[] = [
+                'ten_hdv' => $row['ten_hdv'],
+                'ten_tour' => $row['ten_tour'],
+                'tong_thu' => $row['so_tien'],
+                'tong_chi' => 0,
+                'cong_no' => $row['so_tien'],
+                'lich_su_thanh_toan' => $lich_su
+            ];
+        }
         require 'views/admin/bao_cao_tai_chinh/cong_no_hdv.php';
     }
     

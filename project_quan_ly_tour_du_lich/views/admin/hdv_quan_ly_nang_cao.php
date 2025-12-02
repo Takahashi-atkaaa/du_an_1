@@ -578,13 +578,26 @@
                     <div class="modal-body">
                         <div class="mb-3">
                             <label class="form-label">Gửi đến</label>
-                            <select name="nhan_su_id" class="form-select">
-                                <option value="">Tất cả HDV</option>
-                                <?php if (!empty($hdv_list)): foreach($hdv_list as $hdv): ?>
-                                <option value="<?php echo $hdv['nhan_su_id']; ?>">
-                                    <?php echo htmlspecialchars($hdv['ho_ten']); ?>
-                                </option>
-                                <?php endforeach; endif; ?>
+                            <select name="nguoi_nhan_id" class="form-select">
+                                <optgroup label="HDV">
+                                    <option value="">Tất cả HDV</option>
+                                    <?php if (!empty($hdv_list)): foreach($hdv_list as $hdv): ?>
+                                    <option value="hdv_<?php echo $hdv['nhan_su_id']; ?>">
+                                        <?php echo htmlspecialchars($hdv['ho_ten']); ?>
+                                    </option>
+                                    <?php endforeach; endif; ?>
+                                </optgroup>
+                                <optgroup label="Nhà cung cấp">
+                                    <?php 
+                                    require_once './models/NhaCungCap.php';
+                                    $nccModel = new NhaCungCap();
+                                    $nccList = $nccModel->getAll();
+                                    foreach($nccList as $ncc): ?>
+                                    <option value="ncc_<?php echo $ncc['id_nha_cung_cap']; ?>">
+                                        <?php echo htmlspecialchars($ncc['ten_don_vi']); ?>
+                                    </option>
+                                    <?php endforeach; ?>
+                                </optgroup>
                             </select>
                         </div>
                         <div class="mb-3">

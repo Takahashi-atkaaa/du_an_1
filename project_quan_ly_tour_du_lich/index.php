@@ -46,10 +46,14 @@ require_once __DIR__ . '/models/DichVuNhaCungCap.php';
 
 
 // Route
+
 $act = $_GET['act'] ?? 'auth/login';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
+        'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
+        'admin/congNoKhachHang' => (new BaoCaoTaiChinhController())->congNoKhachHang(),
+        'admin/congNoNhaCungCap' => (new BaoCaoTaiChinhController())->congNoNhaCungCap(),
     'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
     'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
             'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),

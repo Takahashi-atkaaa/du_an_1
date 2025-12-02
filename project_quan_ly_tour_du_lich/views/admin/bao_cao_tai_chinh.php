@@ -41,6 +41,23 @@
     </nav>
 
     <div class="container-fluid px-4">
+                <div class="row mb-3">
+                    <div class="col-lg-12">
+                        <div class="card shadow-sm">
+                            <div class="card-body d-flex flex-wrap gap-3">
+                                <a href="index.php?act=admin/congNoKhachHang" class="btn btn-outline-warning">
+                                    <i class="bi bi-person-badge"></i> Công nợ khách hàng
+                                </a>
+                                <a href="index.php?act=admin/congNoNhaCungCap" class="btn btn-outline-info">
+                                    <i class="bi bi-building"></i> Công nợ nhà cung cấp
+                                </a>
+                                <a href="index.php?act=admin/nhacHanCongNo" class="btn btn-outline-danger">
+                                    <i class="bi bi-bell"></i> Nhắc hạn công nợ
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
         <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h3 class="mb-1"><i class="bi bi-graph-up text-primary"></i> Báo cáo Tài chính</h3>
