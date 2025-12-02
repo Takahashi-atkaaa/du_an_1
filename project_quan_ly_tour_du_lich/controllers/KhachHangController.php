@@ -1,6 +1,46 @@
 <?php
-
 class KhachHangController {
+    // Hiển thị trang thanh toán tour
+    public function thanhToanTour() {
+        require_once 'models/Tour.php';
+        require_once 'models/NguoiDung.php';
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        $tourId = $_GET['id'] ?? null;
+        $userId = $_SESSION['user_id'] ?? null;
+        $tourModel = new Tour();
+        $nguoiDungModel = new NguoiDung();
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $tour = $tourModel->findById($tourId);
+        $nguoiDung = $nguoiDungModel->findById($userId);
+        $khachHang = $khachHangModel->findByUserId($userId);
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $soLuong = (int)($_POST['so_luong'] ?? 1);
+            $ngayKhoiHanh = $tour['ngay_khoi_hanh'] ?? null;
+            $tongTien = ($tour['gia_tour'] ?? $tour['gia_co_ban'] ?? 0) * $soLuong;
+            $data = [
+                'tour_id' => $tourId,
+                'khach_hang_id' => $khachHang['khach_hang_id'] ?? 0,
+                'ngay_dat' => date('Y-m-d'),
+                'ngay_khoi_hanh' => $ngayKhoiHanh,
+                'so_nguoi' => $soLuong,
+                'tong_tien' => $tongTien,
+                'trang_thai' => 'ChoXacNhan',
+                'ghi_chu' => null
+            ];
+            $bookingId = $bookingModel->insert($data);
+            if ($bookingId) {
+                $_SESSION['success'] = 'Đặt tour thành công!';
+                header('Location: index.php?act=khachHang/hoaDon&booking_id=' . $bookingId);
+                exit();
+            } else {
+                $_SESSION['error'] = 'Có lỗi khi đặt tour, vui lòng thử lại.';
+            }
+        }
+        require 'views/khach_hang/thanh_toan_tour.php';
+    }
     
     public function __construct() {
         requireLogin();
@@ -56,7 +96,11 @@ class KhachHangController {
         $tourTrongNuoc = [];
         $tourQuocTe = [];
         $tourTheoYeuCau = [];
-        foreach ($allTours as $tour) {
+        foreach ($allTours as &$tour) {
+            // Lấy hình ảnh từ bảng hinh_anh_tour
+            $hinhAnhList = $tourModel->getHinhAnhByTourId($tour['tour_id']);
+            $tour['hinh_anh_list'] = $hinhAnhList;
+            $tour['hinh_anh'] = !empty($hinhAnhList) ? $hinhAnhList[0]['url_anh'] : null;
             switch ($tour['loai_tour']) {
                 case 'TrongNuoc':
                     $tourTrongNuoc[] = $tour;

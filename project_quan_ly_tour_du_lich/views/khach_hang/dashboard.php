@@ -222,14 +222,8 @@
                     <p class="card-text"><?php echo htmlspecialchars($moTaRutGon); ?><br>Giá chỉ từ <b><?php echo number_format((float)$gia); ?>đ</b></p>
                     <?php $urlDatTour = "index.php?act=khachHang/datTour&id=" . ($tour['tour_id'] ?? ''); ?>
                     <?php $urlThanhToan = "index.php?act=khachHang/thanhToanTour&id=" . ($tour['tour_id'] ?? ''); ?>
-                    <a href="views/khach_hang/thanh_toan_tour.php?id=<?php echo $tour['tour_id'] ?? ''; ?>" class="btn btn-primary">Đặt ngay & Thanh toán</a>
+                    <a href="index.php?act=khachHang/thanhToanTour&id=<?php echo $tour['tour_id'] ?? ''; ?>" class="btn btn-primary">Đặt ngay & Thanh toán</a>
                     <!-- Section: Chi tiết tour -->
-                    <?php
-                    // Lấy chi tiết tour từ model (giả sử đã truyền vào view)
-                    $lichTrinhList = $tour['lich_trinh'] ?? [];
-                    $lichKhoiHanhList = $tour['lich_khoi_hanh'] ?? [];
-                    $hinhAnhList = $tour['hinh_anh_list'] ?? [];
-                    ?>
                     <div class="mt-3">
                         <a href="index.php?act=khachHang/chiTietTour&id=<?php echo $tour['tour_id']; ?>" class="btn btn-outline-info btn-sm">Xem chi tiết tour</a>
                     </div>
@@ -255,7 +249,7 @@
                     <p class="card-text"><?php echo htmlspecialchars($moTaRutGonQT); ?><br>Giá chỉ từ <b><?php echo number_format($tour['gia_tour'] ?? $tour['gia_co_ban'] ?? 0); ?>đ</b></p>
                         <?php $urlDatTourQT = "index.php?act=khachHang/datTour&id=" . ($tour['id'] ?? ''); ?>
                         <?php $urlThanhToanQT = "index.php?act=khachHang/thanhToanTour&id=" . ($tour['id'] ?? $tour['tour_id']); ?>
-                        <a href="views/khach_hang/thanh_toan_tour.php?id=<?php echo $tour['id'] ?? $tour['tour_id']; ?>" class="btn btn-primary">Đặt ngay & Thanh toán</a>
+                        <a href="index.php?act=khachHang/thanhToanTour&id=<?php echo $tour['id'] ?? $tour['tour_id']; ?>" class="btn btn-primary">Đặt ngay & Thanh toán</a>
                     <!-- Section: Chi tiết tour quốc tế -->
                     <?php
                     $lichTrinhList = $tour['lich_trinh'] ?? [];
