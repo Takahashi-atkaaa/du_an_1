@@ -138,10 +138,39 @@ class HDVController {
 
         $danhSachKhach = [];
         if ($selectedLich) {
-            $danhSachKhach = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
-                $selectedLich['tour_id'],
-                $selectedLich['ngay_khoi_hanh']
-            );
+            // Lấy danh sách từng khách từ tour_checkin theo lich_khoi_hanh_id
+            $danhSachKhach = $this->checkinKhachModel->getByLichKhoiHanh($selectedLich['id']);
+            
+            // Nếu chưa có khách trong tour_checkin, lấy từ booking và tạo mặc định
+            if (empty($danhSachKhach)) {
+                $bookings = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
+                    $selectedLich['tour_id'],
+                    $selectedLich['ngay_khoi_hanh']
+                );
+                
+                // Tạo danh sách khách từ booking (mỗi booking có thể có nhiều người)
+                foreach ($bookings as $booking) {
+                    $soNguoi = (int)($booking['so_nguoi'] ?? 1);
+                    for ($i = 0; $i < $soNguoi; $i++) {
+                        $danhSachKhach[] = [
+                            'id' => null,
+                            'booking_id' => $booking['booking_id'],
+                            'khach_hang_id' => $booking['khach_hang_id'],
+                            'ho_ten' => $booking['ho_ten'] . ($soNguoi > 1 ? ' #' . ($i + 1) : ''),
+                            'so_cmnd' => null,
+                            'so_passport' => null,
+                            'ngay_sinh' => null,
+                            'gioi_tinh' => null,
+                            'quoc_tich' => 'Việt Nam',
+                            'dia_chi' => $booking['dia_chi'] ?? null,
+                            'so_dien_thoai' => $booking['so_dien_thoai'] ?? null,
+                            'email' => $booking['email'] ?? null,
+                            'trang_thai' => 'ChuaCheckIn',
+                            'ghi_chu' => null
+                        ];
+                    }
+                }
+            }
         }
 
         require 'views/hdv/danh_sach_khach.php';
@@ -576,7 +605,9 @@ class HDVController {
         
         // Lấy chi tiết tour và kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
         $nhanSuId = $nhanSu['nhan_su_id'];
-        $sql = "SELECT DISTINCT lkh.*, t.* 
+        $sql = "SELECT DISTINCT 
+                    lkh.*,
+                    t.ten_tour, t.loai_tour, t.mo_ta
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id
                 LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
@@ -590,6 +621,25 @@ class HDVController {
             $_SESSION['error'] = 'Không tìm thấy tour hoặc bạn không có quyền truy cập tour này. Tour phải được xác nhận trước khi xem.';
             header('Location: index.php?act=hdv/tours');
             exit();
+        }
+        
+        // Nếu không có ten_tour, thử lấy trực tiếp từ bảng tour bằng tour_id
+        if (empty($tour['ten_tour']) && !empty($tour['tour_id'])) {
+            $sql2 = "SELECT ten_tour, loai_tour, mo_ta FROM tour WHERE tour_id = ? LIMIT 1";
+            $stmt2 = $this->nhanSuModel->conn->prepare($sql2);
+            $stmt2->execute([$tour['tour_id']]);
+            $tourInfo = $stmt2->fetch(PDO::FETCH_ASSOC);
+            if ($tourInfo) {
+                if (!empty($tourInfo['ten_tour'])) {
+                    $tour['ten_tour'] = $tourInfo['ten_tour'];
+                }
+                if (empty($tour['loai_tour']) && !empty($tourInfo['loai_tour'])) {
+                    $tour['loai_tour'] = $tourInfo['loai_tour'];
+                }
+                if (empty($tour['mo_ta']) && !empty($tourInfo['mo_ta'])) {
+                    $tour['mo_ta'] = $tourInfo['mo_ta'];
+                }
+            }
         }
         
         require 'views/hdv/tour_detail.php';
@@ -635,15 +685,40 @@ class HDVController {
             $tour = $stmt->fetch(PDO::FETCH_ASSOC);
             
             if ($tour) {
-                // Lấy danh sách khách
-                $sql = "SELECT b.*, kh.*, nd.ho_ten, nd.email, nd.so_dien_thoai 
-                        FROM booking b 
-                        LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id 
-                        LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
-                        WHERE b.tour_id = ? AND DATE(b.ngay_khoi_hanh) = DATE(?)";
-                $stmt = $this->nhanSuModel->conn->prepare($sql);
-                $stmt->execute([$tour['tour_id'], $tour['ngay_khoi_hanh']]);
-                $khach_list = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                // Lấy danh sách từng khách từ tour_checkin theo lich_khoi_hanh_id
+                $khach_list = $this->checkinKhachModel->getByLichKhoiHanh($tour_id);
+                
+                // Nếu chưa có khách trong tour_checkin, lấy từ booking và tạo danh sách tạm
+                if (empty($khach_list)) {
+                    $bookings = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
+                        $tour['tour_id'],
+                        $tour['ngay_khoi_hanh']
+                    );
+                    
+                    // Tạo danh sách khách từ booking (mỗi booking có thể có nhiều người)
+                    foreach ($bookings as $booking) {
+                        $soNguoi = (int)($booking['so_nguoi'] ?? 1);
+                        for ($i = 0; $i < $soNguoi; $i++) {
+                            $khach_list[] = [
+                                'id' => null,
+                                'booking_id' => $booking['booking_id'],
+                                'khach_hang_id' => $booking['khach_hang_id'],
+                                'ho_ten' => $booking['ho_ten'] . ($soNguoi > 1 ? ' #' . ($i + 1) : ''),
+                                'so_cmnd' => null,
+                                'so_passport' => null,
+                                'ngay_sinh' => null,
+                                'gioi_tinh' => null,
+                                'quoc_tich' => 'Việt Nam',
+                                'dia_chi' => $booking['dia_chi'] ?? null,
+                                'so_dien_thoai' => $booking['so_dien_thoai'] ?? null,
+                                'email' => $booking['email'] ?? null,
+                                'trang_thai' => 'ChuaCheckIn',
+                                'ghi_chu' => null,
+                                'yeu_cau_dac_biet' => $booking['yeu_cau_dac_biet'] ?? null
+                            ];
+                        }
+                    }
+                }
             }
         }
         

@@ -164,7 +164,7 @@
                             <p class="mb-1">
                                 <span class="badge bg-info"><?php echo htmlspecialchars($pb['phan_bo_vai_tro'] ?? 'HDV'); ?></span>
                                 <?php if (!empty($pb['ghi_chu'])): ?>
-                                <span class="text-muted small">- <?php echo htmlspecialchars($pb['ghi_chu']); ?></span>
+                                <span class="text-muted small">- <?php echo htmlspecialchars($pb['ghi_chu'] ?? ''); ?></span>
                                 <?php endif; ?>
                             </p>
                         </div>
@@ -200,7 +200,7 @@
                     <div class="tour-card">
                         <div class="tour-card-header">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="mb-0"><?php echo htmlspecialchars($tour['ten_tour']); ?></h5>
+                                <h5 class="mb-0"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h5>
                                 <span class="status-badge status-<?php echo $tour['trang_thai']; ?>">
                                     <?php 
                                     $statusText = [
@@ -230,7 +230,7 @@
                                 <div class="text-muted small mb-2">
                                     <i class="bi bi-geo-alt"></i>
                                     <strong>Điểm tập trung:</strong> 
-                                    <?php echo htmlspecialchars($tour['diem_tap_trung']); ?>
+                                    <?php echo htmlspecialchars($tour['diem_tap_trung'] ?? ''); ?>
                                 </div>
                                 <?php endif; ?>
                                 <?php if (!empty($tour['so_nguoi'])): ?>

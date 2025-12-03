@@ -179,16 +179,31 @@ class NhaCungCap
 
     // Thêm nhà cung cấp mới
     public function create($data) {
-        $sql = "INSERT INTO nha_cung_cap (ten_don_vi, loai_dich_vu, dia_chi, lien_he, mo_ta) 
-                VALUES (?, ?, ?, ?, ?)";
+        // Cho phép gắn với tài khoản người dùng (nguoi_dung_id) nếu có
+        if (!empty($data['nguoi_dung_id'])) {
+            $sql = "INSERT INTO nha_cung_cap (nguoi_dung_id, ten_don_vi, loai_dich_vu, dia_chi, lien_he, mo_ta) 
+                    VALUES (?, ?, ?, ?, ?, ?)";
+            $params = [
+                (int)$data['nguoi_dung_id'],
+                $data['ten_don_vi'],
+                $data['loai_dich_vu'] ?? null,
+                $data['dia_chi'] ?? null,
+                $data['lien_he'] ?? null,
+                $data['mo_ta'] ?? null
+            ];
+        } else {
+            $sql = "INSERT INTO nha_cung_cap (ten_don_vi, loai_dich_vu, dia_chi, lien_he, mo_ta) 
+                    VALUES (?, ?, ?, ?, ?)";
+            $params = [
+                $data['ten_don_vi'],
+                $data['loai_dich_vu'] ?? null,
+                $data['dia_chi'] ?? null,
+                $data['lien_he'] ?? null,
+                $data['mo_ta'] ?? null
+            ];
+        }
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute([
-            $data['ten_don_vi'],
-            $data['loai_dich_vu'] ?? null,
-            $data['dia_chi'] ?? null,
-            $data['lien_he'] ?? null,
-            $data['mo_ta'] ?? null
-        ]);
+        $stmt->execute($params);
         return $this->conn->lastInsertId();
     }
 

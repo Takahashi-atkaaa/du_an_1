@@ -1,218 +1,151 @@
+<?php
+require_once __DIR__ . '/../../commons/function.php';
+requireLogin();
+requireRole('Admin');
+?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quản lý Người dùng - Admin</title>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; font-family: "Segoe UI", Arial, sans-serif; }
-
         body {
-            background:#f4f6f9;
+            background-color: #f5f5f5;
         }
-
-        .admin-container {
-            width:90%;
-            max-width:1200px;
-            margin:30px auto;
-            background:#fff;
-            padding:20px;
-            border-radius:10px;
-            box-shadow:0 4px 15px rgba(0,0,0,0.1);
+        .main-content {
+            padding: 20px;
         }
-
-        h1 {
-            font-size:26px;
-            margin-bottom:10px;
-            color:#222;
-            font-weight:700;
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
-
-        a.back {
-            color:#007bff;
-            text-decoration:none;
-            font-size:14px;
-            display:inline-block;
-            margin-bottom:20px;
+        .table-responsive {
+            background: white;
+            border-radius: 8px;
         }
-        a.back:hover {
-            text-decoration:underline;
-        }
-
-        table {
-            width:100%;
-            border-collapse: collapse;
-            margin-top:15px;
-        }
-
-        th {
-            background:#007bff;
-            color:white;
-            padding:12px;
-            text-align:left;
-            font-size:15px;
-        }
-
-        td {
-            padding:12px;
-            font-size:14px;
-            border-bottom:1px solid #e5e5e5;
-        }
-
-        tr:hover {
-            background:#f6faff;
-        }
-
-        .status.active {
-            color:#28a745;
-            font-weight:600;
-        }
-        .status.inactive {
-            color:#dc3545;
-            font-weight:600;
-        }
-
-        .btn-detail {
-            padding:6px 12px;
-            border:none;
-            background:#28a745;
-            color:#fff;
-            border-radius:5px;
-            cursor:pointer;
-            font-size:13px;
-        }
-        .btn-detail:hover {
-            opacity:0.9;
-        }
-
-        /* ======= MODAL ======= */
-        .modal {
-            display:none;
-            position:fixed;
-            top:0; left:0;
-            width:100%;
-            height:100%;
-            background:rgba(0,0,0,0.55);
-            justify-content:center;
-            align-items:center;
-            z-index:9999;
-        }
-
-        .modal-content {
-            width:420px;
-            background:#fff;
-            padding:20px 25px;
-            border-radius:10px;
-            box-shadow:0 5px 20px rgba(0,0,0,0.3);
-            animation: fadeIn 0.25s ease;
-        }
-
-        @keyframes fadeIn {
-            from { transform:scale(0.8); opacity:0; }
-            to { transform:scale(1); opacity:1; }
-        }
-
-        .close-btn {
-            float:right;
-            font-size:22px;
-            font-weight:bold;
-            cursor:pointer;
-        }
-        .close-btn:hover { color:red; }
-
-        .detail-item {
-            margin-bottom:10px;
-            font-size:15px;
-        }
-
-        .detail-item strong {
-            min-width:120px;
-            display:inline-block;
-            color:#333;
+        .badge {
+            padding: 5px 10px;
         }
     </style>
 </head>
-
 <body>
-<div class="admin-container">
+    <?php
+    $navbarPath = __DIR__ . '/../../commons/navbar.php';
+    if (file_exists($navbarPath)) {
+        include $navbarPath;
+    } else {
+        ?>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="index.php?act=admin/dashboard">Admin</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#adminNavbar">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="adminNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php?act=admin/dashboard">Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link active" href="index.php?act=admin/quanLyNguoiDung">Người dùng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="index.php?act=admin/baoCaoTaiChinh">Tài chính</a>
+                        </li>
+                    </ul>
+                    <span class="navbar-text text-white-50">
+                        <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Admin'); ?>
+                    </span>
+                </div>
+            </div>
+        </nav>
+        <?php
+    }
+    ?>
+    
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <h1>Quản lý Người dùng</h1>
+                    <nav aria-label="breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="index.php?act=admin/dashboard">Dashboard</a></li>
+                            <li class="breadcrumb-item active">Quản lý Người dùng</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
 
-    <h1>Quản lý Người dùng</h1>
-    <a href="index.php?act=admin/dashboard" class="back">← Quay lại Dashboard</a>
+            <?php if (isset($_SESSION['flash'])): ?>
+                <div class="alert alert-<?php echo $_SESSION['flash']['type']; ?> alert-dismissible fade show" role="alert">
+                    <?php echo $_SESSION['flash']['message']; ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php unset($_SESSION['flash']); ?>
+            <?php endif; ?>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Họ tên</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-            </tr>
-        </thead>
-
-        <tbody>
-        <?php if (!empty($users)): ?>
-            <?php foreach ($users as $user): ?>
-                <tr>
-                    <td><?= $user['id'] ?></td>
-                    <td><?= $user['ho_ten'] ?></td>
-
-                    <td>
-                        <?= $user['trang_thai'] ?>
-                    </td>
-
-                    <td>
-                        <button class="btn-detail"
-                            onclick='openDetailModal(<?= json_encode($user) ?>)'>
-                            Xem chi tiết
-                        </button>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <tr><td colspan="4" style="text-align:center;">Không có người dùng nào.</td></tr>
-        <?php endif; ?>
-        </tbody>
-    </table>
-</div>
-
-
-<!-- ========== MODAL ========== -->
-<div id="detailModal" class="modal">
-    <div class="modal-content">
-        <span class="close-btn" onclick="closeModal()">&times;</span>
-
-        <h3 style="margin-bottom:15px;">Chi tiết người dùng</h3>
-
-        <p class="detail-item"><strong>ID:</strong> <span id="m_id"></span></p>
-        <p class="detail-item"><strong>Tên đăng nhập:</strong> <span id="m_username"></span></p>
-        <p class="detail-item"><strong>Họ tên:</strong> <span id="m_name"></span></p>
-        <p class="detail-item"><strong>Vai trò:</strong> <span id="m_role"></span></p>
-        <p class="detail-item"><strong>Email:</strong> <span id="m_email"></span></p>
-        <p class="detail-item"><strong>Số điện thoại:</strong> <span id="m_phone"></span></p>
-        <p class="detail-item"><strong>Trạng thái:</strong> <span id="m_status"></span></p>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Danh sách Người dùng</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tên đăng nhập</th>
+                                    <th>Họ tên</th>
+                                    <th>Email</th>
+                                    <th>Số điện thoại</th>
+                                    <th>Vai trò</th>
+                                    <th>Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (!empty($users)): ?>
+                                    <?php foreach ($users as $user): ?>
+                                        <tr>
+                                            <td><?php echo htmlspecialchars($user['id']); ?></td>
+                                            <td><?php echo htmlspecialchars($user['ten_dang_nhap'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($user['ho_ten'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($user['email'] ?? ''); ?></td>
+                                            <td><?php echo htmlspecialchars($user['so_dien_thoai'] ?? ''); ?></td>
+                                            <td>
+                                                <?php
+                                                $vaiTro = $user['vai_tro'] ?? 'KhachHang';
+                                                $badgeClass = [
+                                                    'Admin' => 'bg-danger',
+                                                    'HDV' => 'bg-primary',
+                                                    'KhachHang' => 'bg-success',
+                                                    'NhaCungCap' => 'bg-warning'
+                                                ];
+                                                $class = $badgeClass[$vaiTro] ?? 'bg-secondary';
+                                                ?>
+                                                <span class="badge <?php echo $class; ?>"><?php echo htmlspecialchars($vaiTro); ?></span>
+                                            </td>
+                                            <td><?php echo htmlspecialchars($user['ngay_tao'] ?? ''); ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <tr>
+                                        <td colspan="7" class="text-center">Không có người dùng nào.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 
-
-<script>
-function openDetailModal(user) {
-    document.getElementById("m_id").innerText = user.id;
-    document.getElementById("m_username").innerText = user.ten_dang_nhap;
-    document.getElementById("m_name").innerText = user.ho_ten;
-    document.getElementById("m_role").innerText = user.vai_tro;
-    document.getElementById("m_email").innerText = user.email;
-    document.getElementById("m_phone").innerText = user.so_dien_thoai;
-    document.getElementById("m_status").innerText =
-        user.trang_thai;
-
-    document.getElementById("detailModal").style.display = "flex";
-}
-
-function closeModal() {
-    document.getElementById("detailModal").style.display = "none";
-}
-</script>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
+

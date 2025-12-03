@@ -41,66 +41,99 @@
                 </div>
 
                 <?php if (!empty($danhSachKhach)): ?>
+                    <div style="margin-bottom: 10px;">
+                        <strong>Tổng số khách: <?php echo count($danhSachKhach); ?> người</strong>
+                    </div>
                     <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
                         <thead>
-                            <tr>
+                            <tr style="background-color: #f0f0f0;">
                                 <th>STT</th>
-                                <th>Khách/Booking</th>
+                                <th>Họ tên</th>
+                                <th>CMND/Passport</th>
+                                <th>Ngày sinh</th>
+                                <th>Giới tính</th>
+                                <th>Quốc tịch</th>
                                 <th>Liên hệ</th>
-                                <th>Nhóm</th>
-                                <th>Ngày đặt</th>
-                                <th>Ghi chú đặc biệt</th>
-                                <th>Ghi chú nội bộ</th>
+                                <th>Địa chỉ</th>
+                                <th>Trạng thái</th>
+                                <th>Booking ID</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php $stt = 1; foreach ($danhSachKhach as $khach): ?>
-                                <?php
-                                    $soNguoi = (int)($khach['so_nguoi'] ?? 1);
-                                    if ($soNguoi >= 10) {
-                                        $nhomLabel = 'Đoàn lớn';
-                                    } elseif ($soNguoi >= 5) {
-                                        $nhomLabel = 'Nhóm';
-                                    } elseif ($soNguoi >= 3) {
-                                        $nhomLabel = 'Nhóm nhỏ';
-                                    } elseif ($soNguoi == 2) {
-                                        $nhomLabel = 'Cặp';
-                                    } else {
-                                        $nhomLabel = 'Khách lẻ';
-                                    }
-                                ?>
                                 <tr>
                                     <td><?php echo $stt++; ?></td>
                                     <td>
-                                        <strong><?php echo htmlspecialchars($khach['ho_ten'] ?? 'Khách'); ?></strong><br>
-                                        Booking #<?php echo $khach['booking_id']; ?><br>
-                                        <?php if (!empty($khach['dia_chi'])): ?>
-                                            <small><?php echo htmlspecialchars($khach['dia_chi']); ?></small>
+                                        <strong><?php echo htmlspecialchars($khach['ho_ten'] ?? 'Khách'); ?></strong>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($khach['so_cmnd'])): ?>
+                                            CMND: <?php echo htmlspecialchars($khach['so_cmnd']); ?><br>
+                                        <?php endif; ?>
+                                        <?php if (!empty($khach['so_passport'])): ?>
+                                            Passport: <?php echo htmlspecialchars($khach['so_passport']); ?>
+                                        <?php endif; ?>
+                                        <?php if (empty($khach['so_cmnd']) && empty($khach['so_passport'])): ?>
+                                            <span style="color: #999;">Chưa cập nhật</span>
                                         <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php echo htmlspecialchars($khach['email'] ?? ''); ?><br>
-                                        <?php echo htmlspecialchars($khach['so_dien_thoai'] ?? ''); ?>
+                                        <?php echo !empty($khach['ngay_sinh']) ? date('d/m/Y', strtotime($khach['ngay_sinh'])) : 'N/A'; ?>
                                     </td>
                                     <td>
-                                        <?php echo $soNguoi; ?> khách<br>
-                                        <small><?php echo $nhomLabel; ?></small>
+                                        <?php 
+                                        $gioiTinhLabels = ['Nam' => 'Nam', 'Nu' => 'Nữ', 'Khac' => 'Khác'];
+                                        echo $gioiTinhLabels[$khach['gioi_tinh']] ?? $khach['gioi_tinh'] ?? 'N/A';
+                                        ?>
                                     </td>
                                     <td>
-                                        <?php echo !empty($khach['ngay_dat']) ? date('d/m/Y', strtotime($khach['ngay_dat'])) : 'N/A'; ?>
+                                        <?php echo htmlspecialchars($khach['quoc_tich'] ?? 'Việt Nam'); ?>
                                     </td>
                                     <td>
-                                        <?php echo nl2br(htmlspecialchars($khach['yeu_cau_dac_biet'] ?? '')); ?>
+                                        <?php if (!empty($khach['email'])): ?>
+                                            <small><?php echo htmlspecialchars($khach['email']); ?></small><br>
+                                        <?php endif; ?>
+                                        <?php if (!empty($khach['so_dien_thoai'])): ?>
+                                            <small><?php echo htmlspecialchars($khach['so_dien_thoai']); ?></small>
+                                        <?php endif; ?>
+                                        <?php if (empty($khach['email']) && empty($khach['so_dien_thoai'])): ?>
+                                            <span style="color: #999;">N/A</span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
-                                        <?php echo nl2br(htmlspecialchars($khach['ghi_chu_booking'] ?? '')); ?>
+                                        <?php echo !empty($khach['dia_chi']) ? htmlspecialchars($khach['dia_chi']) : 'N/A'; ?>
+                                    </td>
+                                    <td>
+                                        <?php
+                                        $trangThaiLabels = [
+                                            'ChuaCheckIn' => 'Chưa check-in',
+                                            'DaCheckIn' => 'Đã check-in',
+                                            'DaCheckOut' => 'Đã check-out'
+                                        ];
+                                        $trangThaiClass = [
+                                            'ChuaCheckIn' => 'background-color: #ffc107; color: #000; padding: 4px 8px; border-radius: 4px;',
+                                            'DaCheckIn' => 'background-color: #28a745; color: #fff; padding: 4px 8px; border-radius: 4px;',
+                                            'DaCheckOut' => 'background-color: #6c757d; color: #fff; padding: 4px 8px; border-radius: 4px;'
+                                        ];
+                                        $trangThai = $khach['trang_thai'] ?? 'ChuaCheckIn';
+                                        ?>
+                                        <span style="<?php echo $trangThaiClass[$trangThai] ?? $trangThaiClass['ChuaCheckIn']; ?>">
+                                            <?php echo $trangThaiLabels[$trangThai] ?? $trangThai; ?>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <?php if (!empty($khach['booking_id'])): ?>
+                                            #<?php echo $khach['booking_id']; ?>
+                                        <?php else: ?>
+                                            N/A
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
                     </table>
                 <?php else: ?>
-                    <p>Chưa có khách nào đặt tour này hoặc tất cả booking đã bị hủy.</p>
+                    <p>Chưa có khách nào trong danh sách. Vui lòng thêm khách vào lịch khởi hành này.</p>
                 <?php endif; ?>
             <?php else: ?>
                 <p>Không tìm thấy lịch khởi hành phù hợp.</p>
