@@ -31,6 +31,9 @@ class LichKhoiHanhController {
 
     // Danh sách lịch khởi hành
     public function index() {
+        // Tự động cập nhật trạng thái lịch khởi hành theo thời gian thực trước khi hiển thị
+        $this->lichKhoiHanhModel->autoUpdateTrangThai();
+
         $lichKhoiHanhList = $this->lichKhoiHanhModel->getAll();
         
         // Xử lý filter
@@ -133,18 +136,77 @@ class LichKhoiHanhController {
         $bookingList = [];
         $danhSachKhachChiTiet = [];
         if (!empty($lichKhoiHanh['tour_id']) && !empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+            // 1. Lấy danh sách nhóm booking theo tour + ngày khởi hành
             $bookingList = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
                 $lichKhoiHanh['tour_id'],
                 $lichKhoiHanh['ngay_khoi_hanh']
             );
-            
-            // Lấy danh sách khách chi tiết từ tour_checkin
+
+            // 2. Lấy danh sách khách chi tiết từ tour_checkin
             require_once 'models/CheckinKhach.php';
             $checkinModel = new CheckinKhach();
-            foreach ($bookingList as $booking) {
-                $khachList = $checkinModel->getByBookingId($booking['booking_id']);
-                $danhSachKhachChiTiet[$booking['booking_id']] = $khachList;
+
+            if (!empty($bookingList)) {
+                // Có booking: map từng booking -> danh sách khách trong tour_checkin
+                foreach ($bookingList as $booking) {
+                    $khachList = $checkinModel->getByBookingId($booking['booking_id']);
+                    $danhSachKhachChiTiet[$booking['booking_id']] = $khachList;
+                }
+            } else {
+                // Không có booking nhưng HDV đã có danh sách khách trong tour_checkin
+                // => đọc trực tiếp theo lich_khoi_hanh_id để admin vẫn xem được giống HDV
+                $checkinRows = $checkinModel->getByLichKhoiHanh($id);
+
+                if (!empty($checkinRows)) {
+                    $bookingGrouped = [];
+
+                    foreach ($checkinRows as $row) {
+                        $bId = (int)($row['booking_id'] ?? 0);
+                        if ($bId <= 0) {
+                            // Gán booking giả nếu thiếu ID
+                            $bId = -1;
+                        }
+
+                        if (!isset($bookingGrouped[$bId])) {
+                            $bookingGrouped[$bId] = [
+                                'booking_id'   => $bId,
+                                'khach_hang_id'=> $row['khach_hang_id'] ?? null,
+                                'so_nguoi'     => 0,
+                                'ngay_dat'     => null,
+                                'ghi_chu_booking' => null,
+                                // Dùng tên khách đầu tiên làm nhãn nhóm
+                                'ho_ten'       => $row['ho_ten'] ?? 'Khách',
+                                'email'        => $row['email'] ?? null,
+                                'so_dien_thoai'=> $row['so_dien_thoai'] ?? null,
+                                'dia_chi'      => $row['dia_chi'] ?? null,
+                            ];
+                            $danhSachKhachChiTiet[$bId] = [];
+                        }
+
+                        $bookingGrouped[$bId]['so_nguoi']++;
+                        $danhSachKhachChiTiet[$bId][] = $row;
+                    }
+
+                    // Chuyển về dạng mảng tuần tự để view hiển thị
+                    $bookingList = array_values($bookingGrouped);
+                }
             }
+
+            // 3. Đồng bộ lại thống kê số booking & tổng số khách cho view admin
+            $lichKhoiHanh['so_booking'] = count($bookingList);
+
+            $tongNguoi = 0;
+            if (!empty($danhSachKhachChiTiet)) {
+                foreach ($danhSachKhachChiTiet as $list) {
+                    $tongNguoi += is_array($list) ? count($list) : 0;
+                }
+            } else {
+                // fallback: dùng trường so_nguoi trong booking nếu chưa có chi tiết
+                foreach ($bookingList as $booking) {
+                    $tongNguoi += (int)($booking['so_nguoi'] ?? 0);
+                }
+            }
+            $lichKhoiHanh['tong_nguoi_dat'] = $tongNguoi;
         }
         
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';

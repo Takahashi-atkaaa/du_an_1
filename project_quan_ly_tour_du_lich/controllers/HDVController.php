@@ -405,51 +405,62 @@ class HDVController {
         }
         
         $nhanSuId = $hdv_info['nhan_su_id'];
-        
-        // Thống kê tour
+
+        // Thống kê & danh sách tour dựa trên cả hai nguồn:
+        // - HDV chính trong lich_khoi_hanh.hdv_id
+        // - Được phân bổ trong phan_bo_nhan_su với trạng thái 'DaXacNhan'
         $stats = [
-            'upcoming_tours' => 0,
-            'ongoing_tours' => 0,
-            'completed_tours' => 0,
-            'rating' => 0
+            'upcoming_tours'   => 0,
+            'ongoing_tours'    => 0,
+            'completed_tours'  => 0,
+            'rating'           => 0, // TODO: tính từ bảng đánh giá nếu có
         ];
-        
-        // Tour sắp tới (trạng thái SapKhoiHanh)
-        $sql = "SELECT COUNT(*) as count FROM lich_khoi_hanh WHERE hdv_id = ? AND trang_thai = 'SapKhoiHanh'";
+
+        $today = date('Y-m-d');
+        $sevenDaysLater = date('Y-m-d', strtotime('+7 days'));
+
+        $sql = "SELECT DISTINCT lkh.*, t.ten_tour,
+                       pbn.id as phan_bo_id, 
+                       pbn.trang_thai as phan_bo_trang_thai, 
+                       pbn.vai_tro as phan_bo_vai_tro
+                FROM lich_khoi_hanh lkh
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                LEFT JOIN phan_bo_nhan_su pbn 
+                    ON lkh.id = pbn.lich_khoi_hanh_id 
+                    AND pbn.nhan_su_id = ?
+                WHERE (lkh.hdv_id = ? OR (pbn.nhan_su_id IS NOT NULL AND pbn.trang_thai = 'DaXacNhan'))";
+
         $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
-        $stats['upcoming_tours'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-        
-        // Tour đang chạy (trạng thái DangChay)
-        $sql = "SELECT COUNT(*) as count FROM lich_khoi_hanh WHERE hdv_id = ? AND trang_thai = 'DangChay'";
-        $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
-        $stats['ongoing_tours'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-        
-        // Tour hoàn thành (trạng thái HoanThanh)
-        $sql = "SELECT COUNT(*) as count FROM lich_khoi_hanh WHERE hdv_id = ? AND trang_thai = 'HoanThanh'";
-        $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
-        $stats['completed_tours'] = $stmt->fetch(PDO::FETCH_ASSOC)['count'];
-        
-        // Tour hôm nay
-        $sql = "SELECT lkh.*, t.ten_tour 
-                FROM lich_khoi_hanh lkh 
-                LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                WHERE lkh.hdv_id = ? AND DATE(lkh.ngay_khoi_hanh) = CURDATE()";
-        $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
-        $today_tours = $stmt->fetchAll(PDO::FETCH_ASSOC);
-        
-        // Tour sắp tới (7 ngày tới)
-        $sql = "SELECT lkh.*, t.ten_tour 
-                FROM lich_khoi_hanh lkh 
-                LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
-                WHERE lkh.hdv_id = ? AND lkh.ngay_khoi_hanh BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
-                ORDER BY lkh.ngay_khoi_hanh ASC";
-        $stmt = $this->nhanSuModel->conn->prepare($sql);
-        $stmt->execute([$nhanSuId]);
-        $upcoming_tours = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->execute([$nhanSuId, $nhanSuId]);
+        $allTours = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $today_tours = [];
+        $upcoming_tours = [];
+
+        foreach ($allTours as $tour) {
+            $status = $tour['trang_thai'] ?? '';
+            switch ($status) {
+                case 'SapKhoiHanh':
+                    $stats['upcoming_tours']++;
+                    break;
+                case 'DangChay':
+                    $stats['ongoing_tours']++;
+                    break;
+                case 'HoanThanh':
+                    $stats['completed_tours']++;
+                    break;
+            }
+
+            $ngayKhoiHanh = $tour['ngay_khoi_hanh'] ?? null;
+            if ($ngayKhoiHanh) {
+                if ($ngayKhoiHanh === $today) {
+                    $today_tours[] = $tour;
+                }
+                if ($ngayKhoiHanh >= $today && $ngayKhoiHanh <= $sevenDaysLater) {
+                    $upcoming_tours[] = $tour;
+                }
+            }
+        }
         
         // Thông báo mới
         $recent_notifications = $this->hdvMgmtModel->getThongBao($nhanSuId, 5);

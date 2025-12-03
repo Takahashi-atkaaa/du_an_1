@@ -24,16 +24,33 @@ class SupplierDeletionHistory
         return $stmt->fetchAll();
     }
 
-    // Lấy lịch sử xóa theo nha_cung_cap_id
+    // Lấy lịch sử xóa theo nha_cung_cap_id (bản ghi mới nhất)
     public function getBySupplierId($supplierId) {
         $sql = "SELECT sdh.*, 
                 nd.ho_ten as nguoi_xoa, nd.email as email_nguoi_xoa
                 FROM lich_su_xoa_nha_cung_cap sdh
                 LEFT JOIN nguoi_dung nd ON sdh.nguoi_xoa_id = nd.id
                 WHERE sdh.nha_cung_cap_id = ?
-                ORDER BY sdh.thoi_gian_xoa DESC";
+                ORDER BY sdh.thoi_gian_xoa DESC
+                LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$supplierId]);
+        return $stmt->fetch();
+    }
+
+    // Lấy chi tiết lịch sử xóa theo id bản ghi
+    public function getById($id) {
+        $sql = "SELECT sdh.*, 
+                nd.ho_ten as nguoi_xoa, nd.email as email_nguoi_xoa,
+                nd_supplier.ho_ten as ten_nha_cung_cap, nd_supplier.email as email_nha_cung_cap
+                FROM lich_su_xoa_nha_cung_cap sdh
+                LEFT JOIN nguoi_dung nd ON sdh.nguoi_xoa_id = nd.id
+                LEFT JOIN nha_cung_cap ncc ON sdh.nha_cung_cap_id = ncc.id_nha_cung_cap
+                LEFT JOIN nguoi_dung nd_supplier ON ncc.nguoi_dung_id = nd_supplier.id
+                WHERE sdh.id = ?
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$id]);
         return $stmt->fetch();
     }
 

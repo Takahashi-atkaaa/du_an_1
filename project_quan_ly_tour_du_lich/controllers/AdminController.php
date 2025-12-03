@@ -1129,6 +1129,13 @@ class AdminController {
         $filter_tu_ngay = $_GET['tu_ngay'] ?? '';
         $filter_den_ngay = $_GET['den_ngay'] ?? '';
         
+        // Đồng bộ biến filter cho view
+        $tourId = $filter_tour;
+        $hdvId = $filter_hdv;
+        $loaiNhatKy = $filter_loai;
+        $tuNgay = $filter_tu_ngay;
+        $denNgay = $filter_den_ngay;
+        
         // Build query
         $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
                 FROM nhat_ky_tour nkt
@@ -1228,6 +1235,41 @@ class AdminController {
         $hdvList = $hdvModel->getAll();
         
         require 'views/admin/form_nhat_ky_tour.php';
+    }
+
+    /**
+     * Chi tiết nhật ký tour - Admin
+     */
+    public function chiTietNhatKyTour() {
+        $conn = connectDB();
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Nhật ký không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+
+        $sql = "SELECT nkt.*, 
+                       t.ten_tour, t.tour_id, 
+                       nd.ho_ten AS hdv_ten, nd.email AS hdv_email, nd.so_dien_thoai AS hdv_sdt
+                FROM nhat_ky_tour nkt
+                LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE nkt.id = ?
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$id]);
+        $entry = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$entry) {
+            $_SESSION['error'] = 'Không tìm thấy nhật ký.';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+
+        require 'views/admin/chi_tiet_nhat_ky_tour.php';
     }
     
     /**
@@ -1583,5 +1625,28 @@ class AdminController {
         $lichSuXoa = $deletionHistoryModel->getAll();
         
         require 'views/admin/lich_su_xoa_nha_cung_cap.php';
+    }
+
+    // Xem chi tiết một bản ghi lịch sử xóa nhà cung cấp
+    public function chiTietLichSuXoaNhaCungCap() {
+        require_once 'models/SupplierDeletionHistory.php';
+        $deletionHistoryModel = new SupplierDeletionHistory();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Bản ghi không hợp lệ.';
+            header('Location: index.php?act=admin/lichSuXoaNhaCungCap');
+            exit;
+        }
+
+        $chiTiet = $deletionHistoryModel->getById($id);
+
+        if (!$chiTiet) {
+            $_SESSION['error'] = 'Không tìm thấy bản ghi lịch sử xóa.';
+            header('Location: index.php?act=admin/lichSuXoaNhaCungCap');
+            exit;
+        }
+
+        require 'views/admin/chi_tiet_lich_su_xoa_nha_cung_cap.php';
     }
 }
