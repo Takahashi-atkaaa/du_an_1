@@ -151,6 +151,7 @@ class AdminController {
     
     public function addNhacungcap() {
         $nhaCungCapModel = new NhaCungCap();
+        $nguoiDungModel = new NguoiDung();
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $nguoiDungId = isset($_POST['nguoi_dung_id']) && $_POST['nguoi_dung_id'] !== '' 
@@ -167,14 +168,20 @@ class AdminController {
             } else {
                 try {
                     $data = [
-                        'ten_don_vi' => $tenDonVi,
+                        'ten_don_vi'   => $tenDonVi,
                         'loai_dich_vu' => $loaiDichVu,
-                        'nguoi_dung_id' => $nguoiDungId,
-                        'dia_chi' => $diaChi,
-                        'lien_he' => $lienHe,
-                        'mo_ta' => $moTa
+                        'nguoi_dung_id'=> $nguoiDungId,
+                        'dia_chi'      => $diaChi,
+                        'lien_he'      => $lienHe,
+                        'mo_ta'        => $moTa
                     ];
                     $nhaCungCapModel->create($data);
+
+                    // Nếu có gắn với tài khoản người dùng, cập nhật vai trò thành NhaCungCap
+                    if ($nguoiDungId) {
+                        $nguoiDungModel->update($nguoiDungId, ['vai_tro' => 'NhaCungCap']);
+                    }
+
                     $_SESSION['success'] = 'Thêm nhà cung cấp thành công';
                 } catch (Exception $e) {
                     $_SESSION['error'] = 'Không thể thêm nhà cung cấp: ' . $e->getMessage();
@@ -190,15 +197,15 @@ class AdminController {
         $nhaCungCapModel = new NhaCungCap();
         $nhaCungCapList = $nhaCungCapModel->getAll();
         
-        // Danh sách tài khoản có vai trò Nhà cung cấp để admin gán nhanh
+        // Danh sách tài khoản để admin gán nhanh thành nhà cung cấp
         $nguoiDungModel = new NguoiDung();
         $supplierUsers = [];
         try {
-            // Chỉ lấy các tài khoản vai trò NhaCungCap CHƯA gắn với bất kỳ nhà cung cấp nào
+            // Lấy TẤT CẢ tài khoản CHƯA gắn với bất kỳ nhà cung cấp nào (không giới hạn vai trò)
             $sql = "SELECT nd.id, nd.ho_ten, nd.email, nd.so_dien_thoai
                     FROM nguoi_dung nd
                     LEFT JOIN nha_cung_cap ncc ON nd.id = ncc.nguoi_dung_id
-                    WHERE nd.vai_tro = 'NhaCungCap' AND ncc.id_nha_cung_cap IS NULL
+                    WHERE ncc.id_nha_cung_cap IS NULL
                     ORDER BY nd.ngay_tao DESC";
             $stmt = $nguoiDungModel->conn->prepare($sql);
             $stmt->execute();
@@ -257,6 +264,93 @@ class AdminController {
                 } catch (Exception $e) {
                     $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
                 }
+            }
+        }
+        
+        header('Location: index.php?act=admin/nhaCungCap');
+        exit();
+    }
+    
+    public function deleteNhaCungCap() {
+        require_once 'models/SupplierDeletionHistory.php';
+        $nhaCungCapModel = new NhaCungCap();
+        $nguoiDungModel = new NguoiDung();
+        $deletionHistoryModel = new SupplierDeletionHistory();
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id_nha_cung_cap'] ?? 0;
+            $matKhau = $_POST['mat_khau'] ?? '';
+            $lyDoXoa = $_POST['ly_do_xoa'] ?? '';
+            
+            if ($id <= 0) {
+                $_SESSION['error'] = 'ID nhà cung cấp không hợp lệ';
+                header('Location: index.php?act=admin/nhaCungCap');
+                exit();
+            }
+            
+            // Kiểm tra mật khẩu admin
+            $adminId = $_SESSION['user_id'] ?? 0;
+            $admin = $nguoiDungModel->findById($adminId);
+            
+            if (!$admin || !password_verify($matKhau, $admin['mat_khau'])) {
+                $_SESSION['error'] = 'Mật khẩu không đúng.';
+                header('Location: index.php?act=admin/nhaCungCap&id=' . $id);
+                exit();
+            }
+            
+            try {
+                // Lấy thông tin nhà cung cấp trước khi xóa
+                $nhaCungCap = $nhaCungCapModel->findById($id);
+                if (!$nhaCungCap) {
+                    $_SESSION['error'] = 'Không tìm thấy nhà cung cấp';
+                } else {
+                    // Lưu thông tin nhà cung cấp vào JSON trước khi xóa
+                    $thongTinNCC = json_encode([
+                        'id_nha_cung_cap' => $nhaCungCap['id_nha_cung_cap'],
+                        'ten_don_vi' => $nhaCungCap['ten_don_vi'] ?? 'N/A',
+                        'loai_dich_vu' => $nhaCungCap['loai_dich_vu'] ?? null,
+                        'dia_chi' => $nhaCungCap['dia_chi'] ?? null,
+                        'lien_he' => $nhaCungCap['lien_he'] ?? null,
+                        'mo_ta' => $nhaCungCap['mo_ta'] ?? null,
+                        'nguoi_dung_id' => $nhaCungCap['nguoi_dung_id'] ?? null
+                    ], JSON_UNESCAPED_UNICODE);
+                    
+                    // Xóa các bản ghi liên quan trước (cascade delete)
+                    // 1. Xóa phân bổ dịch vụ
+                    $sql1 = "DELETE FROM phan_bo_dich_vu WHERE nha_cung_cap_id = ?";
+                    $stmt1 = $nhaCungCapModel->conn->prepare($sql1);
+                    $stmt1->execute([$id]);
+                    
+                    // 2. Xóa danh mục dịch vụ của nhà cung cấp
+                    $sql2 = "DELETE FROM dich_vu_nha_cung_cap WHERE nha_cung_cap_id = ?";
+                    $stmt2 = $nhaCungCapModel->conn->prepare($sql2);
+                    $stmt2->execute([$id]);
+                    
+                    // 3. Xóa nhà cung cấp
+                    $result = $nhaCungCapModel->delete($id);
+                    
+                    if ($result) {
+                        // Lưu vào lịch sử xóa
+                        $deletionHistoryModel->insert([
+                            'nha_cung_cap_id' => $id,
+                            'nguoi_dung_id' => $nhaCungCap['nguoi_dung_id'] ?? null,
+                            'nguoi_xoa_id' => $adminId,
+                            'ly_do_xoa' => $lyDoXoa,
+                            'thong_tin_nha_cung_cap' => $thongTinNCC
+                        ]);
+                        
+                        // Nếu có gắn với user, đổi lại vai trò về KhachHang
+                        if (!empty($nhaCungCap['nguoi_dung_id'])) {
+                            $nguoiDungModel->update($nhaCungCap['nguoi_dung_id'], ['vai_tro' => 'KhachHang']);
+                        }
+                        
+                        $_SESSION['success'] = 'Xóa nhà cung cấp thành công';
+                    } else {
+                        $_SESSION['error'] = 'Không thể xóa nhà cung cấp';
+                    }
+                }
+            } catch (Exception $e) {
+                $_SESSION['error'] = 'Lỗi khi xóa: ' . $e->getMessage();
             }
         }
         
@@ -1479,5 +1573,15 @@ class AdminController {
         $lichSuXoa = $deletionHistoryModel->getAll();
         
         require 'views/admin/lich_su_xoa_booking.php';
+    }
+
+    // Hiển thị lịch sử xóa nhà cung cấp
+    public function lichSuXoaNhaCungCap() {
+        require_once 'models/SupplierDeletionHistory.php';
+        $deletionHistoryModel = new SupplierDeletionHistory();
+        
+        $lichSuXoa = $deletionHistoryModel->getAll();
+        
+        require 'views/admin/lich_su_xoa_nha_cung_cap.php';
     }
 }
