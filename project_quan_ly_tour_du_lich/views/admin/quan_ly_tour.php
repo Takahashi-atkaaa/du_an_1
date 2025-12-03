@@ -7,161 +7,25 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-      /* ======= Theme TEAL – hiện đại hơn, mềm hơn ======= */
-
-.table-actions a, .table-actions button {
-    margin-right: 6px;
-    border-radius: 10px;
-    padding: 6px 10px;
-}
-
-/* Status badge */
-.status-badge {
-    padding: 6px 12px;
-    border-radius: 12px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.status-hoatdong {
-    background-color: #d1fae5; /* xanh lá pastel */
-    color: #065f46;
-}
-
-.status-ngung {
-    background-color: #fee2e2; /* đỏ pastel */
-    color: #991b1b;
-}
-
-/* Tour image */
-.tour-image {
-    width: 64px;
-    height: 64px;
-    object-fit: cover;
-    border-radius: 12px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-}
-
-/* Price */
-.price-tag {
-    font-weight: 700;
-    color: #0d9488;  /* TEAL */
-    font-size: 1rem;
-}
-
-/* Table */
-.table-hover tbody tr:hover {
-    background: #f0fdfa; /* pastel mint */
-}
-.table thead {
-    background: #ecfdf5;
-}
-.table thead th {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.4px;
-}
-.table td {
-    vertical-align: middle;
-}
-
-/* Card */
-.card {
-    border-radius: 16px;
-    border: none;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.04);
-}
-.card-body {
-    padding: 24px;
-}
-.card-footer {
-    border-top: 1px solid #e2e8f0;
-}
-
-/* Filter form */
-.form-select-sm, .form-control-sm {
-    border-radius: 12px;
-    padding: 10px 12px;
-    border: 1px solid #cbd5e1;
-    transition: 0.2s;
-}
-.form-select-sm:focus,
-.form-control-sm:focus {
-    border-color: #14b8a6; /* teal focus */
-    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.25);
-}
-
-/* Navbar */
-.navbar-dark {
-    background: linear-gradient(90deg, #0d9488, #115e59); /* teal đậm */
-}
-
-/* Buttons */
-.btn {
-    border-radius: 12px !important;
-    font-weight: 500;
-}
-
-.btn-success {
-    background: #0d9488;
-    border-color: #0d9488;
-}
-.btn-success:hover {
-    background: #0f766e;
-}
-
-/* outline buttons */
-.btn-outline-primary {
-    color: #0d9488;
-    border-color: #0d9488;
-}
-.btn-outline-primary:hover {
-    background: #ccfbf1;
-}
-
-.btn-outline-info {
-    color: #0e7490;
-    border-color: #0e7490;
-}
-.btn-outline-info:hover {
-    background: #e0f7fa;
-}
-
-.btn-outline-warning {
-    color: #ca8a04;
-    border-color: #facc15;
-}
-.btn-outline-warning:hover {
-    background: #fef9c3;
-}
-
-.btn-outline-secondary:hover {
-    background: #f1f5f9;
-}
-
-.btn-outline-dark:hover {
-    background: #e2e8f0;
-}
-
-/* Delete button */
-.btn-outline-danger {
-    color: #dc2626;
-    border-color: #fca5a5;
-}
-.btn-outline-danger:hover {
-    background: #fee2e2;
-    color: #b91c1c;
-}
-
-/* Empty state */
-.bi-inbox {
-    opacity: 0.7;
-}
-
+        .table-actions a, .table-actions button { margin-right: 4px; }
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .status-hoatdong { background-color: #d4edda; color: #155724; }
+        .status-ngung { background-color: #f8d7da; color: #721c24; }
+        .tour-image {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 0.375rem;
+        }
+        .price-tag {
+            font-weight: 600;
+            color: #0d6efd;
+        }
     </style>
 </head>
 <body class="bg-light">
