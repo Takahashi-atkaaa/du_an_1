@@ -141,17 +141,17 @@ class LichKhoiHanhController {
                 $lichKhoiHanh['tour_id'],
                 $lichKhoiHanh['ngay_khoi_hanh']
             );
-
+            
             // 2. Lấy danh sách khách chi tiết từ tour_checkin
             require_once 'models/CheckinKhach.php';
             $checkinModel = new CheckinKhach();
 
             if (!empty($bookingList)) {
                 // Có booking: map từng booking -> danh sách khách trong tour_checkin
-                foreach ($bookingList as $booking) {
-                    $khachList = $checkinModel->getByBookingId($booking['booking_id']);
-                    $danhSachKhachChiTiet[$booking['booking_id']] = $khachList;
-                }
+            foreach ($bookingList as $booking) {
+                $khachList = $checkinModel->getByBookingId($booking['booking_id']);
+                $danhSachKhachChiTiet[$booking['booking_id']] = $khachList;
+            }
             } else {
                 // Không có booking nhưng HDV đã có danh sách khách trong tour_checkin
                 // => đọc trực tiếp theo lich_khoi_hanh_id để admin vẫn xem được giống HDV
@@ -576,10 +576,10 @@ class LichKhoiHanhController {
                     continue; // bỏ qua dòng trống
                 }
 
-                $data = [
-                    'booking_id' => $bookingId,
-                    'khach_hang_id' => $booking['khach_hang_id'],
-                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+            $data = [
+                'booking_id' => $bookingId,
+                'khach_hang_id' => $booking['khach_hang_id'],
+                'lich_khoi_hanh_id' => $lichKhoiHanhId,
                     'ho_ten' => $hoTen,
                     'so_cmnd' => $soCmndArr[$index] ?? null,
                     'so_passport' => $soPassportArr[$index] ?? null,
@@ -589,10 +589,10 @@ class LichKhoiHanhController {
                     'dia_chi' => $diaChiArr[$index] ?? null,
                     'so_dien_thoai' => $soDienThoaiArr[$index] ?? null,
                     'email' => $emailArr[$index] ?? null,
-                    'trang_thai' => 'ChuaCheckIn',
+                'trang_thai' => 'ChuaCheckIn',
                     'ghi_chu' => $ghiChuArr[$index] ?? null
-                ];
-
+            ];
+            
                 if ($checkinModel->insert($data)) {
                     $successCount++;
                 } else {

@@ -119,6 +119,7 @@ public function quanLyNguoiDung() {
     public function yeuCauDacBiet() {
         require_once 'models/YeuCauDacBiet.php';
         require_once 'models/Tour.php';
+        require_once 'models/Booking.php';
 
         $filters = [
             'keyword' => trim($_GET['keyword'] ?? ''),
@@ -137,6 +138,10 @@ public function quanLyNguoiDung() {
 
         $tourModel = new Tour();
         $tourList = $tourModel->getAll();
+
+        // Danh sách booking để admin có thể chọn khi tạo yêu cầu mới
+        $bookingModel = new Booking();
+        $bookingList = $bookingModel->getAllWithDetails();
 
         require 'views/admin/quan_ly_yeu_cau_dac_biet.php';
     }
@@ -163,10 +168,63 @@ public function quanLyNguoiDung() {
             'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null
         ];
 
-        $nguoiXuLyId = $_SESSION['user_id'] ?? null;
-        $result = $yeuCauModel->updateByAdmin($yeuCauId, $data, $nguoiXuLyId);
+        $nguoiDungId = $_SESSION['user_id'] ?? null;
+        // Admin không phải nhân sự nên không gán vào nguoi_xu_ly_id (FK sang nhan_su),
+        // chỉ dùng user_id để lưu lịch sử thao tác.
+        $result = $yeuCauModel->updateByAdmin($yeuCauId, $data, null, $nguoiDungId);
 
         $_SESSION[$result ? 'success' : 'error'] = $result ? 'Cập nhật yêu cầu thành công.' : 'Không thể cập nhật yêu cầu.';
+
+        header('Location: index.php?act=admin/yeuCauDacBiet');
+        exit();
+    }
+
+    /**
+     * Admin tạo mới yêu cầu đặc biệt cho một booking cụ thể
+     */
+    public function taoYeuCauDacBiet() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'Vui lòng chọn booking/khách hàng cần tạo yêu cầu.';
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        require_once 'models/YeuCauDacBiet.php';
+        $yeuCauModel = new YeuCauDacBiet();
+
+        $data = [
+            'loai_yeu_cau' => $_POST['loai_yeu_cau'] ?? 'khac',
+            'tieu_de' => trim($_POST['tieu_de'] ?? ''),
+            'mo_ta' => $_POST['mo_ta'] ?? null,
+            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? 'trung_binh',
+            'trang_thai' => $_POST['trang_thai'] ?? 'moi',
+            'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null,
+        ];
+
+        if ($data['tieu_de'] === '') {
+            $data['tieu_de'] = 'Yêu cầu đặc biệt';
+        }
+
+        $nguoiTaoId = $_SESSION['user_id'] ?? null;
+        if (!$nguoiTaoId) {
+            $_SESSION['error'] = 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.';
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+
+        $newId = $yeuCauModel->createFromAdmin($bookingId, $data, $nguoiTaoId);
+
+        if ($newId) {
+            $_SESSION['success'] = 'Đã tạo yêu cầu đặc biệt mới cho khách.';
+        } else {
+            $_SESSION['error'] = 'Không thể tạo yêu cầu đặc biệt. Vui lòng thử lại.';
+        }
 
         header('Location: index.php?act=admin/yeuCauDacBiet');
         exit();

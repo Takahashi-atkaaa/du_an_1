@@ -121,6 +121,7 @@ match ($act) {
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
+    'admin/themYeuCauDacBiet' => (new AdminController())->taoYeuCauDacBiet(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
     'admin/chiTietNhatKyTour' => (new AdminController())->chiTietNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),

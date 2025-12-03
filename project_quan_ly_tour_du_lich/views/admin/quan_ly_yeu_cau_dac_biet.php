@@ -53,7 +53,14 @@ $totalRequests = (int)(($stats['khan_cap'] ?? 0) + ($stats['cao'] ?? 0) + ($stat
                 <h1 class="h3 mb-1">Quản lý yêu cầu đặc biệt</h1>
                 <p class="text-muted mb-0">Theo dõi và xử lý các yêu cầu cá nhân của khách hàng</p>
             </div>
-            <a href="index.php?act=admin/dashboard" class="btn btn-outline-primary"><i class="bi bi-arrow-left me-2"></i>Dashboard</a>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRequestModal">
+                    <i class="bi bi-plus-lg me-1"></i>Tạo yêu cầu
+                </button>
+                <a href="index.php?act=admin/dashboard" class="btn btn-outline-primary">
+                    <i class="bi bi-arrow-left me-2"></i>Dashboard
+                </a>
+            </div>
         </div>
 
         <?php if (isset($_SESSION['success'])): ?>
@@ -244,6 +251,90 @@ $totalRequests = (int)(($stats['khan_cap'] ?? 0) + ($stats['cao'] ?? 0) + ($stat
         </div>
     </div>
 
+    <!-- Modal tạo mới yêu cầu -->
+    <div class="modal fade" id="createRequestModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <form method="POST" action="index.php?act=admin/themYeuCauDacBiet">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Tạo yêu cầu đặc biệt mới</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label">Booking / Khách hàng</label>
+                                <select name="booking_id" class="form-select" required>
+                                    <option value="">-- Chọn booking --</option>
+                                    <?php if (!empty($bookingList)): ?>
+                                        <?php foreach ($bookingList as $bk): ?>
+                                            <?php
+                                                $label = sprintf(
+                                                    '#%d - %s | %s | KH: %s (%s)',
+                                                    $bk['booking_id'],
+                                                    !empty($bk['ten_tour']) ? $bk['ten_tour'] : 'Tour',
+                                                    !empty($bk['ngay_khoi_hanh']) ? date('d/m/Y', strtotime($bk['ngay_khoi_hanh'])) : 'N/A',
+                                                    $bk['ho_ten'] ?? 'N/A',
+                                                    $bk['so_dien_thoai'] ?? ''
+                                                );
+                                            ?>
+                                            <option value="<?php echo (int)$bk['booking_id']; ?>">
+                                                <?php echo htmlspecialchars($label); ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Loại yêu cầu</label>
+                                <select name="loai_yeu_cau" class="form-select">
+                                    <?php $types = ['an_uong' => 'Ăn uống', 'suc_khoe' => 'Sức khỏe', 'di_chuyen' => 'Di chuyển', 'phong_o' => 'Phòng ở', 'hoat_dong' => 'Hoạt động', 'khac' => 'Khác'];
+                                    foreach ($types as $key => $label): ?>
+                                        <option value="<?php echo $key; ?>"><?php echo $label; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Mức ưu tiên</label>
+                                <select name="muc_do_uu_tien" class="form-select">
+                                    <?php foreach ($priorityMap as $key => $info): ?>
+                                        <option value="<?php echo $key; ?>"><?php echo $info['label']; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Trạng thái</label>
+                                <select name="trang_thai" class="form-select">
+                                    <?php foreach ($statusMap as $key => $info): ?>
+                                        <option value="<?php echo $key; ?>"><?php echo $info['label']; ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Tiêu đề</label>
+                                <input type="text" name="tieu_de" class="form-control" placeholder="Tiêu đề yêu cầu (tuỳ chọn)">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Nội dung yêu cầu</label>
+                                <textarea name="mo_ta" rows="4" class="form-control" placeholder="Mô tả chi tiết yêu cầu đặc biệt của khách"></textarea>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Ghi chú xử lý (nếu có)</label>
+                                <textarea name="ghi_chu_hdv" rows="3" class="form-control" placeholder="Ghi chú nội bộ cho HDV / bộ phận vận hành"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Lưu yêu cầu
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
@@ -337,13 +428,3 @@ $totalRequests = (int)(($stats['khan_cap'] ?? 0) + ($stats['cao'] ?? 0) + ($stat
     </script>
 </body>
 </html>
-{
-  "cells": [],
-  "metadata": {
-    "language_info": {
-      "name": "python"
-    }
-  },
-  "nbformat": 4,
-  "nbformat_minor": 2
-}

@@ -445,7 +445,7 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                         <div class="add-form-card">
                             <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
                                 <span>
-                                    <i class="bi bi-person-plus"></i> Thêm khách mới
+                                <i class="bi bi-person-plus"></i> Thêm khách mới
                                 </span>
                                 <button type="button" id="btnAddGuestRow" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-plus-circle"></i> Thêm người
@@ -483,58 +483,58 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                             </button>
                                         </div>
                                         <div class="row g-3">
-                                            <div class="col-md-6">
-                                                <label class="form-label small fw-semibold">Họ tên <span class="text-danger">*</span></label>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Họ tên <span class="text-danger">*</span></label>
                                                 <input type="text" name="ho_ten[]" class="form-control guest-ho-ten" required>
-                                            </div>
+                                    </div>
                                             <div class="col-md-3">
-                                                <label class="form-label small fw-semibold">Số CMND/CCCD</label>
+                                        <label class="form-label small fw-semibold">Số CMND/CCCD</label>
                                                 <input type="text" name="so_cmnd[]" class="form-control">
-                                            </div>
+                                    </div>
                                             <div class="col-md-3">
-                                                <label class="form-label small fw-semibold">Số Passport</label>
+                                        <label class="form-label small fw-semibold">Số Passport</label>
                                                 <input type="text" name="so_passport[]" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small fw-semibold">Ngày sinh</label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Ngày sinh</label>
                                                 <input type="date" name="ngay_sinh[]" class="form-control">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small fw-semibold">Giới tính</label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Giới tính</label>
                                                 <select name="gioi_tinh[]" class="form-select">
-                                                    <option value="Nam">Nam</option>
-                                                    <option value="Nu">Nữ</option>
-                                                    <option value="Khac">Khác</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small fw-semibold">Quốc tịch</label>
+                                            <option value="Nam">Nam</option>
+                                            <option value="Nu">Nữ</option>
+                                            <option value="Khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Quốc tịch</label>
                                                 <input type="text" name="quoc_tich[]" class="form-control" value="Việt Nam">
-                                            </div>
-                                            <div class="col-md-4">
-                                                <label class="form-label small fw-semibold">Số điện thoại</label>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold">Số điện thoại</label>
                                                 <input type="text" name="so_dien_thoai[]" class="form-control">
-                                            </div>
+                                    </div>
                                             <div class="col-md-4">
-                                                <label class="form-label small fw-semibold">Email</label>
+                                        <label class="form-label small fw-semibold">Email</label>
                                                 <input type="email" name="email[]" class="form-control">
-                                            </div>
+                                    </div>
                                             <div class="col-md-4">
-                                                <label class="form-label small fw-semibold">Địa chỉ</label>
+                                        <label class="form-label small fw-semibold">Địa chỉ</label>
                                                 <input type="text" name="dia_chi[]" class="form-control">
-                                            </div>
-                                            <div class="col-12">
-                                                <label class="form-label small fw-semibold">Ghi chú</label>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Ghi chú</label>
                                                 <textarea name="ghi_chu[]" class="form-control" rows="2"></textarea>
-                                            </div>
+                                    </div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="text-end">
-                                    <button type="submit" class="btn btn-primary">
+                                        <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-save"></i> Lưu danh sách khách
-                                    </button>
+                                        </button>
                                 </div>
                             </form>
                         </div>
