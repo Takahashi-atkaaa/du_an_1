@@ -68,12 +68,35 @@ class AdminController {
         require 'views/admin/chi_tiet_tour_admin.php';
     }
     
-    public function quanLyNguoiDung() {
-        require_once __DIR__ . '/../models/NguoiDung.php';
+    // File: controllers/AdminController.php
+
+// ... các code khác ...
+
+public function quanLyNguoiDung() {
+    // 1. Lấy tham số tìm kiếm và lọc từ URL (GET)
+    // Các tên biến PHẢI khớp với tên trong form của View: name="search" và name="role"
+    $search = $_GET['search'] ?? ''; // Mặc định là chuỗi rỗng nếu không có
+    $role = $_GET['role'] ?? '';     // Mặc định là chuỗi rỗng nếu không có
+    
+    // 2. Load Model và gọi phương thức lọc
+    require_once __DIR__ . '/../models/NguoiDung.php';
     $nguoiDungModel = new NguoiDung();
-    $users = $nguoiDungModel->getAll();
-        require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
-    }
+    
+    // Phương thức này cần được bạn tạo trong NguoiDung.php
+    $users = $nguoiDungModel->getFilteredUsers($search, $role);
+    
+    // 3. Truyền các biến cần thiết xuống View
+    // View của bạn cần $users, $search, và $role để hiển thị dữ liệu và giữ trạng thái form.
+    // Nếu bạn không dùng framework, cách đơn giản nhất là khai báo chúng:
+    
+    // $users đã có
+    // $search đã có
+    // $role đã có
+    
+    // 4. Load View
+    require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
+}
+// ... các code khác ...
     
     public function quanLyBooking() {
         $bookingModel = new Booking();
