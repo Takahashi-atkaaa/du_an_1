@@ -541,28 +541,71 @@ class LichKhoiHanhController {
             }
             
             $checkinModel = new CheckinKhach();
-            $data = [
-                'booking_id' => $bookingId,
-                'khach_hang_id' => $booking['khach_hang_id'],
-                'lich_khoi_hanh_id' => $lichKhoiHanhId,
-                'ho_ten' => $_POST['ho_ten'] ?? '',
-                'so_cmnd' => $_POST['so_cmnd'] ?? null,
-                'so_passport' => $_POST['so_passport'] ?? null,
-                'ngay_sinh' => $_POST['ngay_sinh'] ?? null,
-                'gioi_tinh' => $_POST['gioi_tinh'] ?? 'Khac',
-                'quoc_tich' => $_POST['quoc_tich'] ?? 'Việt Nam',
-                'dia_chi' => $_POST['dia_chi'] ?? null,
-                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? null,
-                'email' => $_POST['email'] ?? null,
-                'trang_thai' => 'ChuaCheckIn',
-                'ghi_chu' => $_POST['ghi_chu'] ?? null
-            ];
-            
-            $result = $checkinModel->insert($data);
-            if ($result) {
-                $_SESSION['success'] = 'Thêm khách thành công.';
+            $hoTenArr = $_POST['ho_ten'] ?? [];
+
+            // Cho phép submit cả dạng đơn (string) lẫn mảng
+            if (!is_array($hoTenArr)) {
+                $hoTenArr = [$hoTenArr];
+                $_POST['so_cmnd'] = [$_POST['so_cmnd'] ?? null];
+                $_POST['so_passport'] = [$_POST['so_passport'] ?? null];
+                $_POST['ngay_sinh'] = [$_POST['ngay_sinh'] ?? null];
+                $_POST['gioi_tinh'] = [$_POST['gioi_tinh'] ?? 'Khac'];
+                $_POST['quoc_tich'] = [$_POST['quoc_tich'] ?? 'Việt Nam'];
+                $_POST['dia_chi'] = [$_POST['dia_chi'] ?? null];
+                $_POST['so_dien_thoai'] = [$_POST['so_dien_thoai'] ?? null];
+                $_POST['email'] = [$_POST['email'] ?? null];
+                $_POST['ghi_chu'] = [$_POST['ghi_chu'] ?? null];
+            }
+
+            $soCmndArr = $_POST['so_cmnd'] ?? [];
+            $soPassportArr = $_POST['so_passport'] ?? [];
+            $ngaySinhArr = $_POST['ngay_sinh'] ?? [];
+            $gioiTinhArr = $_POST['gioi_tinh'] ?? [];
+            $quocTichArr = $_POST['quoc_tich'] ?? [];
+            $diaChiArr = $_POST['dia_chi'] ?? [];
+            $soDienThoaiArr = $_POST['so_dien_thoai'] ?? [];
+            $emailArr = $_POST['email'] ?? [];
+            $ghiChuArr = $_POST['ghi_chu'] ?? [];
+
+            $successCount = 0;
+            $errorCount = 0;
+
+            foreach ($hoTenArr as $index => $hoTen) {
+                $hoTen = trim($hoTen ?? '');
+                if ($hoTen === '') {
+                    continue; // bỏ qua dòng trống
+                }
+
+                $data = [
+                    'booking_id' => $bookingId,
+                    'khach_hang_id' => $booking['khach_hang_id'],
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'ho_ten' => $hoTen,
+                    'so_cmnd' => $soCmndArr[$index] ?? null,
+                    'so_passport' => $soPassportArr[$index] ?? null,
+                    'ngay_sinh' => $ngaySinhArr[$index] ?? null,
+                    'gioi_tinh' => $gioiTinhArr[$index] ?? 'Khac',
+                    'quoc_tich' => $quocTichArr[$index] ?? 'Việt Nam',
+                    'dia_chi' => $diaChiArr[$index] ?? null,
+                    'so_dien_thoai' => $soDienThoaiArr[$index] ?? null,
+                    'email' => $emailArr[$index] ?? null,
+                    'trang_thai' => 'ChuaCheckIn',
+                    'ghi_chu' => $ghiChuArr[$index] ?? null
+                ];
+
+                if ($checkinModel->insert($data)) {
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                }
+            }
+
+            if ($successCount > 0 && $errorCount === 0) {
+                $_SESSION['success'] = 'Thêm ' . $successCount . ' khách thành công.';
+            } elseif ($successCount > 0 && $errorCount > 0) {
+                $_SESSION['success'] = 'Thêm ' . $successCount . ' khách thành công, ' . $errorCount . ' khách lỗi.';
             } else {
-                $_SESSION['error'] = 'Không thể thêm khách.';
+                $_SESSION['error'] = 'Không thể thêm khách. Vui lòng kiểm tra lại thông tin.';
             }
             
             header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
