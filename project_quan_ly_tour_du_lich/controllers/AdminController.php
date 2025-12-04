@@ -72,14 +72,14 @@ class AdminController {
 
 // ... các code khác ...
 
-public function quanLyNguoiDung() {
+    public function quanLyNguoiDung() {
     // 1. Lấy tham số tìm kiếm và lọc từ URL (GET)
     // Các tên biến PHẢI khớp với tên trong form của View: name="search" và name="role"
     $search = $_GET['search'] ?? ''; // Mặc định là chuỗi rỗng nếu không có
     $role = $_GET['role'] ?? '';     // Mặc định là chuỗi rỗng nếu không có
     
     // 2. Load Model và gọi phương thức lọc
-    require_once __DIR__ . '/../models/NguoiDung.php';
+        require_once __DIR__ . '/../models/NguoiDung.php';
     $nguoiDungModel = new NguoiDung();
     
     // Phương thức này cần được bạn tạo trong NguoiDung.php
@@ -94,8 +94,8 @@ public function quanLyNguoiDung() {
     // $role đã có
     
     // 4. Load View
-    require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
-}
+        require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
+    }
 // ... các code khác ...
     
     public function quanLyBooking() {
