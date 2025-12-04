@@ -401,13 +401,25 @@
                                     <div class="timeline">
                                         <?php foreach ($lichTrinhList as $index => $lt): ?>
                                             <div class="timeline-item">
-                                                <div class="timeline-badge"><?php echo $lt['ngay_thu']; ?></div>
+                                                <div class="timeline-badge">
+                                                    <?php if ($lt['ngay_thu'] == 0): ?>
+                                                        📍
+                                                    <?php else: ?>
+                                                        <?php echo $lt['ngay_thu']; ?>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <div class="card border-0 shadow-sm">
                                                     <div class="card-body">
                                                         <h6 class="fw-bold text-primary mb-2">
-                                                            Ngày <?php echo $lt['ngay_thu']; ?>: <?php echo htmlspecialchars($lt['dia_diem']); ?>
+                                                            <?php if ($lt['ngay_thu'] == 0): ?>
+                                                                ✈️ Điểm tập trung: <?php echo htmlspecialchars($lt['dia_diem']); ?>
+                                                            <?php else: ?>
+                                                                🗓️ NGÀY <?php echo $lt['ngay_thu']; ?>: <?php echo htmlspecialchars($lt['dia_diem']); ?>
+                                                            <?php endif; ?>
                                                         </h6>
-                                                        <p class="text-muted mb-0"><?php echo nl2br(htmlspecialchars($lt['hoat_dong'])); ?></p>
+                                                        <div class="text-muted" style="white-space: pre-line; line-height: 1.8;">
+                                                            <?php echo htmlspecialchars($lt['hoat_dong']); ?>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

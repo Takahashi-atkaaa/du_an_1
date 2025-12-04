@@ -81,9 +81,12 @@
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
                         <h1 class="display-6 fw-bold mb-2">
-                            <i class="bi bi-plus-circle"></i> Tạo Lịch Khởi Hành Mới
+                            <i class="bi bi-plus-circle"></i>
+                            <?php echo isset($mode) && $mode === 'edit' ? 'Sửa Lịch Khởi Hành' : 'Tạo Lịch Khởi Hành Mới'; ?>
                         </h1>
-                        <p class="lead mb-0 opacity-75">Thêm lịch khởi hành mới cho tour</p>
+                        <p class="lead mb-0 opacity-75">
+                            <?php echo isset($mode) && $mode === 'edit' ? 'Chỉnh sửa thông tin lịch khởi hành' : 'Thêm lịch khởi hành mới cho tour'; ?>
+                        </p>
                     </div>
                     <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
                         <i class="bi bi-arrow-left"></i> Quay lại danh sách
@@ -103,7 +106,10 @@
         <div class="row">
             <!-- Left Column: Form -->
             <div class="col-lg-8">
-                <form method="POST" action="index.php?act=lichKhoiHanh/create">
+                <form method="POST" action="index.php?act=<?php echo (isset($mode) && $mode === 'edit') ? 'lichKhoiHanh/update' : 'lichKhoiHanh/create'; ?>">
+                    <?php if (isset($mode) && $mode === 'edit' && isset($lichKhoiHanh['id'])): ?>
+                        <input type="hidden" name="id" value="<?php echo (int)$lichKhoiHanh['id']; ?>">
+                    <?php endif; ?>
                     <!-- Tour Selection -->
                     <div class="form-section">
                         <div class="form-section-title">
@@ -112,10 +118,10 @@
                         
                         <div class="mb-3">
                             <label class="form-label required-label fw-semibold">Tour</label>
-                            <select name="tour_id" class="form-select form-select-lg" required>
+                            <select name="tour_id" class="form-select form-select-lg" required <?php echo (isset($mode) && $mode === 'edit') ? 'disabled' : ''; ?>>
                                 <option value="">-- Chọn tour --</option>
                                 <?php foreach ($tours as $tour): ?>
-                                    <option value="<?php echo $tour['tour_id']; ?>">
+                                    <option value="<?php echo $tour['tour_id']; ?>" <?php echo (isset($lichKhoiHanh['tour_id']) && $lichKhoiHanh['tour_id'] == $tour['tour_id']) ? 'selected' : ''; ?>>
                                         <?php echo htmlspecialchars($tour['ten_tour']); ?>
                                         <?php if (isset($tour['gia_co_ban'])): ?>
                                             - <?php echo number_format($tour['gia_co_ban'], 0, ',', '.'); ?> VNĐ
@@ -137,28 +143,32 @@
                                 <label class="form-label required-label fw-semibold">
                                     <i class="bi bi-calendar-event text-primary"></i> Ngày khởi hành
                                 </label>
-                                <input type="date" name="ngay_khoi_hanh" class="form-control" required>
+                                <input type="date" name="ngay_khoi_hanh" class="form-control" required
+                                       value="<?php echo isset($lichKhoiHanh['ngay_khoi_hanh']) ? htmlspecialchars($lichKhoiHanh['ngay_khoi_hanh']) : ''; ?>">
                             </div>
                             
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-clock text-info"></i> Giờ xuất phát
                                 </label>
-                                <input type="time" name="gio_xuat_phat" class="form-control" value="07:00">
+                                <input type="time" name="gio_xuat_phat" class="form-control"
+                                       value="<?php echo isset($lichKhoiHanh['gio_xuat_phat']) ? htmlspecialchars($lichKhoiHanh['gio_xuat_phat']) : '07:00'; ?>">
                             </div>
                             
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
                                 </label>
-                                <input type="date" name="ngay_ket_thuc" class="form-control">
+                                <input type="date" name="ngay_ket_thuc" class="form-control"
+                                       value="<?php echo isset($lichKhoiHanh['ngay_ket_thuc']) ? htmlspecialchars($lichKhoiHanh['ngay_ket_thuc']) : ''; ?>">
                             </div>
                             
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-clock text-warning"></i> Giờ kết thúc
                                 </label>
-                                <input type="time" name="gio_ket_thuc" class="form-control" value="17:00">
+                                <input type="time" name="gio_ket_thuc" class="form-control"
+                                       value="<?php echo isset($lichKhoiHanh['gio_ket_thuc']) ? htmlspecialchars($lichKhoiHanh['gio_ket_thuc']) : '17:00'; ?>">
                             </div>
                             
                             <div class="col-12">
@@ -166,7 +176,8 @@
                                     <i class="bi bi-geo-alt text-danger"></i> Điểm tập trung
                                 </label>
                                 <input type="text" name="diem_tap_trung" class="form-control" 
-                                       placeholder="VD: Số 54 Trần Đại Nghĩa, Hai Bà Trưng, Hà Nội">
+                                       placeholder="VD: Số 54 Trần Đại Nghĩa, Hai Bà Trưng, Hà Nội"
+                                       value="<?php echo isset($lichKhoiHanh['diem_tap_trung']) ? htmlspecialchars($lichKhoiHanh['diem_tap_trung']) : ''; ?>">
                             </div>
                         </div>
                     </div>
@@ -182,7 +193,8 @@
                                 <label class="form-label required-label fw-semibold">
                                     <i class="bi bi-people-fill text-primary"></i> Số chỗ
                                 </label>
-                                <input type="number" name="so_cho" class="form-control" value="50" min="1" required>
+                                <input type="number" name="so_cho" class="form-control" min="1" required
+                                       value="<?php echo isset($lichKhoiHanh['so_cho']) ? (int)$lichKhoiHanh['so_cho'] : 50; ?>">
                                 <small class="text-muted">Số lượng khách tối đa cho lịch khởi hành này</small>
                             </div>
                             
@@ -198,7 +210,7 @@
                                     $hdvList = $nhanSuModel->getByRole('HDV');
                                     foreach ($hdvList as $hdv):
                                     ?>
-                                        <option value="<?php echo $hdv['nhan_su_id']; ?>">
+                                        <option value="<?php echo $hdv['nhan_su_id']; ?>" <?php echo (isset($lichKhoiHanh['hdv_id']) && $lichKhoiHanh['hdv_id'] == $hdv['nhan_su_id']) ? 'selected' : ''; ?>>
                                             <?php echo htmlspecialchars($hdv['ho_ten'] ?? 'N/A'); ?>
                                             <?php if (isset($hdv['so_dien_thoai'])): ?>
                                                 - <?php echo htmlspecialchars($hdv['so_dien_thoai']); ?>
@@ -221,10 +233,11 @@
                                 <label class="form-label fw-semibold">
                                     <i class="bi bi-toggle-on text-primary"></i> Trạng thái
                                 </label>
+                                <?php $currentStatus = $lichKhoiHanh['trang_thai'] ?? 'SapKhoiHanh'; ?>
                                 <select name="trang_thai" class="form-select">
-                                    <option value="SapKhoiHanh" selected>Sắp khởi hành</option>
-                                    <option value="DangChay">Đang chạy</option>
-                                    <option value="HoanThanh">Hoàn thành</option>
+                                    <option value="SapKhoiHanh" <?php echo $currentStatus === 'SapKhoiHanh' ? 'selected' : ''; ?>>Sắp khởi hành</option>
+                                    <option value="DangChay" <?php echo $currentStatus === 'DangChay' ? 'selected' : ''; ?>>Đang chạy</option>
+                                    <option value="HoanThanh" <?php echo $currentStatus === 'HoanThanh' ? 'selected' : ''; ?>>Hoàn thành</option>
                                 </select>
                             </div>
                             
@@ -233,7 +246,7 @@
                                     <i class="bi bi-chat-left-text text-info"></i> Ghi chú
                                 </label>
                                 <textarea name="ghi_chu" class="form-control" rows="3" 
-                                          placeholder="Thêm ghi chú nếu cần..."></textarea>
+                                          placeholder="Thêm ghi chú nếu cần..."><?php echo isset($lichKhoiHanh['ghi_chu']) ? htmlspecialchars($lichKhoiHanh['ghi_chu']) : ''; ?></textarea>
                             </div>
                         </div>
                     </div>
@@ -242,7 +255,8 @@
                     <div class="btn-action-group">
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-check-circle"></i> Tạo lịch khởi hành
+                                <i class="bi bi-check-circle"></i>
+                                <?php echo isset($mode) && $mode === 'edit' ? 'Lưu lịch khởi hành' : 'Tạo lịch khởi hành'; ?>
                             </button>
                             <button type="reset" class="btn btn-outline-secondary btn-lg">
                                 <i class="bi bi-arrow-counterclockwise"></i> Đặt lại

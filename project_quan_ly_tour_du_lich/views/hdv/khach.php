@@ -55,7 +55,7 @@
                         <i class="bi bi-people"></i> Danh sách Khách
                     </h3>
                     <?php if ($tour): ?>
-                    <p class="mb-0 opacity-75"><?php echo htmlspecialchars($tour['ten_tour']); ?></p>
+                    <p class="mb-0 opacity-75"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></p>
                     <?php endif; ?>
                 </div>
                 <a href="index.php?act=hdv/dashboard" class="btn btn-light">
@@ -75,8 +75,8 @@
                     <option value="">-- Chọn tour --</option>
                     <?php foreach($tours_list as $t): ?>
                     <option value="<?php echo $t['id']; ?>">
-                        <?php echo htmlspecialchars($t['ten_tour']); ?> 
-                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'])); ?>)
+                        <?php echo htmlspecialchars($t['ten_tour'] ?? ''); ?> 
+                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'] ?? 'now')); ?>)
                     </option>
                     <?php endforeach; ?>
                 </select>
@@ -89,12 +89,12 @@
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <h5 class="mb-1"><?php echo htmlspecialchars($tour['ten_tour']); ?></h5>
+                        <h5 class="mb-1"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h5>
                         <div class="text-muted">
                             <i class="bi bi-calendar3"></i> 
-                            <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'])); ?>
+                            <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'] ?? 'now')); ?>
                             -
-                            <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'])); ?>
+                            <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'] ?? 'now')); ?>
                         </div>
                     </div>
                     <div>
@@ -108,55 +108,99 @@
 
         <!-- Customer List -->
         <?php if (!empty($khach_list)): ?>
-            <?php foreach($khach_list as $index => $khach): ?>
-            <div class="customer-card">
-                <div class="row align-items-center">
-                    <div class="col-auto">
-                        <div class="customer-avatar">
-                            <?php echo strtoupper(substr($khach['ho_ten'] ?? 'K', 0, 1)); ?>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <h5 class="mb-1">
-                            <?php echo htmlspecialchars($khach['ho_ten']); ?>
-                            <span class="badge bg-secondary ms-2">#<?php echo $index + 1; ?></span>
-                        </h5>
-                        <div class="text-muted small">
-                            <?php if (!empty($khach['email'])): ?>
-                            <div class="mb-1">
-                                <i class="bi bi-envelope"></i> 
-                                <?php echo htmlspecialchars($khach['email']); ?>
-                            </div>
-                            <?php endif; ?>
-                            <?php if (!empty($khach['so_dien_thoai'])): ?>
-                            <div>
-                                <i class="bi bi-telephone"></i> 
-                                <?php echo htmlspecialchars($khach['so_dien_thoai']); ?>
-                            </div>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="col-auto">
-                        <div class="btn-group btn-group-sm">
-                            <a href="index.php?act=hdv/yeu_cau_dac_biet&tour_id=<?php echo $tour['id']; ?>&khach_id=<?php echo $khach['khach_hang_id']; ?>" 
-                               class="btn btn-outline-warning" title="Yêu cầu đặc biệt">
-                                <i class="bi bi-exclamation-triangle"></i>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                
-                <?php if (!empty($khach['yeu_cau_dac_biet'])): ?>
-                <div class="mt-3 p-3 bg-light rounded">
-                    <small class="text-muted d-block mb-1"><strong>Yêu cầu đặc biệt:</strong></small>
-                    <small><?php echo nl2br(htmlspecialchars($khach['yeu_cau_dac_biet'])); ?></small>
-                </div>
-                <?php endif; ?>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>STT</th>
+                            <th>Họ tên</th>
+                            <th>CMND/Passport</th>
+                            <th>Ngày sinh</th>
+                            <th>Giới tính</th>
+                            <th>Quốc tịch</th>
+                            <th>Liên hệ</th>
+                            <th>Địa chỉ</th>
+                            <th>Trạng thái</th>
+                            <th>Booking ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($khach_list as $index => $khach): ?>
+                        <tr>
+                            <td><?php echo $index + 1; ?></td>
+                            <td>
+                                <strong><?php echo htmlspecialchars($khach['ho_ten'] ?? 'Khách'); ?></strong>
+                            </td>
+                            <td>
+                                <?php if (!empty($khach['so_cmnd'])): ?>
+                                    CMND: <?php echo htmlspecialchars($khach['so_cmnd'] ?? ''); ?><br>
+                                <?php endif; ?>
+                                <?php if (!empty($khach['so_passport'])): ?>
+                                    Passport: <?php echo htmlspecialchars($khach['so_passport'] ?? ''); ?>
+                                <?php endif; ?>
+                                <?php if (empty($khach['so_cmnd']) && empty($khach['so_passport'])): ?>
+                                    <span class="text-muted">Chưa cập nhật</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php echo !empty($khach['ngay_sinh']) ? date('d/m/Y', strtotime($khach['ngay_sinh'])) : 'N/A'; ?>
+                            </td>
+                            <td>
+                                <?php 
+                                $gioiTinhLabels = ['Nam' => 'Nam', 'Nu' => 'Nữ', 'Khac' => 'Khác'];
+                                echo $gioiTinhLabels[$khach['gioi_tinh']] ?? $khach['gioi_tinh'] ?? 'N/A';
+                                ?>
+                            </td>
+                            <td>
+                                <?php echo htmlspecialchars($khach['quoc_tich'] ?? 'Việt Nam'); ?>
+                            </td>
+                            <td>
+                                <?php if (!empty($khach['email'])): ?>
+                                    <small><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($khach['email'] ?? ''); ?></small><br>
+                                <?php endif; ?>
+                                <?php if (!empty($khach['so_dien_thoai'])): ?>
+                                    <small><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($khach['so_dien_thoai'] ?? ''); ?></small>
+                                <?php endif; ?>
+                                <?php if (empty($khach['email']) && empty($khach['so_dien_thoai'])): ?>
+                                    <span class="text-muted">N/A</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php echo !empty($khach['dia_chi']) ? htmlspecialchars($khach['dia_chi'] ?? '') : 'N/A'; ?>
+                            </td>
+                            <td>
+                                <?php
+                                $trangThaiLabels = [
+                                    'ChuaCheckIn' => 'Chưa check-in',
+                                    'DaCheckIn' => 'Đã check-in',
+                                    'DaCheckOut' => 'Đã check-out'
+                                ];
+                                $trangThaiClass = [
+                                    'ChuaCheckIn' => 'warning',
+                                    'DaCheckIn' => 'success',
+                                    'DaCheckOut' => 'secondary'
+                                ];
+                                $trangThai = $khach['trang_thai'] ?? 'ChuaCheckIn';
+                                ?>
+                                <span class="badge bg-<?php echo $trangThaiClass[$trangThai] ?? 'warning'; ?>">
+                                    <?php echo $trangThaiLabels[$trangThai] ?? $trangThai; ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if (!empty($khach['booking_id'])): ?>
+                                    #<?php echo $khach['booking_id']; ?>
+                                <?php else: ?>
+                                    N/A
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
             </div>
-            <?php endforeach; ?>
         <?php else: ?>
             <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> Chưa có khách nào đăng ký tour này.
+                <i class="bi bi-info-circle"></i> Chưa có khách nào trong danh sách. Vui lòng thêm khách vào lịch khởi hành này.
             </div>
         <?php endif; ?>
         

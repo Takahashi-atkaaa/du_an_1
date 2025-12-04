@@ -72,7 +72,7 @@
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="mb-1">
-                        <i class="bi bi-map"></i> <?php echo htmlspecialchars($tour['ten_tour']); ?>
+                        <i class="bi bi-map"></i> <?php echo htmlspecialchars($tour['ten_tour'] ?? 'Tour không xác định'); ?>
                     </h3>
                     <p class="mb-0 opacity-75">Chi tiết lịch trình tour</p>
                 </div>
@@ -92,7 +92,7 @@
                     <div class="info-row">
                         <div class="row">
                             <div class="col-4 text-muted">Tên tour:</div>
-                            <div class="col-8"><strong><?php echo htmlspecialchars($tour['ten_tour']); ?></strong></div>
+                            <div class="col-8"><strong><?php echo htmlspecialchars($tour['ten_tour'] ?? 'Tour không xác định'); ?></strong></div>
                         </div>
                     </div>
                     <div class="info-row">
@@ -143,7 +143,7 @@
                     <div class="info-row">
                         <div class="row">
                             <div class="col-4 text-muted">Ghi chú:</div>
-                            <div class="col-8"><?php echo nl2br(htmlspecialchars($tour['ghi_chu'])); ?></div>
+                            <div class="col-8"><?php echo nl2br(htmlspecialchars($tour['ghi_chu'] ?? '')); ?></div>
                         </div>
                     </div>
                     <?php endif; ?>
@@ -153,7 +153,7 @@
                 <?php if (!empty($tour['mo_ta'])): ?>
                 <div class="info-card">
                     <h5 class="mb-3"><i class="bi bi-file-text"></i> Mô tả Tour</h5>
-                    <div><?php echo nl2br(htmlspecialchars($tour['mo_ta'])); ?></div>
+                    <div><?php echo nl2br(htmlspecialchars($tour['mo_ta'] ?? '')); ?></div>
                 </div>
                 <?php endif; ?>
             </div>

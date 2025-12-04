@@ -30,6 +30,8 @@ require_once __DIR__ . '/models/NguoiDung.php';
 require_once __DIR__ . '/models/Tour.php';
 require_once __DIR__ . '/models/Booking.php';
 require_once __DIR__ . '/models/BookingHistory.php';
+require_once __DIR__ . '/models/BookingDeletionHistory.php';
+require_once __DIR__ . '/models/SupplierDeletionHistory.php';
 require_once __DIR__ . '/models/KhachHang.php';
 require_once __DIR__ . '/models/HDV.php';
 require_once __DIR__ . '/models/NhaCungCap.php';
@@ -43,6 +45,7 @@ require_once __DIR__ . '/models/HDVManagement.php';
 require_once __DIR__ . '/models/TourCheckin.php';
 require_once __DIR__ . '/models/HotelRoomAssignment.php';
 require_once __DIR__ . '/models/DichVuNhaCungCap.php';
+require_once __DIR__ . '/models/YeuCauDacBiet.php';
 
 
 // Route
@@ -105,6 +108,8 @@ match ($act) {
     'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),
     'lichKhoiHanh/create' => (new LichKhoiHanhController())->create(),
     'lichKhoiHanh/chiTiet' => (new LichKhoiHanhController())->chiTiet(),
+    'lichKhoiHanh/chiTietTheoBooking' => (new LichKhoiHanhController())->chiTietTheoBooking(),
+    'lichKhoiHanh/edit' => (new LichKhoiHanhController())->edit(),
     'lichKhoiHanh/update' => (new LichKhoiHanhController())->update(),
     'lichKhoiHanh/phanBoNhanSu' => (new LichKhoiHanhController())->phanBoNhanSu(),
     'lichKhoiHanh/updateTrangThaiNhanSu' => (new LichKhoiHanhController())->updateTrangThaiNhanSu(),
@@ -112,6 +117,9 @@ match ($act) {
     'lichKhoiHanh/updateTrangThaiDichVu' => (new LichKhoiHanhController())->updateTrangThaiDichVu(),
     'lichKhoiHanh/deleteNhanSu' => (new LichKhoiHanhController())->deleteNhanSu(),
     'lichKhoiHanh/deleteDichVu' => (new LichKhoiHanhController())->deleteDichVu(),
+    'lichKhoiHanh/themKhachChiTiet' => (new LichKhoiHanhController())->themKhachChiTiet(),
+    'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
+    'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
     
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
@@ -122,11 +130,33 @@ match ($act) {
     'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
     'admin/soSanhChiTietChiPhi' => (new AdminController())->soSanhChiTietChiPhi(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
+    'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
+    'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
+    'admin/themYeuCauDacBiet' => (new AdminController())->taoYeuCauDacBiet(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
+    'admin/chiTietNhatKyTour' => (new AdminController())->chiTietNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
     'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),
     'admin/deleteNhatKyTour' => (new AdminController())->deleteNhatKyTour(),
     'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
+    'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
+    // Báo cáo tài chính
+    'admin/baoCaoTaiChinh' => (new BaoCaoTaiChinhController())->dashboard(),
+    'admin/lichSuGiaoDich' => (new BaoCaoTaiChinhController())->lichSuGiaoDich(),
+    'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
+    'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
+    'admin/congNo' => (new BaoCaoTaiChinhController())->congNo(),
+    'admin/congNoKhachHang' => (new BaoCaoTaiChinhController())->congNoKhachHang(),
+    'admin/congNoNhaCungCap' => (new BaoCaoTaiChinhController())->congNoNhaCungCap(),
+    'admin/laiLoTour' => (new BaoCaoTaiChinhController())->laiLoTour(),
+    'admin/duToanTour' => (new BaoCaoTaiChinhController())->duToanTour(),
+    'admin/formDuToan' => (new BaoCaoTaiChinhController())->formDuToan(),
+    'admin/chiPhiThucTe' => (new BaoCaoTaiChinhController())->chiPhiThucTe(),
+    'admin/formChiPhi' => (new BaoCaoTaiChinhController())->formChiPhi(),
+    'admin/duyetChiPhi' => (new BaoCaoTaiChinhController())->duyetChiPhi(),
+    'admin/tuChoiChiPhi' => (new BaoCaoTaiChinhController())->tuChoiChiPhi(),
+    'admin/soSanhDuToan' => (new BaoCaoTaiChinhController())->soSanhDuToan(),
+    'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
     'hdv/tours' => (new HDVController())->tours(),
@@ -174,11 +204,16 @@ match ($act) {
     'admin/nhanSu_get_users' => (new AdminController())->nhanSu_get_users(),
     // Admin - Quản lý khách theo tour
     'admin/danhSachKhachTheoTour' => (new AdminController())->danhSachKhachTheoTour(),
+    'admin/themKhachLichKhoiHanh' => (new AdminController())->themKhachLichKhoiHanh(),
+    'admin/suaKhachLichKhoiHanh' => (new AdminController())->suaKhachLichKhoiHanh(),
+    'admin/xoaKhachLichKhoiHanh' => (new AdminController())->xoaKhachLichKhoiHanh(),
     'admin/checkInKhach' => (new AdminController())->checkInKhach(),
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
+    'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
     'admin/updateNhaCungCap' => (new AdminController())->updateNhaCungCap(),
+    'admin/deleteNhaCungCap' => (new AdminController())->deleteNhaCungCap(),
     'admin/chiTietDichVu' => (new AdminController())->chiTietDichVu(),
     'admin/supplierServiceAction' => (new AdminController())->supplierServiceAction(),
     

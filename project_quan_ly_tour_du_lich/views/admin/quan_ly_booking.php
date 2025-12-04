@@ -130,7 +130,10 @@
                         <h1 class="display-5 fw-bold mb-2">
                             <i class="bi bi-calendar-check-fill"></i> Quản Lý Booking
                         </h1>
-                        <p class="lead mb-0 opacity-75">Quản lý booking, danh sách khách hàng từng booking, và xử lý đặt tour cho khách hàng</p>
+                        <p class="lead mb-0 opacity-75">Quản lý đặt tour và xử lý booking của khách hàng</p>
+                        <a href="index.php?act=admin/lichSuXoaBooking" class="btn btn-outline-danger btn-sm mt-2">
+                            <i class="bi bi-clock-history"></i> Xem lịch sử xóa booking
+                        </a>
                     </div>
                     <div class="d-flex gap-2">
                         <a href="index.php?act=booking/datTourChoKhach" class="btn btn-warning btn-lg">
@@ -309,9 +312,17 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <small>
+                                            <?php
+                                                $ngayKhoiHanh = !empty($booking['ngay_khoi_hanh']) ? $booking['ngay_khoi_hanh'] : ($booking['ngay_dat'] ?? null);
+                                                $ngayKetThuc = isset($booking['ngay_ket_thuc']) && !empty($booking['ngay_ket_thuc']) ? $booking['ngay_ket_thuc'] : $ngayKhoiHanh;
+                                            ?>
+                                            <small class="d-block">
                                                 <i class="bi bi-calendar-event text-primary"></i>
-                                                <?php echo $booking['ngay_khoi_hanh'] ? date('d/m/Y', strtotime($booking['ngay_khoi_hanh'])) : 'N/A'; ?>
+                                                Khởi hành: <?php echo $ngayKhoiHanh ? date('d/m/Y', strtotime($ngayKhoiHanh)) : 'N/A'; ?>
+                                            </small>
+                                            <small class="d-block">
+                                                <i class="bi bi-calendar-check text-success"></i>
+                                                Kết thúc: <?php echo $ngayKetThuc ? date('d/m/Y', strtotime($ngayKetThuc)) : 'N/A'; ?>
                                             </small>
                                         </td>
                                         <td>
@@ -338,8 +349,9 @@
                                                    class="btn btn-sm btn-info" title="Xem chi tiết">
                                                     <i class="bi bi-eye"></i>
                                                 </a>
-                                                <a href="index.php?act=admin/danhSachKhachBooking&booking_id=<?php echo $booking['booking_id']; ?>" class="btn btn-sm btn-success" title="Xem danh sách khách booking">
-                                                    <i class="bi bi-people"></i>
+                                                <a href="index.php?act=tour/phanBoNhanSuLichKhoiHanh&id=<?php echo $booking['tour_id']; ?>" 
+                                                   class="btn btn-sm btn-warning" title="Phân bổ nhân sự & dịch vụ">
+                                                    <i class="bi bi-people-fill"></i>
                                                 </a>
                                                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
                                                     <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 

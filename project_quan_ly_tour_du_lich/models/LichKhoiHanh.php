@@ -9,11 +9,40 @@ class LichKhoiHanh
         $this->conn = connectDB();
     }
 
+    // Tự động cập nhật trạng thái lịch khởi hành theo thời gian hiện tại
+    public function autoUpdateTrangThai() {
+        // Hoàn thành: đã kết thúc (ngày_ket_thuc < hôm nay hoặc = hôm nay và giờ_ket_thuc <= hiện tại)
+        $sqlHoanThanh = "UPDATE lich_khoi_hanh
+                         SET trang_thai = 'HoanThanh'
+                         WHERE trang_thai IN ('SapKhoiHanh','DangChay')
+                           AND (
+                               ngay_ket_thuc < CURDATE()
+                               OR (ngay_ket_thuc = CURDATE() AND gio_ket_thuc IS NOT NULL AND gio_ket_thuc <= CURTIME())
+                           )";
+        $stmt1 = $this->conn->prepare($sqlHoanThanh);
+        $stmt1->execute();
+
+        // Đang chạy: đã bắt đầu nhưng chưa kết thúc
+        $sqlDangChay = "UPDATE lich_khoi_hanh
+                        SET trang_thai = 'DangChay'
+                        WHERE trang_thai = 'SapKhoiHanh'
+                          AND ngay_khoi_hanh <= CURDATE()
+                          AND (ngay_ket_thuc IS NULL OR ngay_ket_thuc >= CURDATE())";
+        $stmt2 = $this->conn->prepare($sqlDangChay);
+        $stmt2->execute();
+    }
+
     // Lấy tất cả lịch khởi hành
     public function getAll() {
-        $sql = "SELECT lk.*, t.ten_tour, t.loai_tour
+        $sql = "SELECT 
+                    lk.*, 
+                    t.ten_tour, 
+                    t.loai_tour,
+                    COUNT(DISTINCT pbn.id) AS so_nhan_su
                 FROM lich_khoi_hanh lk
                 LEFT JOIN tour t ON lk.tour_id = t.tour_id
+                LEFT JOIN phan_bo_nhan_su pbn ON pbn.lich_khoi_hanh_id = lk.id
+                GROUP BY lk.id
                 ORDER BY lk.ngay_khoi_hanh DESC, lk.gio_xuat_phat DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute();
@@ -41,6 +70,17 @@ class LichKhoiHanh
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId]);
         return $stmt->fetchAll();
+    }
+
+    // Tìm lịch khởi hành theo tour và ngày khởi hành (dùng để map từ booking)
+    public function findByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh) {
+        $sql = "SELECT * FROM lich_khoi_hanh 
+                WHERE tour_id = ? AND ngay_khoi_hanh = ?
+                ORDER BY id ASC
+                LIMIT 1";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        return $stmt->fetch();
     }
 
     // Thêm lịch khởi hành mới

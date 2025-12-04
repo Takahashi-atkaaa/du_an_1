@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Yêu cầu đặc biệt - HDV</title>
+    <title>Quản lý Yêu cầu đặc biệt - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -46,10 +46,6 @@ $statusMap = [
 ];
 $stats = $stats ?? [];
 $totalRequests = (int)(($stats['khan_cap'] ?? 0) + ($stats['cao'] ?? 0) + ($stats['trung_binh'] ?? 0) + ($stats['thap'] ?? 0));
-$requests = $requests ?? [];
-$histories = $histories ?? [];
-$tourList = $tourList ?? [];
-$bookingList = $bookingList ?? [];
 ?>
     <div class="container py-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
@@ -61,24 +57,24 @@ $bookingList = $bookingList ?? [];
                 <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createRequestModal">
                     <i class="bi bi-plus-lg me-1"></i>Tạo yêu cầu
                 </button>
-                <a href="index.php?act=hdv/dashboard" class="btn btn-outline-primary">
+                <a href="index.php?act=admin/dashboard" class="btn btn-outline-primary">
                     <i class="bi bi-arrow-left me-2"></i>Dashboard
                 </a>
             </div>
         </div>
 
-    <?php if (isset($_SESSION['success'])): ?>
+        <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    <?php if (isset($_SESSION['error'])): ?>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+                <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
+            </div>
+        <?php endif; ?>
 
         <div class="row g-3 mb-4">
             <div class="col-md-3">
@@ -116,7 +112,7 @@ $bookingList = $bookingList ?? [];
         </div>
 
         <form class="card shadow-sm mb-4" method="GET" action="">
-            <input type="hidden" name="act" value="hdv/quanLyYeuCauDacBiet">
+            <input type="hidden" name="act" value="admin/yeuCauDacBiet">
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-3">
@@ -155,18 +151,8 @@ $bookingList = $bookingList ?? [];
                         <label class="form-label">Tour</label>
                         <select name="tour_id" class="form-select">
                             <option value="0">Tất cả tour</option>
-                            <?php foreach ($tourList as $tourId): ?>
-            <?php
-                                // Tìm tên tour từ requests
-                                $tourName = '';
-                                foreach ($requests as $req) {
-                                    if ($req['tour_id'] == $tourId) {
-                                        $tourName = $req['ten_tour'] ?? 'Tour #' . $tourId;
-                                        break;
-                                    }
-                                }
-            ?>
-                                <option value="<?php echo $tourId; ?>" <?php echo ((int)($filters['tour_id'] ?? 0) === (int)$tourId) ? 'selected' : ''; ?>><?php echo htmlspecialchars($tourName ?: 'Tour #' . $tourId); ?></option>
+                            <?php foreach ($tourList as $tour): ?>
+                                <option value="<?php echo $tour['tour_id']; ?>" <?php echo ((int)($filters['tour_id'] ?? 0) === (int)$tour['tour_id']) ? 'selected' : ''; ?>><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -182,7 +168,7 @@ $bookingList = $bookingList ?? [];
                         <button type="submit" class="btn btn-primary w-100"><i class="bi bi-funnel me-1"></i>Lọc</button>
                     </div>
                     <div class="col-md-2 d-flex align-items-end">
-                        <a href="index.php?act=hdv/quanLyYeuCauDacBiet" class="btn btn-light w-100">Đặt lại</a>
+                        <a href="index.php?act=admin/yeuCauDacBiet" class="btn btn-light w-100">Đặt lại</a>
                     </div>
                 </div>
             </div>
@@ -193,18 +179,18 @@ $bookingList = $bookingList ?? [];
                 <?php if (!empty($requests)): ?>
                     <div class="table-responsive">
                         <table class="table align-middle">
-                        <thead>
-                            <tr>
+                            <thead>
+                                <tr>
                                     <th>#</th>
-                                <th>Khách hàng</th>
+                                    <th>Khách hàng</th>
                                     <th>Tour</th>
                                     <th>Chi tiết yêu cầu</th>
                                     <th>Ưu tiên</th>
                                     <th>Trạng thái</th>
                                     <th>Hành động</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                                </tr>
+                            </thead>
+                            <tbody>
                                 <?php foreach ($requests as $request):
                                     $priorityInfo = $priorityMap[$request['muc_do_uu_tien'] ?? 'trung_binh'] ?? $priorityMap['trung_binh'];
                                     $statusInfo = $statusMap[$request['trang_thai'] ?? 'moi'] ?? $statusMap['moi'];
@@ -214,12 +200,12 @@ $bookingList = $bookingList ?? [];
                                         <td>
                                             <strong>#<?php echo $request['id']; ?></strong><br>
                                             <small class="text-muted"><?php echo date('d/m/Y H:i', strtotime($request['ngay_tao'] ?? 'now')); ?></small>
-                                    </td>
-                                    <td>
+                                        </td>
+                                        <td>
                                             <strong><?php echo htmlspecialchars($request['khach_ten'] ?? 'N/A'); ?></strong>
                                             <div class="text-muted small"><?php echo htmlspecialchars($request['khach_phone'] ?? ''); ?></div>
                                             <div class="text-muted small"><?php echo htmlspecialchars($request['khach_email'] ?? ''); ?></div>
-                                    </td>
+                                        </td>
                                         <td>
                                             <div class="fw-semibold"><?php echo htmlspecialchars($request['ten_tour'] ?? 'Chưa rõ'); ?></div>
                                             <small class="text-muted">Khởi hành: <?php echo !empty($request['ngay_khoi_hanh']) ? date('d/m/Y', strtotime($request['ngay_khoi_hanh'])) : 'N/A'; ?></small>
@@ -236,8 +222,8 @@ $bookingList = $bookingList ?? [];
                                         </td>
                                         <td>
                                             <span class="badge bg-<?php echo $statusInfo['badge']; ?>"><?php echo $statusInfo['label']; ?></span>
-                                    </td>
-                                    <td>
+                                        </td>
+                                        <td>
                                             <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
                                                 data-bs-target="#updateModal"
                                                 data-id="<?php echo $request['id']; ?>"
@@ -249,18 +235,18 @@ $bookingList = $bookingList ?? [];
                                                 data-history="<?php echo $historyData; ?>">
                                                 <i class="bi bi-pencil-square me-1"></i>Cập nhật
                                             </button>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 <?php else: ?>
                     <div class="text-center py-5">
                         <i class="bi bi-inboxes text-muted" style="font-size: 3rem;"></i>
                         <p class="mt-3 text-muted">Không tìm thấy yêu cầu nào phù hợp với bộ lọc hiện tại.</p>
                     </div>
-            <?php endif; ?>
+                <?php endif; ?>
             </div>
         </div>
     </div>
@@ -269,7 +255,7 @@ $bookingList = $bookingList ?? [];
     <div class="modal fade" id="createRequestModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form method="POST" action="index.php?act=hdv/save_yeu_cau">
+                <form method="POST" action="index.php?act=admin/themYeuCauDacBiet">
                     <div class="modal-header">
                         <h5 class="modal-title">Tạo yêu cầu đặc biệt mới</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -295,8 +281,8 @@ $bookingList = $bookingList ?? [];
                                             <option value="<?php echo (int)$bk['booking_id']; ?>">
                                                 <?php echo htmlspecialchars($label); ?>
                                             </option>
-        <?php endforeach; ?>
-    <?php endif; ?>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div class="col-md-6">
@@ -352,7 +338,7 @@ $bookingList = $bookingList ?? [];
     <div class="modal fade" id="updateModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <form method="POST" action="index.php?act=hdv/save_yeu_cau">
+                <form method="POST" action="index.php?act=admin/capNhatYeuCauDacBiet">
                     <div class="modal-header">
                         <div>
                             <h5 class="modal-title">Cập nhật yêu cầu</h5>

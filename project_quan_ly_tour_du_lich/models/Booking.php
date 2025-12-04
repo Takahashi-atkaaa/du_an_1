@@ -56,14 +56,15 @@ class Booking
 
     // Thêm booking mới
     public function insert($data) {
-        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, so_nguoi, tong_tien, trang_thai, ghi_chu) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, ngay_ket_thuc, so_nguoi, tong_tien, trang_thai, ghi_chu) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         $result = $stmt->execute([
             $data['tour_id'] ?? 0,
             $data['khach_hang_id'] ?? 0,
             $data['ngay_dat'] ?? date('Y-m-d'),
             $data['ngay_khoi_hanh'] ?? null,
+            $data['ngay_ket_thuc'] ?? null,
             $data['so_nguoi'] ?? 1,
             $data['tong_tien'] ?? 0,
             $data['trang_thai'] ?? 'ChoXacNhan',
@@ -78,11 +79,12 @@ class Booking
 
     // Cập nhật booking
     public function update($id, $data) {
-        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
             $data['so_nguoi'] ?? 1,
             $data['ngay_khoi_hanh'] ?? null,
+            $data['ngay_ket_thuc'] ?? null,
             $data['tong_tien'] ?? 0,
             $data['trang_thai'] ?? 'ChoXacNhan',
             $data['ghi_chu'] ?? null,
@@ -221,6 +223,8 @@ class Booking
 
     // Lấy danh sách khách/nhóm tham gia tour cho một lịch cụ thể
     public function getKhachByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh) {
+        // Lưu ý: KHÔNG giới hạn quá chặt theo trạng_thai để tránh mất khách ở màn HDV
+        // Chỉ loại các booking đã hủy (DaHuy) nếu có, còn lại hiển thị cho HDV/Admin xử lý.
         $sql = "SELECT 
                     b.booking_id,
                     b.khach_hang_id,
@@ -234,14 +238,14 @@ class Booking
                     (
                         SELECT id 
                         FROM yeu_cau_dac_biet y 
-                        WHERE y.khach_hang_id = b.khach_hang_id AND y.tour_id = b.tour_id 
+                        WHERE y.booking_id = b.booking_id
                         ORDER BY y.id DESC 
                         LIMIT 1
                     ) as yeu_cau_id,
                     (
-                        SELECT noi_dung 
+                        SELECT mo_ta 
                         FROM yeu_cau_dac_biet y 
-                        WHERE y.khach_hang_id = b.khach_hang_id AND y.tour_id = b.tour_id 
+                        WHERE y.booking_id = b.booking_id
                         ORDER BY y.id DESC 
                         LIMIT 1
                     ) as yeu_cau_dac_biet
@@ -249,11 +253,51 @@ class Booking
                 LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
                 LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
                 WHERE b.tour_id = ?
-                    AND b.ngay_khoi_hanh = ?
-                    AND b.trang_thai IN ('ChoXacNhan','DaCoc','HoanTat')
+                    AND DATE(b.ngay_khoi_hanh) = DATE(?)
+                    AND (b.trang_thai IS NULL OR b.trang_thai <> 'DaHuy')
                 ORDER BY b.ngay_dat ASC, b.booking_id ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        return $stmt->fetchAll();
+    }
+    
+    // Lấy danh sách khách/nhóm tham gia tour theo lich_khoi_hanh.id
+    // Phương thức này đảm bảo lấy đúng booking theo lịch khởi hành cụ thể
+    public function getKhachByLichKhoiHanhId($lichKhoiHanhId) {
+        $sql = "SELECT 
+                    b.booking_id,
+                    b.khach_hang_id,
+                    b.so_nguoi,
+                    b.ngay_dat,
+                    b.ghi_chu as ghi_chu_booking,
+                    nd.ho_ten,
+                    nd.email,
+                    nd.so_dien_thoai,
+                    kh.dia_chi,
+                    (
+                        SELECT id 
+                        FROM yeu_cau_dac_biet y 
+                        WHERE y.booking_id = b.booking_id
+                        ORDER BY y.id DESC 
+                        LIMIT 1
+                    ) as yeu_cau_id,
+                    (
+                        SELECT mo_ta 
+                        FROM yeu_cau_dac_biet y 
+                        WHERE y.booking_id = b.booking_id
+                        ORDER BY y.id DESC 
+                        LIMIT 1
+                    ) as yeu_cau_dac_biet
+                FROM booking b
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                INNER JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id 
+                    AND DATE(b.ngay_khoi_hanh) = DATE(lkh.ngay_khoi_hanh)
+                WHERE lkh.id = ?
+                    AND (b.trang_thai IS NULL OR b.trang_thai <> 'DaHuy')
+                ORDER BY b.ngay_dat ASC, b.booking_id ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$lichKhoiHanhId]);
         return $stmt->fetchAll();
     }
 
@@ -262,7 +306,7 @@ class Booking
         $sql = "SELECT b.*, 
                 t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
                 t.trang_thai as tour_trang_thai,
-                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_xuat_phat as gio_khoi_hanh, lkh.diem_tap_trung
                 FROM booking b
                 LEFT JOIN tour t ON b.tour_id = t.tour_id
                 LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND b.ngay_khoi_hanh = lkh.ngay_khoi_hanh
@@ -278,7 +322,7 @@ class Booking
         $sql = "SELECT b.*, 
                 t.ten_tour, t.gia_co_ban, t.mo_ta, t.loai_tour, t.chinh_sach,
                 t.trang_thai as tour_trang_thai,
-                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_khoi_hanh, lkh.dia_diem_tap_trung
+                lkh.ngay_khoi_hanh as lich_ngay_khoi_hanh, lkh.gio_xuat_phat as gio_khoi_hanh, lkh.diem_tap_trung
                 FROM booking b
                 LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
                 LEFT JOIN tour t ON b.tour_id = t.tour_id
