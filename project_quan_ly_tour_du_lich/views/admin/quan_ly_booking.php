@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản lý Booking</title>
+    <title>Quản lý Booking & Khách Booking</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
@@ -355,7 +355,7 @@
                                                 </a>
                                                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
                                                     <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
-                                                       class="btn btn-sm btn-primary" title="Sửa">
+se="Sửa">
                                                         <i class="bi bi-pencil"></i>
                                                     </a>
                                                 <?php endif; ?>
