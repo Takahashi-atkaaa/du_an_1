@@ -1,0 +1,643 @@
+
+<?php
+
+class KhachHangController {
+        // Gửi yêu cầu tour theo mong muốn
+        public function guiYeuCauTour() {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                require_once 'models/ThongBao.php';
+                require_once 'models/NguoiDung.php';
+                $thongBaoModel = new ThongBao();
+                $nguoiDungModel = new NguoiDung();
+                $user = $nguoiDungModel->findById($_SESSION['user_id']);
+                $noi_dung =
+                    'Tên: ' . ($user['ho_ten'] ?? '') . "\n" .
+                    'Email: ' . ($user['email'] ?? '') . "\n" .
+                    'Số điện thoại: ' . ($user['so_dien_thoai'] ?? '') . "\n" .
+                    'Địa điểm: ' . ($_POST['dia_diem'] ?? '') . "\n" .
+                    'Thời gian: ' . ($_POST['thoi_gian'] ?? '') . "\n" .
+                    'Số người: ' . ($_POST['so_nguoi'] ?? '') . "\n" .
+                    'Yêu cầu đặc biệt: ' . ($_POST['yeu_cau_dac_biet'] ?? '');
+                $data = [
+                    'tieu_de' => 'Yêu cầu tour theo mong muốn',
+                    'noi_dung' => $noi_dung,
+                    'loai_thong_bao' => 'KhachHang',
+                    'muc_do_uu_tien' => 'TrungBinh',
+                    'nguoi_gui_id' => $_SESSION['user_id'],
+                    'vai_tro_nhan' => 'Admin',
+                    'trang_thai' => 'DaGui'
+                ];
+                $thongBaoModel->insert($data);
+                $_SESSION['success'] = 'Yêu cầu của bạn đã được gửi đến admin. Chúng tôi sẽ liên hệ lại sớm nhất!';
+                header('Location: index.php?act=khachHang/yeuCauTour');
+                exit();
+            }
+            // Lấy tất cả yêu cầu tour của khách hàng này
+            require_once 'models/ThongBao.php';
+            $thongBaoModel = new ThongBao();
+            $allYeuCau = $thongBaoModel->getAllByKhachHang($_SESSION['user_id']);
+            require 'views/khach_hang/yeu_cau_tour.php';
+        }
+    
+    public function __construct() {
+        requireLogin();
+    }
+    
+    // Dashboard khách hàng
+    public function dashboard() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        require_once 'models/ThongBao.php';
+        require_once 'models/Tour.php';
+        require_once 'models/DanhGia.php';
+
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $thongBaoModel = new ThongBao();
+        $tourModel = new Tour();
+        $danhGiaModel = new DanhGia();
+
+        // Lấy thông tin khách hàng
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng';
+            header('Location: index.php?act=auth/profile');
+            exit();
+        }
+
+        // Lấy booking của khách hàng
+        $bookings = $bookingModel->getByKhachHangId($khachHang['khach_hang_id']);
+
+        // Lấy thông báo chưa đọc
+        $thongBaoChuaDoc = $thongBaoModel->countChuaDoc($_SESSION['user_id']);
+        $thongBaoList = $thongBaoModel->getByNguoiDung($_SESSION['user_id'], 5);
+
+        // Lấy tour sắp tới (booking có ngày khởi hành >= hôm nay)
+        $tourSapToi = [];
+        $today = date('Y-m-d');
+        foreach ($bookings as $booking) {
+            if (!empty($booking['ngay_khoi_hanh']) && $booking['ngay_khoi_hanh'] >= $today && 
+                in_array($booking['trang_thai'], ['ChoXacNhan', 'DaCoc', 'HoanTat'])) {
+                $tourSapToi[] = $booking;
+            }
+        }
+
+        // Thống kê
+        $tongBooking = count($bookings);
+        $bookingChoXacNhan = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'ChoXacNhan'));
+        $bookingDaCoc = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'DaCoc'));
+        $bookingHoanTat = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'HoanTat'));
+
+        // Lấy 3 đánh giá tốt nhất (điểm cao nhất, mới nhất)
+        $allDanhGia = $danhGiaModel->filter(['diem_min' => 4]);
+        usort($allDanhGia, function($a, $b) {
+            if ($b['diem'] == $a['diem']) {
+                return strtotime($b['ngay_danh_gia']) - strtotime($a['ngay_danh_gia']);
+            }
+            return $b['diem'] - $a['diem'];
+        });
+        $danhGiaTot = array_slice($allDanhGia, 0, 3);
+
+        // Lấy danh sách tour và lọc theo tên, loại tour nếu có
+        $allTours = $tourModel->getAll();
+        // Lọc theo loại tour nếu có
+        if (!empty($_GET['loai_tour'])) {
+            $allTours = array_filter($allTours, function($tour) {
+                return $tour['loai_tour'] === $_GET['loai_tour'];
+            });
+        }
+        // Lọc theo tên tour nếu có
+        if (!empty($_GET['search'])) {
+            $search = mb_strtolower(trim($_GET['search']));
+            $allTours = array_filter($allTours, function($tour) use ($search) {
+                return mb_strpos(mb_strtolower($tour['ten_tour']), $search) !== false;
+            });
+        }
+        // Gán hình ảnh đại diện cho mỗi tour
+        foreach ($allTours as &$tour) {
+            $hinhAnhList = $tourModel->getHinhAnhByTourId($tour['tour_id']);
+            $tour['hinh_anh'] = !empty($hinhAnhList) ? $hinhAnhList[0]['url_anh'] : null;
+        }
+        unset($tour);
+        $tourTrongNuoc = array_filter($allTours, fn($t) => $t['loai_tour'] === 'TrongNuoc' && $t['trang_thai'] === 'HoatDong');
+        $tourQuocTe = array_filter($allTours, fn($t) => $t['loai_tour'] === 'QuocTe' && $t['trang_thai'] === 'HoatDong');
+
+        require 'views/khach_hang/dashboard.php';
+    }
+    
+    // Tra cứu bằng mã tour và mã khách hàng (ID)
+    public function traCuu() {
+        
+        require 'views/khach_hang/tra_cuu.php';
+    }
+    
+    public function danhSachTour() {
+        require 'views/khach_hang/danh_sach_tour.php';
+    }
+    
+    public function chiTietTour() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $tour = null;
+        $lichTrinhList = [];
+        $lichKhoiHanhList = [];
+        $hinhAnhList = [];
+        $yeuCauList = [];
+        $nhatKyList = [];
+        $hdvInfo = null;
+        $anhChinh = null;
+        $error = null;
+
+        if ($id <= 0) {
+            $error = 'Thiếu mã tour cần xem chi tiết.';
+        } else {
+            require_once 'models/Tour.php';
+            $tourModel = new Tour();
+            $tour = $tourModel->findById($id);
+            if (!$tour) {
+                $error = 'Tour không tồn tại hoặc đã bị xóa.';
+            } else {
+                $lichTrinhList = $tourModel->getLichTrinhByTourId($id);
+                $lichKhoiHanhList = $tourModel->getLichKhoiHanhByTourId($id);
+                $hinhAnhList = $tourModel->getHinhAnhByTourId($id);
+                $anhChinh = $this->chonAnhChinh($hinhAnhList);
+                $yeuCauList = $tourModel->getYeuCauDacBietByTourId($id);
+                $nhatKyList = $tourModel->getNhatKyTourByTourId($id);
+                $hdvInfo = $tourModel->getHDVByTourId($id);
+            }
+        }
+
+        require 'views/khach_hang/chi_tiet_tour.php';
+    }
+    
+    public function datTour() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $tour = null;
+        if ($id > 0) {
+            require_once 'models/Tour.php';
+            $tourModel = new Tour();
+            $tour = $tourModel->findById($id);
+        }
+        require 'views/khach_hang/dat_tour.php';
+    }
+    
+    public function danhGia() {
+        // Lấy danh sách để khách hàng chọn
+        require_once 'models/Tour.php';
+        require_once 'models/NhaCungCap.php';
+        require_once 'models/NhanSu.php';
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        
+        $tourModel = new Tour();
+        $nccModel = new NhaCungCap();
+        $nhanSuModel = new NhanSu();
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        
+        // Lấy booking đã hoàn thành của khách hàng để đánh giá
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        $bookingsHoanTat = [];
+        if ($khachHang) {
+            $allBookings = $bookingModel->getByKhachHangId($khachHang['khach_hang_id']);
+            $bookingsHoanTat = array_filter($allBookings, fn($b) => $b['trang_thai'] === 'HoanTat');
+        }
+        
+        $tourList = $tourModel->getAll();
+        $nccList = $nccModel->getAll();
+        $nhanSuList = $nhanSuModel->getAll();
+        
+        require 'views/khach_hang/danh_gia.php';
+    }
+    
+    public function guiDanhGia() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=khachHang/danhGia');
+            exit();
+        }
+        
+        require_once 'models/DanhGia.php';
+        require_once 'models/KhachHang.php';
+        
+        // Lấy khach_hang_id từ session
+        $khachHangModel = new KhachHang();
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng';
+            header('Location: index.php?act=khachHang/danhGia');
+            exit();
+        }
+        
+        $data = [
+            'khach_hang_id' => $khachHang['khach_hang_id'],
+            'tour_id' => !empty($_POST['tour_id']) ? (int)$_POST['tour_id'] : null,
+            'nha_cung_cap_id' => !empty($_POST['nha_cung_cap_id']) ? (int)$_POST['nha_cung_cap_id'] : null,
+            'nhan_su_id' => !empty($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : null,
+            'loai_danh_gia' => $_POST['loai_danh_gia'],
+            'tieu_chi' => $_POST['tieu_chi'] ?? null,
+            'loai_dich_vu' => $_POST['loai_dich_vu'] ?? null,
+            'diem' => (int)$_POST['diem'],
+            'noi_dung' => $_POST['noi_dung']
+        ];
+        
+        $danhGiaModel = new DanhGia();
+        if ($danhGiaModel->create($data)) {
+            $_SESSION['success'] = 'Cảm ơn bạn đã đánh giá! Ý kiến của bạn rất quan trọng với chúng tôi.';
+        } else {
+            $_SESSION['error'] = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+        }
+        
+        header('Location: index.php?act=khachHang/danhGia');
+        exit();
+    }
+
+    // Xem hóa đơn và trạng thái thanh toán
+    public function hoaDon() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        require_once 'models/GiaoDich.php';
+        
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $giaoDichModel = new GiaoDich();
+        
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+        
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $booking = null;
+        $tour = null;
+        $giaoDichList = [];
+        
+        if ($bookingId > 0) {
+            $booking = $bookingModel->getBookingWithDetails($bookingId);
+            if ($booking && $booking['khach_hang_id'] == $khachHang['khach_hang_id']) {
+                $giaoDichList = $giaoDichModel->getByTourId($booking['tour_id']);
+                // Tính tổng đã thanh toán
+                $tongDaThanhToan = $giaoDichModel->getTongThuByTour($booking['tour_id']);
+            } else {
+                $_SESSION['error'] = 'Không tìm thấy hóa đơn';
+                header('Location: index.php?act=khachHang/dashboard');
+                exit();
+            }
+        } else {
+            // Lấy tất cả booking của khách hàng
+            $bookings = $bookingModel->getByKhachHangId($khachHang['khach_hang_id']);
+        }
+        
+        require 'views/khach_hang/hoa_don.php';
+    }
+    
+    // Xem lịch trình tour chi tiết
+    public function lichTrinhTour() {
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        require_once 'models/Tour.php';
+        
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $tourModel = new Tour();
+        
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+        
+        $booking = null;
+        $tour = null;
+        $lichTrinhList = [];
+        $lichKhoiHanh = null;
+        
+        if ($bookingId > 0) {
+            $booking = $bookingModel->getBookingWithDetails($bookingId);
+            if ($booking && $booking['khach_hang_id'] == $khachHang['khach_hang_id']) {
+                $tour = $tourModel->findById($booking['tour_id']);
+                if ($tour) {
+                    $lichTrinhList = $tourModel->getLichTrinhByTourId($booking['tour_id']);
+                    $lichKhoiHanhList = $tourModel->getLichKhoiHanhByTourId($booking['tour_id']);
+                    // Tìm lịch khởi hành phù hợp với ngày khởi hành của booking
+                    foreach ($lichKhoiHanhList as $lkh) {
+                        if ($lkh['ngay_khoi_hanh'] == $booking['ngay_khoi_hanh']) {
+                            $lichKhoiHanh = $lkh;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                $_SESSION['error'] = 'Không tìm thấy booking';
+                header('Location: index.php?act=khachHang/dashboard');
+                exit();
+            }
+        } else {
+            $_SESSION['error'] = 'Thiếu mã booking';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+        
+        require 'views/khach_hang/lich_trinh_tour.php';
+    }
+    
+    // Thông báo
+    public function thongBao() {
+        require_once 'models/ThongBao.php';
+        
+        $thongBaoModel = new ThongBao();
+        
+        $thongBaoList = $thongBaoModel->getByNguoiDung($_SESSION['user_id'], 50);
+        $thongBaoChuaDoc = $thongBaoModel->countChuaDoc($_SESSION['user_id']);
+        
+        // Đánh dấu đã đọc nếu có tham số
+        if (isset($_GET['mark_read']) && $_GET['mark_read'] > 0) {
+            $thongBaoModel->danhDauDaDoc((int)$_GET['mark_read'], $_SESSION['user_id']);
+            header('Location: index.php?act=khachHang/thongBao');
+            exit();
+        }
+        
+        require 'views/khach_hang/thong_bao.php';
+    }
+    
+    // Cập nhật thông tin cá nhân
+    public function capNhatThongTin() {
+        require_once 'models/KhachHang.php';
+        require_once 'models/NguoiDung.php';
+        
+        $khachHangModel = new KhachHang();
+        $nguoiDungModel = new NguoiDung();
+        
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        $nguoiDung = $nguoiDungModel->findById($_SESSION['user_id']);
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Cập nhật thông tin người dùng
+            $nguoiDungData = [
+                'ho_ten' => $_POST['ho_ten'] ?? '',
+                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? '',
+                'email' => $_POST['email'] ?? ''
+            ];
+            
+            if (!empty($_POST['mat_khau_moi']) && $_POST['mat_khau_moi'] === $_POST['xac_nhan_mat_khau']) {
+                $nguoiDungData['mat_khau'] = password_hash($_POST['mat_khau_moi'], PASSWORD_DEFAULT);
+            }
+            
+            $nguoiDungModel->update($_SESSION['user_id'], $nguoiDungData);
+            
+            // Cập nhật thông tin khách hàng
+            if ($khachHang) {
+                $khachHangData = [
+                    'dia_chi' => $_POST['dia_chi'] ?? null,
+                    'gioi_tinh' => $_POST['gioi_tinh'] ?? null,
+                    'ngay_sinh' => !empty($_POST['ngay_sinh']) ? $_POST['ngay_sinh'] : null
+                ];
+                
+                $sql = "UPDATE khach_hang SET dia_chi = ?, gioi_tinh = ?, ngay_sinh = ? WHERE khach_hang_id = ?";
+                $stmt = $khachHangModel->conn->prepare($sql);
+                $stmt->execute([
+                    $khachHangData['dia_chi'],
+                    $khachHangData['gioi_tinh'],
+                    $khachHangData['ngay_sinh'],
+                    $khachHang['khach_hang_id']
+                ]);
+            }
+            
+            $_SESSION['success'] = 'Cập nhật thông tin thành công';
+            header('Location: index.php?act=khachHang/capNhatThongTin');
+            exit();
+        }
+        
+        require 'views/khach_hang/cap_nhat_thong_tin.php';
+    }
+    
+    // Gửi yêu cầu hỗ trợ
+    public function guiYeuCauHoTro() {
+        require_once 'models/ThongBao.php';
+        require_once 'models/KhachHang.php';
+        
+        $thongBaoModel = new ThongBao();
+        $khachHangModel = new KhachHang();
+        
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $data = [
+                'tieu_de' => $_POST['tieu_de'] ?? 'Yêu cầu hỗ trợ',
+                'noi_dung' => $_POST['noi_dung'] ?? '',
+                'loai_thong_bao' => 'KhachHang',
+                'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? 'TrungBinh',
+                'nguoi_gui_id' => $_SESSION['user_id'],
+                'vai_tro_nhan' => 'Admin',
+                'trang_thai' => 'DaGui'
+            ];
+            
+            if ($thongBaoModel->insert($data)) {
+                $_SESSION['success'] = 'Yêu cầu hỗ trợ đã được gửi thành công. Chúng tôi sẽ phản hồi sớm nhất có thể.';
+            } else {
+                $_SESSION['error'] = 'Có lỗi xảy ra. Vui lòng thử lại sau.';
+            }
+            
+            header('Location: index.php?act=khachHang/guiYeuCauHoTro');
+            exit();
+        }
+        
+        require 'views/khach_hang/gui_yeu_cau_ho_tro.php';
+    }
+    
+    // Đặt tour & thanh toán nhanh từ trang khách hàng
+    public function thanhToanTour() {
+        require_once 'models/Tour.php';
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        require_once 'models/GiaoDich.php';
+        require_once 'models/NguoiDung.php';
+
+        $tourModel = new Tour();
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $giaoDichModel = new GiaoDich();
+        $nguoiDungModel = new NguoiDung();
+
+        // Lấy thông tin user & khách hàng hiện tại
+        $userId = $_SESSION['user_id'] ?? 0;
+        if (!$userId) {
+            $_SESSION['error'] = 'Vui lòng đăng nhập để đặt tour.';
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+
+        $khachHang = $khachHangModel->findByUserId($userId);
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng. Vui lòng cập nhật hồ sơ trước khi đặt tour.';
+            header('Location: index.php?act=khachHang/capNhatThongTin');
+            exit();
+        }
+
+        $nguoiDung = $nguoiDungModel->findById($userId);
+
+        // Lấy tour cần đặt
+        $tourId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($tourId <= 0) {
+            $_SESSION['error'] = 'Thiếu thông tin tour cần đặt.';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+
+        $tour = $tourModel->findById($tourId);
+        if (!$tour) {
+            $_SESSION['error'] = 'Tour không tồn tại hoặc đã bị xóa.';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+
+        // Xử lý khi khách bấm "Xác nhận đã thanh toán & Đặt tour"
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $soLuong = isset($_POST['so_luong']) ? (int)$_POST['so_luong'] : 1;
+            if ($soLuong <= 0) {
+                $soLuong = 1;
+            }
+
+            // Lấy giá tour (ưu tiên giá_tour nếu có, fallback về gia_co_ban)
+            $giaCoBan = 0;
+            if (isset($tour['gia_tour']) && $tour['gia_tour'] !== null) {
+                $giaCoBan = (float)$tour['gia_tour'];
+            } elseif (isset($tour['gia_co_ban']) && $tour['gia_co_ban'] !== null) {
+                $giaCoBan = (float)$tour['gia_co_ban'];
+            }
+
+            $tongTien = $giaCoBan * $soLuong;
+
+            try {
+                // Tạo booking mới
+                $bookingData = [
+                    'tour_id' => $tourId,
+                    'khach_hang_id' => $khachHang['khach_hang_id'],
+                    'ngay_dat' => date('Y-m-d'),
+                    'ngay_khoi_hanh' => null,   // Khách đặt & thanh toán nhanh, có thể bổ sung sau
+                    'ngay_ket_thuc' => null,
+                    'so_nguoi' => $soLuong,
+                    'tong_tien' => $tongTien,
+                    'trang_thai' => 'DaCoc',
+                    'ghi_chu' => 'Khách hàng đặt tour và thanh toán online từ trang khách hàng'
+                ];
+
+                $bookingId = $bookingModel->insert($bookingData);
+                if (!$bookingId) {
+                    throw new Exception('Không thể tạo booking. Vui lòng thử lại sau.');
+                }
+
+                // Lưu giao dịch thanh toán
+                $giaoDichData = [
+                    'tour_id' => $tourId,
+                    'loai' => 'Thu',
+                    'so_tien' => $tongTien,
+                    'mo_ta' => "Thanh toán booking #{$bookingId} - {$tour['ten_tour']}",
+                    'ngay_giao_dich' => date('Y-m-d')
+                ];
+                $giaoDichModel->insert($giaoDichData);
+
+                // Cập nhật trạng thái booking (ghi lịch sử)
+                $bookingModel->updateTrangThai(
+                    $bookingId,
+                    'DaCoc',
+                    $userId,
+                    'Khách hàng xác nhận đã thanh toán khi đặt tour'
+                );
+
+                $_SESSION['success'] = 'Đặt tour và thanh toán thành công! Cảm ơn bạn đã tin tưởng dịch vụ của chúng tôi.';
+                header('Location: index.php?act=khachHang/hoaDon&booking_id=' . $bookingId);
+                exit();
+            } catch (Exception $e) {
+                $_SESSION['error'] = $e->getMessage();
+                header('Location: index.php?act=khachHang/thanhToanTour&id=' . $tourId);
+                exit();
+            }
+        }
+
+        // GET: hiển thị form thanh toán tour
+        require 'views/khach_hang/thanh_toan_tour.php';
+    }
+    
+    // Thanh toán online
+    public function thanhToan() {
+        require_once 'models/Booking.php';
+        require_once 'models/KhachHang.php';
+        require_once 'models/GiaoDich.php';
+        
+        $bookingModel = new Booking();
+        $khachHangModel = new KhachHang();
+        $giaoDichModel = new GiaoDich();
+        
+        $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
+        if (!$khachHang) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin khách hàng';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+        
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'Thiếu mã booking';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+        
+        $booking = $bookingModel->getBookingWithDetails($bookingId);
+        if (!$booking || $booking['khach_hang_id'] != $khachHang['khach_hang_id']) {
+            $_SESSION['error'] = 'Không tìm thấy booking';
+            header('Location: index.php?act=khachHang/dashboard');
+            exit();
+        }
+        
+        // Xử lý thanh toán
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $soTien = (float)($_POST['so_tien'] ?? 0);
+            $phuongThuc = $_POST['phuong_thuc'] ?? 'Online';
+            
+            if ($soTien > 0) {
+                // Lưu giao dịch
+                $giaoDichData = [
+                    'tour_id' => $booking['tour_id'],
+                    'loai' => 'Thu',
+                    'so_tien' => $soTien,
+                    'mo_ta' => "Thanh toán booking #{$bookingId} - {$booking['ten_tour']}",
+                    'ngay_giao_dich' => date('Y-m-d')
+                ];
+                
+                if ($giaoDichModel->insert($giaoDichData)) {
+                    // Cập nhật trạng thái booking nếu đã thanh toán đủ
+                    $tongDaThanhToan = $giaoDichModel->getTongThuByTour($booking['tour_id']);
+                    if ($tongDaThanhToan >= $booking['tong_tien']) {
+                        $bookingModel->updateTrangThai($bookingId, 'DaCoc', $_SESSION['user_id'], 'Đã thanh toán đủ');
+                    }
+                    
+                    $_SESSION['success'] = 'Thanh toán thành công!';
+                    header('Location: index.php?act=khachHang/hoaDon&booking_id=' . $bookingId);
+                    exit();
+                } else {
+                    $_SESSION['error'] = 'Có lỗi xảy ra khi xử lý thanh toán';
+                }
+            }
+        }
+        
+        // Tính số tiền còn nợ
+        $tongDaThanhToan = $giaoDichModel->getTongThuByTour($booking['tour_id']);
+        $conNo = max(0, $booking['tong_tien'] - $tongDaThanhToan);
+        
+        require 'views/khach_hang/thanh_toan.php';
+    }
+
+    private function chonAnhChinh(array $hinhAnhList) {
+        foreach ($hinhAnhList as $anh) {
+            if (!empty($anh['url_anh'])) {
+                return $anh;
+            }
+        }
+        return null;
+    }
+}
