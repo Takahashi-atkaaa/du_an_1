@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>public/css/style.css">
 </head>
 <body>
+
 <?php
 $selectedSupplier = $selectedSupplier ?? null;
 $serviceTypeSummary = $serviceTypeSummary ?? [];
@@ -33,8 +34,98 @@ $statusMap = [
     'HoanTat' => ['Hoàn tất', 'info']
 ];
 ?>
+<style>
+    /* ... (Giữ nguyên các style khác) ... */
+
+    /* Thanh điều hướng quản trị (Giờ là Header chính) */
+    .admin-header {
+        background: #0d6efd; /* Màu xanh Navy */
+        color: white;
+        padding: 14px 0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 18px;
+        font-weight: 600;
+        border-bottom: 3px solid #0956d6;
+    }
+    .admin-header a {
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+    }
+
+    /* Banner (Được sửa để chứa tiêu đề và hành động) */
+    .admin-banner {
+        background: linear-gradient(90deg, #4b6ef6, #7c42d6);
+        padding: 24px 30px; /* Chỉnh lại padding cho đẹp */
+        border-radius: 12px;
+        color: white;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 30px rgba(108,99,255,0.08);
+    }
+    .admin-banner h1 {
+        font-size: 26px; /* Giảm kích thước h1 trong banner */
+        font-weight: 700;
+        margin: 0;
+        display: inline-flex;
+        gap: 10px;
+        align-items: center;
+    }
+    .admin-banner p {
+        margin: 6px 0 0 0;
+        opacity: 0.95;
+    }
+    
+    /* action buttons on banner */
+    .banner-actions .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.5); 
+    }
+
+    /* ... (Giữ nguyên các style khác) ... */
+</style>
+<div class="admin-header">
+    <div class="container-fluid px-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="index.php?act=admin/dashboard" class="d-flex align-items-center gap-2 text-white text-decoration-none fw-bold">
+                <i class="bi bi-speedometer2 fs-4"></i>
+                <span>Quản trị</span>
+            </a>
+           
+        </div>
+    </div>
+</div>
+<div class="container py-4">
+    <div class="admin-banner">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h3 mb-1"><i class="bi bi-building"></i> Quản lý Nhà cung cấp</h1>
+                <p class="text-white opacity-75 mb-0">Theo dõi đối tác khách sạn, nhà hàng, vận chuyển, vé, visa, bảo hiểm</p>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addSupplierModal">
+                    <i class="bi bi-plus-circle"></i> Thêm nhà cung cấp
+                </button>
+                <a href="index.php?act=admin/lichSuXoaNhaCungCap" class="btn btn-outline-light">
+                    <i class="bi bi-clock-history"></i> Lịch sử xóa
+                </a>
+            </div>
+        </div>
+    </div>
+    <?php if (!empty($_SESSION['flash'])): ?>
+        <div class="alert alert-<?= htmlspecialchars($_SESSION['flash']['type'] ?? 'info') ?> alert-dismissible fade show">
+            <?= htmlspecialchars($_SESSION['flash']['message'] ?? '') ?>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <?php unset($_SESSION['flash']); ?>
+    <?php endif; ?>
+  
     <div class="container-fluid py-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
                 <h1 class="h3 mb-1"><i class="bi bi-building"></i> Quản lý Nhà cung cấp</h1>
                 <p class="text-muted mb-0">Theo dõi đối tác khách sạn, nhà hàng, vận chuyển, vé, visa, bảo hiểm</p>
@@ -50,7 +141,7 @@ $statusMap = [
                     <i class="bi bi-arrow-left"></i> Quay lại Dashboard
                 </a>
             </div>
-        </div>
+        </div> -->
 
         <?php if (isset($_SESSION['success'])): ?>
         <div class="alert alert-success alert-dismissible fade show" role="alert">
