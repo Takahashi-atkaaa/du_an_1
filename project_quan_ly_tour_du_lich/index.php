@@ -49,20 +49,10 @@ require_once __DIR__ . '/models/YeuCauDacBiet.php';
 
 
 // Route
-
 $act = $_GET['act'] ?? 'auth/login';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
-        'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
-        'admin/congNoKhachHang' => (new BaoCaoTaiChinhController())->congNoKhachHang(),
-        'admin/congNoNhaCungCap' => (new BaoCaoTaiChinhController())->congNoNhaCungCap(),
-    'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
-    'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
-            'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),
-        'admin/danhSachKhachBooking' => (new AdminController())->danhSachKhachBooking(),
-        'admin/xoaKhachBooking' => (new AdminController())->xoaKhachBooking(),
-        'admin/suaKhachBooking' => (new AdminController())->suaKhachBooking(),
     // Trang chủ - Tour
     'tour/index' => (new TourController())->index(),
     'tour/show' => (new TourController())->show(),
@@ -124,11 +114,10 @@ match ($act) {
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
-    'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
-    'admin/xemChiTietNguoiDung' => (new AdminController())->xemChiTietNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
-    'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
-    'admin/soSanhChiTietChiPhi' => (new AdminController())->soSanhChiTietChiPhi(),
+    'admin/lichSuXoaBooking' => (new AdminController())->lichSuXoaBooking(),
+    'admin/lichSuXoaNhaCungCap' => (new AdminController())->lichSuXoaNhaCungCap(),
+    'admin/chiTietLichSuXoaNhaCungCap' => (new AdminController())->chiTietLichSuXoaNhaCungCap(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
@@ -232,20 +221,19 @@ match ($act) {
     'nhaCungCap/chiTietDichVu' => (new NhaCungCapController())->chiTietDichVu(),
     
     // Khách hàng
-        'khachHang/dashboard' => (new KhachHangController())->dashboard(),
-        'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),
-        'khachHang/chiTietTour' => (new KhachHangController())->chiTietTour(),
-        'khachHang/datTour' => (new KhachHangController())->datTour(),
-        'khachHang/danhGia' => (new KhachHangController())->danhGia(),
-        'khachHang/guiDanhGia' => (new KhachHangController())->guiDanhGia(),
-        'khachHang/traCuu' => (new KhachHangController())->traCuu(),
-        'khachHang/hoaDon' => (new KhachHangController())->hoaDon(),
-        'khachHang/lichTrinhTour' => (new KhachHangController())->lichTrinhTour(),
-        'khachHang/thongBao' => (new KhachHangController())->thongBao(),
-        'khachHang/capNhatThongTin' => (new KhachHangController())->capNhatThongTin(),
-        'khachHang/guiYeuCauHoTro' => (new KhachHangController())->guiYeuCauHoTro(),
-        'khachHang/thanhToan' => (new KhachHangController())->thanhToan(),
-        'khachHang/thanhToanTour' => (new KhachHangController())->thanhToanTour(),
+    'khachHang/dashboard' => (new KhachHangController())->dashboard(),
+    'khachHang/danhSachTour' => (new KhachHangController())->danhSachTour(),
+    'khachHang/chiTietTour' => (new KhachHangController())->chiTietTour(),
+    'khachHang/datTour' => (new KhachHangController())->datTour(),
+    'khachHang/danhGia' => (new KhachHangController())->danhGia(),
+    'khachHang/guiDanhGia' => (new KhachHangController())->guiDanhGia(),
+    'khachHang/traCuu' => (new KhachHangController())->traCuu(),
+    'khachHang/hoaDon' => (new KhachHangController())->hoaDon(),
+    'khachHang/lichTrinhTour' => (new KhachHangController())->lichTrinhTour(),
+    'khachHang/thongBao' => (new KhachHangController())->thongBao(),
+    'khachHang/capNhatThongTin' => (new KhachHangController())->capNhatThongTin(),
+    'khachHang/guiYeuCauHoTro' => (new KhachHangController())->guiYeuCauHoTro(),
+    'khachHang/thanhToan' => (new KhachHangController())->thanhToan(),
 
     // Nhân sự
     'admin/nhanSu' => (new AdminController())->nhanSu(),
