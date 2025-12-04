@@ -73,6 +73,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
                                     <th>Người xóa</th>
                                     <th>Lý do xóa</th>
                                     <th>Thời gian xóa</th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -155,6 +156,12 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'Admin') {
                                             <small>
                                                 <?php echo $item['thoi_gian_xoa'] ? date('d/m/Y H:i:s', strtotime($item['thoi_gian_xoa'])) : 'N/A'; ?>
                                             </small>
+                                        </td>
+                                        <td class="text-end">
+                                            <a href="index.php?act=admin/chiTietLichSuXoaNhaCungCap&id=<?php echo $item['id']; ?>" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="bi bi-search"></i> Xem chi tiết
+                                            </a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

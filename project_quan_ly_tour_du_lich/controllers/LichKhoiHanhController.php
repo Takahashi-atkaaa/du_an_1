@@ -31,6 +31,9 @@ class LichKhoiHanhController {
 
     // Danh sách lịch khởi hành
     public function index() {
+        // Tự động cập nhật trạng thái lịch khởi hành theo thời gian thực trước khi hiển thị
+        $this->lichKhoiHanhModel->autoUpdateTrangThai();
+
         $lichKhoiHanhList = $this->lichKhoiHanhModel->getAll();
         
         // Xử lý filter
@@ -133,18 +136,77 @@ class LichKhoiHanhController {
         $bookingList = [];
         $danhSachKhachChiTiet = [];
         if (!empty($lichKhoiHanh['tour_id']) && !empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+            // 1. Lấy danh sách nhóm booking theo tour + ngày khởi hành
             $bookingList = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
                 $lichKhoiHanh['tour_id'],
                 $lichKhoiHanh['ngay_khoi_hanh']
             );
             
-            // Lấy danh sách khách chi tiết từ tour_checkin
+            // 2. Lấy danh sách khách chi tiết từ tour_checkin
             require_once 'models/CheckinKhach.php';
             $checkinModel = new CheckinKhach();
+
+            if (!empty($bookingList)) {
+                // Có booking: map từng booking -> danh sách khách trong tour_checkin
             foreach ($bookingList as $booking) {
                 $khachList = $checkinModel->getByBookingId($booking['booking_id']);
                 $danhSachKhachChiTiet[$booking['booking_id']] = $khachList;
             }
+            } else {
+                // Không có booking nhưng HDV đã có danh sách khách trong tour_checkin
+                // => đọc trực tiếp theo lich_khoi_hanh_id để admin vẫn xem được giống HDV
+                $checkinRows = $checkinModel->getByLichKhoiHanh($id);
+
+                if (!empty($checkinRows)) {
+                    $bookingGrouped = [];
+
+                    foreach ($checkinRows as $row) {
+                        $bId = (int)($row['booking_id'] ?? 0);
+                        if ($bId <= 0) {
+                            // Gán booking giả nếu thiếu ID
+                            $bId = -1;
+                        }
+
+                        if (!isset($bookingGrouped[$bId])) {
+                            $bookingGrouped[$bId] = [
+                                'booking_id'   => $bId,
+                                'khach_hang_id'=> $row['khach_hang_id'] ?? null,
+                                'so_nguoi'     => 0,
+                                'ngay_dat'     => null,
+                                'ghi_chu_booking' => null,
+                                // Dùng tên khách đầu tiên làm nhãn nhóm
+                                'ho_ten'       => $row['ho_ten'] ?? 'Khách',
+                                'email'        => $row['email'] ?? null,
+                                'so_dien_thoai'=> $row['so_dien_thoai'] ?? null,
+                                'dia_chi'      => $row['dia_chi'] ?? null,
+                            ];
+                            $danhSachKhachChiTiet[$bId] = [];
+                        }
+
+                        $bookingGrouped[$bId]['so_nguoi']++;
+                        $danhSachKhachChiTiet[$bId][] = $row;
+                    }
+
+                    // Chuyển về dạng mảng tuần tự để view hiển thị
+                    $bookingList = array_values($bookingGrouped);
+                }
+            }
+
+            // 3. Đồng bộ lại thống kê số booking & tổng số khách cho view admin
+            $lichKhoiHanh['so_booking'] = count($bookingList);
+
+            $tongNguoi = 0;
+            if (!empty($danhSachKhachChiTiet)) {
+                foreach ($danhSachKhachChiTiet as $list) {
+                    $tongNguoi += is_array($list) ? count($list) : 0;
+                }
+            } else {
+                // fallback: dùng trường so_nguoi trong booking nếu chưa có chi tiết
+                foreach ($bookingList as $booking) {
+                    $tongNguoi += (int)($booking['so_nguoi'] ?? 0);
+                }
+            }
+            $lichKhoiHanh['tong_nguoi_dat'] = $tongNguoi;
         }
         
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
@@ -479,28 +541,71 @@ class LichKhoiHanhController {
             }
             
             $checkinModel = new CheckinKhach();
+            $hoTenArr = $_POST['ho_ten'] ?? [];
+
+            // Cho phép submit cả dạng đơn (string) lẫn mảng
+            if (!is_array($hoTenArr)) {
+                $hoTenArr = [$hoTenArr];
+                $_POST['so_cmnd'] = [$_POST['so_cmnd'] ?? null];
+                $_POST['so_passport'] = [$_POST['so_passport'] ?? null];
+                $_POST['ngay_sinh'] = [$_POST['ngay_sinh'] ?? null];
+                $_POST['gioi_tinh'] = [$_POST['gioi_tinh'] ?? 'Khac'];
+                $_POST['quoc_tich'] = [$_POST['quoc_tich'] ?? 'Việt Nam'];
+                $_POST['dia_chi'] = [$_POST['dia_chi'] ?? null];
+                $_POST['so_dien_thoai'] = [$_POST['so_dien_thoai'] ?? null];
+                $_POST['email'] = [$_POST['email'] ?? null];
+                $_POST['ghi_chu'] = [$_POST['ghi_chu'] ?? null];
+            }
+
+            $soCmndArr = $_POST['so_cmnd'] ?? [];
+            $soPassportArr = $_POST['so_passport'] ?? [];
+            $ngaySinhArr = $_POST['ngay_sinh'] ?? [];
+            $gioiTinhArr = $_POST['gioi_tinh'] ?? [];
+            $quocTichArr = $_POST['quoc_tich'] ?? [];
+            $diaChiArr = $_POST['dia_chi'] ?? [];
+            $soDienThoaiArr = $_POST['so_dien_thoai'] ?? [];
+            $emailArr = $_POST['email'] ?? [];
+            $ghiChuArr = $_POST['ghi_chu'] ?? [];
+
+            $successCount = 0;
+            $errorCount = 0;
+
+            foreach ($hoTenArr as $index => $hoTen) {
+                $hoTen = trim($hoTen ?? '');
+                if ($hoTen === '') {
+                    continue; // bỏ qua dòng trống
+                }
+
             $data = [
                 'booking_id' => $bookingId,
                 'khach_hang_id' => $booking['khach_hang_id'],
                 'lich_khoi_hanh_id' => $lichKhoiHanhId,
-                'ho_ten' => $_POST['ho_ten'] ?? '',
-                'so_cmnd' => $_POST['so_cmnd'] ?? null,
-                'so_passport' => $_POST['so_passport'] ?? null,
-                'ngay_sinh' => $_POST['ngay_sinh'] ?? null,
-                'gioi_tinh' => $_POST['gioi_tinh'] ?? 'Khac',
-                'quoc_tich' => $_POST['quoc_tich'] ?? 'Việt Nam',
-                'dia_chi' => $_POST['dia_chi'] ?? null,
-                'so_dien_thoai' => $_POST['so_dien_thoai'] ?? null,
-                'email' => $_POST['email'] ?? null,
+                    'ho_ten' => $hoTen,
+                    'so_cmnd' => $soCmndArr[$index] ?? null,
+                    'so_passport' => $soPassportArr[$index] ?? null,
+                    'ngay_sinh' => $ngaySinhArr[$index] ?? null,
+                    'gioi_tinh' => $gioiTinhArr[$index] ?? 'Khac',
+                    'quoc_tich' => $quocTichArr[$index] ?? 'Việt Nam',
+                    'dia_chi' => $diaChiArr[$index] ?? null,
+                    'so_dien_thoai' => $soDienThoaiArr[$index] ?? null,
+                    'email' => $emailArr[$index] ?? null,
                 'trang_thai' => 'ChuaCheckIn',
-                'ghi_chu' => $_POST['ghi_chu'] ?? null
+                    'ghi_chu' => $ghiChuArr[$index] ?? null
             ];
             
-            $result = $checkinModel->insert($data);
-            if ($result) {
-                $_SESSION['success'] = 'Thêm khách thành công.';
+                if ($checkinModel->insert($data)) {
+                    $successCount++;
+                } else {
+                    $errorCount++;
+                }
+            }
+
+            if ($successCount > 0 && $errorCount === 0) {
+                $_SESSION['success'] = 'Thêm ' . $successCount . ' khách thành công.';
+            } elseif ($successCount > 0 && $errorCount > 0) {
+                $_SESSION['success'] = 'Thêm ' . $successCount . ' khách thành công, ' . $errorCount . ' khách lỗi.';
             } else {
-                $_SESSION['error'] = 'Không thể thêm khách.';
+                $_SESSION['error'] = 'Không thể thêm khách. Vui lòng kiểm tra lại thông tin.';
             }
             
             header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);

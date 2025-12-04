@@ -72,14 +72,14 @@ class AdminController {
 
 // ... các code khác ...
 
-public function quanLyNguoiDung() {
+    public function quanLyNguoiDung() {
     // 1. Lấy tham số tìm kiếm và lọc từ URL (GET)
     // Các tên biến PHẢI khớp với tên trong form của View: name="search" và name="role"
     $search = $_GET['search'] ?? ''; // Mặc định là chuỗi rỗng nếu không có
     $role = $_GET['role'] ?? '';     // Mặc định là chuỗi rỗng nếu không có
     
     // 2. Load Model và gọi phương thức lọc
-    require_once __DIR__ . '/../models/NguoiDung.php';
+        require_once __DIR__ . '/../models/NguoiDung.php';
     $nguoiDungModel = new NguoiDung();
     
     // Phương thức này cần được bạn tạo trong NguoiDung.php
@@ -94,8 +94,8 @@ public function quanLyNguoiDung() {
     // $role đã có
     
     // 4. Load View
-    require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
-}
+        require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
+    }
 // ... các code khác ...
     
     public function quanLyBooking() {
@@ -119,6 +119,7 @@ public function quanLyNguoiDung() {
     public function yeuCauDacBiet() {
         require_once 'models/YeuCauDacBiet.php';
         require_once 'models/Tour.php';
+        require_once 'models/Booking.php';
 
         $filters = [
             'keyword' => trim($_GET['keyword'] ?? ''),
@@ -137,6 +138,10 @@ public function quanLyNguoiDung() {
 
         $tourModel = new Tour();
         $tourList = $tourModel->getAll();
+
+        // Danh sách booking để admin có thể chọn khi tạo yêu cầu mới
+        $bookingModel = new Booking();
+        $bookingList = $bookingModel->getAllWithDetails();
 
         require 'views/admin/quan_ly_yeu_cau_dac_biet.php';
     }
@@ -163,10 +168,63 @@ public function quanLyNguoiDung() {
             'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null
         ];
 
-        $nguoiXuLyId = $_SESSION['user_id'] ?? null;
-        $result = $yeuCauModel->updateByAdmin($yeuCauId, $data, $nguoiXuLyId);
+        $nguoiDungId = $_SESSION['user_id'] ?? null;
+        // Admin không phải nhân sự nên không gán vào nguoi_xu_ly_id (FK sang nhan_su),
+        // chỉ dùng user_id để lưu lịch sử thao tác.
+        $result = $yeuCauModel->updateByAdmin($yeuCauId, $data, null, $nguoiDungId);
 
         $_SESSION[$result ? 'success' : 'error'] = $result ? 'Cập nhật yêu cầu thành công.' : 'Không thể cập nhật yêu cầu.';
+
+        header('Location: index.php?act=admin/yeuCauDacBiet');
+        exit();
+    }
+
+    /**
+     * Admin tạo mới yêu cầu đặc biệt cho một booking cụ thể
+     */
+    public function taoYeuCauDacBiet() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'Vui lòng chọn booking/khách hàng cần tạo yêu cầu.';
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        require_once 'models/YeuCauDacBiet.php';
+        $yeuCauModel = new YeuCauDacBiet();
+
+        $data = [
+            'loai_yeu_cau' => $_POST['loai_yeu_cau'] ?? 'khac',
+            'tieu_de' => trim($_POST['tieu_de'] ?? ''),
+            'mo_ta' => $_POST['mo_ta'] ?? null,
+            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? 'trung_binh',
+            'trang_thai' => $_POST['trang_thai'] ?? 'moi',
+            'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null,
+        ];
+
+        if ($data['tieu_de'] === '') {
+            $data['tieu_de'] = 'Yêu cầu đặc biệt';
+        }
+
+        $nguoiTaoId = $_SESSION['user_id'] ?? null;
+        if (!$nguoiTaoId) {
+            $_SESSION['error'] = 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.';
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+
+        $newId = $yeuCauModel->createFromAdmin($bookingId, $data, $nguoiTaoId);
+
+        if ($newId) {
+            $_SESSION['success'] = 'Đã tạo yêu cầu đặc biệt mới cho khách.';
+        } else {
+            $_SESSION['error'] = 'Không thể tạo yêu cầu đặc biệt. Vui lòng thử lại.';
+        }
 
         header('Location: index.php?act=admin/yeuCauDacBiet');
         exit();
@@ -1152,6 +1210,13 @@ public function quanLyNguoiDung() {
         $filter_tu_ngay = $_GET['tu_ngay'] ?? '';
         $filter_den_ngay = $_GET['den_ngay'] ?? '';
         
+        // Đồng bộ biến filter cho view
+        $tourId = $filter_tour;
+        $hdvId = $filter_hdv;
+        $loaiNhatKy = $filter_loai;
+        $tuNgay = $filter_tu_ngay;
+        $denNgay = $filter_den_ngay;
+        
         // Build query
         $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
                 FROM nhat_ky_tour nkt
@@ -1251,6 +1316,41 @@ public function quanLyNguoiDung() {
         $hdvList = $hdvModel->getAll();
         
         require 'views/admin/form_nhat_ky_tour.php';
+    }
+
+    /**
+     * Chi tiết nhật ký tour - Admin
+     */
+    public function chiTietNhatKyTour() {
+        $conn = connectDB();
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Nhật ký không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+
+        $sql = "SELECT nkt.*, 
+                       t.ten_tour, t.tour_id, 
+                       nd.ho_ten AS hdv_ten, nd.email AS hdv_email, nd.so_dien_thoai AS hdv_sdt
+                FROM nhat_ky_tour nkt
+                LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE nkt.id = ?
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$id]);
+        $entry = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$entry) {
+            $_SESSION['error'] = 'Không tìm thấy nhật ký.';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+
+        require 'views/admin/chi_tiet_nhat_ky_tour.php';
     }
     
     /**
@@ -1606,5 +1706,28 @@ public function quanLyNguoiDung() {
         $lichSuXoa = $deletionHistoryModel->getAll();
         
         require 'views/admin/lich_su_xoa_nha_cung_cap.php';
+    }
+
+    // Xem chi tiết một bản ghi lịch sử xóa nhà cung cấp
+    public function chiTietLichSuXoaNhaCungCap() {
+        require_once 'models/SupplierDeletionHistory.php';
+        $deletionHistoryModel = new SupplierDeletionHistory();
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Bản ghi không hợp lệ.';
+            header('Location: index.php?act=admin/lichSuXoaNhaCungCap');
+            exit;
+        }
+
+        $chiTiet = $deletionHistoryModel->getById($id);
+
+        if (!$chiTiet) {
+            $_SESSION['error'] = 'Không tìm thấy bản ghi lịch sử xóa.';
+            header('Location: index.php?act=admin/lichSuXoaNhaCungCap');
+            exit;
+        }
+
+        require 'views/admin/chi_tiet_lich_su_xoa_nha_cung_cap.php';
     }
 }

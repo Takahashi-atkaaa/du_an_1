@@ -23,16 +23,35 @@
             border-left: 4px solid var(--primary-color);
             transition: all 0.3s;
             cursor: pointer;
+            
+            color: #000 !important;
         }
         
         .checkpoint-card:hover {
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             transform: translateY(-2px);
+            color: #000 !important;
+            background-color:rgb(3, 126, 248) !important;
         }
         
         .checkpoint-card.active {
             border-left-color: var(--secondary-color);
-            background: linear-gradient(to right, rgba(102, 126, 234, 0.1), transparent);
+            background: linear-gradient(to right, rgba(203, 6, 147, 0.83), transparent) !important;
+            color: #000 !important;
+        }
+        
+        .checkpoint-card:focus,
+        .checkpoint-card:active {
+            color: #000 !important;
+            background-color: #f8f9fa !important;
+        }
+        
+        .checkpoint-card strong {
+            color: #000 !important;
+        }
+        
+        .checkpoint-card .small {
+            color: #000 !important;
         }
         
         .customer-row {
@@ -154,7 +173,7 @@
                                             <span class="badge bg-secondary me-2"><?php echo $diem['thu_tu'] ?? ''; ?></span>
                                             <strong><?php echo htmlspecialchars($diem['ten_diem'] ?? ''); ?></strong>
                                         </div>
-                                        <div class="small text-muted">
+                                        <div class="small">
                                             <span class="checkpoint-type type-<?php echo $diem['loai_diem']; ?>">
                                                 <?php 
                                                 $types = [
@@ -169,7 +188,7 @@
                                             </span>
                                         </div>
                                         <?php if ($diem['thoi_gian_du_kien']): ?>
-                                        <div class="small text-muted mt-1">
+                                        <div class="small mt-1" style="color: #000;">
                                             <i class="bi bi-clock"></i> <?php echo date('H:i d/m', strtotime($diem['thoi_gian_du_kien'])); ?>
                                         </div>
                                         <?php endif; ?>
@@ -242,6 +261,7 @@
                         </h5>
                     </div>
                     <div class="card-body p-0">
+                 
                         <?php if (!empty($khach_list)): ?>
                         <div class="table-responsive">
                             <table class="table table-hover mb-0">
@@ -250,7 +270,6 @@
                                         <th>STT</th>
                                         <th>Họ tên</th>
                                         <th>Liên hệ</th>
-                                        <th>Số người</th>
                                         <th>Trạng thái</th>
                                         <th>Thao tác</th>
                                     </tr>
@@ -270,10 +289,6 @@
                                                 <i class="bi bi-telephone"></i> <?php echo htmlspecialchars($khach['so_dien_thoai'] ?? 'N/A'); ?><br>
                                                 <i class="bi bi-envelope"></i> <?php echo htmlspecialchars($khach['email'] ?? 'N/A'); ?>
                                             </small>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-info"><?php echo ($khach['so_nguoi_lon'] ?? 0) + ($khach['so_tre_em'] ?? 0); ?> người</span>
-                                            <small class="text-muted d-block"><?php echo $khach['so_nguoi_lon'] ?? 0; ?> NL, <?php echo $khach['so_tre_em'] ?? 0; ?> TE</small>
                                         </td>
                                         <td>
                                             <span class="status-badge status-<?php echo $khach['checkin_status'] ?? 'chua_checkin'; ?>">

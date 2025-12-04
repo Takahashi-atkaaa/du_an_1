@@ -223,6 +223,8 @@ class Booking
 
     // Lấy danh sách khách/nhóm tham gia tour cho một lịch cụ thể
     public function getKhachByTourAndNgayKhoiHanh($tourId, $ngayKhoiHanh) {
+        // Lưu ý: KHÔNG giới hạn quá chặt theo trạng_thai để tránh mất khách ở màn HDV
+        // Chỉ loại các booking đã hủy (DaHuy) nếu có, còn lại hiển thị cho HDV/Admin xử lý.
         $sql = "SELECT 
                     b.booking_id,
                     b.khach_hang_id,
@@ -251,11 +253,51 @@ class Booking
                 LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
                 LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
                 WHERE b.tour_id = ?
-                    AND b.ngay_khoi_hanh = ?
-                    AND b.trang_thai IN ('ChoXacNhan','DaCoc','HoanTat')
+                    AND DATE(b.ngay_khoi_hanh) = DATE(?)
+                    AND (b.trang_thai IS NULL OR b.trang_thai <> 'DaHuy')
                 ORDER BY b.ngay_dat ASC, b.booking_id ASC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$tourId, $ngayKhoiHanh]);
+        return $stmt->fetchAll();
+    }
+    
+    // Lấy danh sách khách/nhóm tham gia tour theo lich_khoi_hanh.id
+    // Phương thức này đảm bảo lấy đúng booking theo lịch khởi hành cụ thể
+    public function getKhachByLichKhoiHanhId($lichKhoiHanhId) {
+        $sql = "SELECT 
+                    b.booking_id,
+                    b.khach_hang_id,
+                    b.so_nguoi,
+                    b.ngay_dat,
+                    b.ghi_chu as ghi_chu_booking,
+                    nd.ho_ten,
+                    nd.email,
+                    nd.so_dien_thoai,
+                    kh.dia_chi,
+                    (
+                        SELECT id 
+                        FROM yeu_cau_dac_biet y 
+                        WHERE y.booking_id = b.booking_id
+                        ORDER BY y.id DESC 
+                        LIMIT 1
+                    ) as yeu_cau_id,
+                    (
+                        SELECT mo_ta 
+                        FROM yeu_cau_dac_biet y 
+                        WHERE y.booking_id = b.booking_id
+                        ORDER BY y.id DESC 
+                        LIMIT 1
+                    ) as yeu_cau_dac_biet
+                FROM booking b
+                LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
+                LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
+                INNER JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id 
+                    AND DATE(b.ngay_khoi_hanh) = DATE(lkh.ngay_khoi_hanh)
+                WHERE lkh.id = ?
+                    AND (b.trang_thai IS NULL OR b.trang_thai <> 'DaHuy')
+                ORDER BY b.ngay_dat ASC, b.booking_id ASC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$lichKhoiHanhId]);
         return $stmt->fetchAll();
     }
 

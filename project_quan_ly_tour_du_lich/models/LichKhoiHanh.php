@@ -9,6 +9,29 @@ class LichKhoiHanh
         $this->conn = connectDB();
     }
 
+    // Tự động cập nhật trạng thái lịch khởi hành theo thời gian hiện tại
+    public function autoUpdateTrangThai() {
+        // Hoàn thành: đã kết thúc (ngày_ket_thuc < hôm nay hoặc = hôm nay và giờ_ket_thuc <= hiện tại)
+        $sqlHoanThanh = "UPDATE lich_khoi_hanh
+                         SET trang_thai = 'HoanThanh'
+                         WHERE trang_thai IN ('SapKhoiHanh','DangChay')
+                           AND (
+                               ngay_ket_thuc < CURDATE()
+                               OR (ngay_ket_thuc = CURDATE() AND gio_ket_thuc IS NOT NULL AND gio_ket_thuc <= CURTIME())
+                           )";
+        $stmt1 = $this->conn->prepare($sqlHoanThanh);
+        $stmt1->execute();
+
+        // Đang chạy: đã bắt đầu nhưng chưa kết thúc
+        $sqlDangChay = "UPDATE lich_khoi_hanh
+                        SET trang_thai = 'DangChay'
+                        WHERE trang_thai = 'SapKhoiHanh'
+                          AND ngay_khoi_hanh <= CURDATE()
+                          AND (ngay_ket_thuc IS NULL OR ngay_ket_thuc >= CURDATE())";
+        $stmt2 = $this->conn->prepare($sqlDangChay);
+        $stmt2->execute();
+    }
+
     // Lấy tất cả lịch khởi hành
     public function getAll() {
         $sql = "SELECT 
