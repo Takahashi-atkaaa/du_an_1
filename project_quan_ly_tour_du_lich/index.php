@@ -30,6 +30,8 @@ require_once __DIR__ . '/models/NguoiDung.php';
 require_once __DIR__ . '/models/Tour.php';
 require_once __DIR__ . '/models/Booking.php';
 require_once __DIR__ . '/models/BookingHistory.php';
+require_once __DIR__ . '/models/BookingDeletionHistory.php';
+require_once __DIR__ . '/models/SupplierDeletionHistory.php';
 require_once __DIR__ . '/models/KhachHang.php';
 require_once __DIR__ . '/models/HDV.php';
 require_once __DIR__ . '/models/NhaCungCap.php';
@@ -114,10 +116,14 @@ match ($act) {
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
     'admin/lichSuXoaBooking' => (new AdminController())->lichSuXoaBooking(),
+    'admin/lichSuXoaNhaCungCap' => (new AdminController())->lichSuXoaNhaCungCap(),
+    'admin/chiTietLichSuXoaNhaCungCap' => (new AdminController())->chiTietLichSuXoaNhaCungCap(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
+    'admin/themYeuCauDacBiet' => (new AdminController())->taoYeuCauDacBiet(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
+    'admin/chiTietNhatKyTour' => (new AdminController())->chiTietNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
     'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),
     'admin/deleteNhatKyTour' => (new AdminController())->deleteNhatKyTour(),
@@ -194,7 +200,9 @@ match ($act) {
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
+    'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
     'admin/updateNhaCungCap' => (new AdminController())->updateNhaCungCap(),
+    'admin/deleteNhaCungCap' => (new AdminController())->deleteNhaCungCap(),
     'admin/chiTietDichVu' => (new AdminController())->chiTietDichVu(),
     'admin/supplierServiceAction' => (new AdminController())->supplierServiceAction(),
     

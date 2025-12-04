@@ -218,6 +218,26 @@ class Tour
         ]);
     }
 
+    // Thêm nhiều lịch trình cùng lúc
+    public function insertMultipleLichTrinh($tourId, $lichTrinhList) {
+        // Xóa lịch trình cũ trước
+        $this->deleteLichTrinhByTourId($tourId);
+        
+        $sql = "INSERT INTO lich_trinh_tour (tour_id, ngay_thu, dia_diem, hoat_dong) VALUES (?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        
+        foreach ($lichTrinhList as $lichTrinh) {
+            $stmt->execute([
+                (int)$tourId,
+                (int)$lichTrinh['ngay_thu'],
+                $lichTrinh['dia_diem'] ?? '',
+                $lichTrinh['hoat_dong'] ?? ''
+            ]);
+        }
+        
+        return true;
+    }
+
     // Xóa lịch trình tour theo tour_id
     public function deleteLichTrinhByTourId($tourId) {
         $sql = "DELETE FROM lich_trinh_tour WHERE tour_id = ?";

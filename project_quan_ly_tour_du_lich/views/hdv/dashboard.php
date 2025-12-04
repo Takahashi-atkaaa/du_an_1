@@ -305,14 +305,14 @@
                 </a>
             </div>
             <div class="col-md-4">
-                <a href="index.php?act=hdv/khach" class="feature-card">
-                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=400');"></div>
-                    <div class="feature-icon bg-success bg-opacity-10 text-success mx-auto">
-                        <i class="bi bi-people"></i>
+                <a href="index.php?act=hdv/checkin" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
+                    <div class="feature-icon bg-info bg-opacity-10 text-info mx-auto">
+                        <i class="bi bi-check2-square"></i>
                     </div>
-                    <h5 class="text-center mb-2">Danh sách Khách</h5>
+                    <h5 class="text-center mb-2">Check-in & Điểm danh</h5>
                     <p class="text-center text-muted mb-0 small">
-                        Xem thông tin khách trong đoàn
+                        Xác nhận và điểm danh khách
                     </p>
                 </a>
             </div>
@@ -331,18 +331,7 @@
         </div>
 
         <div class="row mb-4">
-            <div class="col-md-4">
-                <a href="index.php?act=hdv/checkin" class="feature-card">
-                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
-                    <div class="feature-icon bg-info bg-opacity-10 text-info mx-auto">
-                        <i class="bi bi-check2-square"></i>
-                    </div>
-                    <h5 class="text-center mb-2">Check-in & Điểm danh</h5>
-                    <p class="text-center text-muted mb-0 small">
-                        Xác nhận và điểm danh khách
-                    </p>
-                </a>
-            </div>
+         
             <div class="col-md-4">
                 <a href="index.php?act=hdv/yeu_cau_dac_biet" class="feature-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400');"></div>

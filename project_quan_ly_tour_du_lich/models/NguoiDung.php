@@ -2,10 +2,13 @@
 // Model cho NguoiDung - tương tác với cơ sở dữ liệu
 class NguoiDung 
 {
-    public $conn;
+    // Bỏ thuộc tính private $db; để tránh nhầm lẫn
+    public $conn; // Thuộc tính kết nối duy nhất, được khởi tạo trong __construct()
     
+    // Yêu cầu: Đảm bảo rằng hàm connectDB() trả về một đối tượng PDO đã kết nối thành công.
     public function __construct()
     {
+        // Giả định hàm connectDB() đã được định nghĩa và có thể gọi được.
         $this->conn = connectDB();
     }
 
@@ -75,6 +78,46 @@ class NguoiDung
         return $this->findById($nguoiDungId);
     }
 
+    /**
+     * Lấy danh sách người dùng có kèm tìm kiếm và lọc.
+     * Đây là hàm được sửa để sử dụng $this->conn thay vì $this->db
+     */
+    public function getFilteredUsers($search = '', $role = '') {
+        // Kiểm tra kết nối trước khi sử dụng
+        if ($this->conn === null) {
+             // Có thể ném ngoại lệ hoặc trả về mảng rỗng nếu kết nối thất bại
+             return []; 
+        }
+
+        $sql = "SELECT * FROM nguoi_dung WHERE 1=1";
+        $params = [];
+        
+        // Xử lý Tìm kiếm (Search)
+        if (!empty($search)) {
+            // Tìm kiếm theo tên đăng nhập, họ tên hoặc email
+            $sql .= " AND (ten_dang_nhap LIKE :search OR ho_ten LIKE :search OR email LIKE :search)";
+            $params[':search'] = '%' . $search . '%';
+        }
+        
+        // Xử lý Lọc (Filter) theo vai trò
+        if (!empty($role)) {
+            $sql .= " AND vai_tro = :role";
+            $params[':role'] = $role;
+        }
+        
+        $sql .= " ORDER BY id DESC";
+
+        try {
+            // SỬA LỖI: Sử dụng $this->conn thay vì $this->db
+            $stmt = $this->conn->prepare($sql);
+            $stmt->execute($params);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            // Xử lý lỗi DB tại đây (nên dùng error_log)
+            return []; 
+        }
+    }
+
     // Tìm người dùng theo điều kiện
     public function find($conditions = []) {
         $sql = "SELECT * FROM nguoi_dung";
@@ -97,7 +140,7 @@ class NguoiDung
     // Thêm người dùng mới
     public function insert($data) {
         $sql = "INSERT INTO nguoi_dung (ten_dang_nhap, ho_ten, email, so_dien_thoai, mat_khau, vai_tro, ngay_tao) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)";
+                 VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         try {
             $result = $stmt->execute([
@@ -110,6 +153,7 @@ class NguoiDung
                 $data['ngay_tao'] ?? date('Y-m-d H:i:s')
             ]);
         } catch (PDOException $e) {
+            // Thêm logging hoặc xử lý lỗi chi tiết hơn nếu cần
             return false;
         }
 

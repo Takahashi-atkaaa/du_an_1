@@ -314,6 +314,9 @@
                             </div>
                             
                             <div class="entry-actions mt-3">
+                                <a href="index.php?act=admin/chiTietNhatKyTour&id=<?php echo $entry['id']; ?>" class="btn btn-sm btn-outline-secondary">
+                                    <i class="bi bi-eye"></i> Xem chi tiết
+                                </a>
                                 <a href="index.php?act=admin/formNhatKyTour&id=<?php echo $entry['id']; ?>" class="btn btn-sm btn-primary">
                                     <i class="bi bi-pencil"></i> Sửa
                                 </a>

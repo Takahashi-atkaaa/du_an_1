@@ -443,12 +443,17 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                         
                         <!-- Add Customer Form -->
                         <div class="add-form-card">
-                            <h6 class="fw-bold mb-3">
+                            <h6 class="fw-bold mb-3 d-flex justify-content-between align-items-center">
+                                <span>
                                 <i class="bi bi-person-plus"></i> Thêm khách mới
+                                </span>
+                                <button type="button" id="btnAddGuestRow" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-circle"></i> Thêm người
+                                </button>
                             </h6>
                             <form method="POST" action="index.php?act=lichKhoiHanh/themKhachChiTiet">
                                 <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
-                                <div class="row g-3">
+                                <div class="row g-3 mb-3">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Booking <span class="text-danger">*</span></label>
                                         <select name="booking_id" class="form-select" required>
@@ -460,25 +465,43 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
+                                    <div class="col-md-6 d-flex align-items-end justify-content-end">
+                                        <small class="text-muted">
+                                            Có thể nhập nhiều khách rồi lưu một lần.
+                                        </small>
+                                    </div>
+                                </div>
+
+                                <div id="guestFormsWrapper">
+                                    <div class="guest-form border rounded-3 p-3 mb-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="fw-semibold">
+                                                <i class="bi bi-person-badge"></i> Khách <span class="guest-index">1</span>
+                                            </span>
+                                            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-guest" style="display:none;">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </div>
+                                        <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Họ tên <span class="text-danger">*</span></label>
-                                        <input type="text" name="ho_ten" class="form-control" required>
+                                                <input type="text" name="ho_ten[]" class="form-control guest-ho-ten" required>
                                     </div>
-                                    <div class="col-md-4">
+                                            <div class="col-md-3">
                                         <label class="form-label small fw-semibold">Số CMND/CCCD</label>
-                                        <input type="text" name="so_cmnd" class="form-control">
+                                                <input type="text" name="so_cmnd[]" class="form-control">
                                     </div>
-                                    <div class="col-md-4">
+                                            <div class="col-md-3">
                                         <label class="form-label small fw-semibold">Số Passport</label>
-                                        <input type="text" name="so_passport" class="form-control">
+                                                <input type="text" name="so_passport[]" class="form-control">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Ngày sinh</label>
-                                        <input type="date" name="ngay_sinh" class="form-control">
+                                                <input type="date" name="ngay_sinh[]" class="form-control">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Giới tính</label>
-                                        <select name="gioi_tinh" class="form-select">
+                                                <select name="gioi_tinh[]" class="form-select">
                                             <option value="Nam">Nam</option>
                                             <option value="Nu">Nữ</option>
                                             <option value="Khac">Khác</option>
@@ -486,29 +509,32 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Quốc tịch</label>
-                                        <input type="text" name="quoc_tich" class="form-control" value="Việt Nam">
+                                                <input type="text" name="quoc_tich[]" class="form-control" value="Việt Nam">
                                     </div>
                                     <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Số điện thoại</label>
-                                        <input type="text" name="so_dien_thoai" class="form-control">
+                                                <input type="text" name="so_dien_thoai[]" class="form-control">
                                     </div>
-                                    <div class="col-md-6">
+                                            <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Email</label>
-                                        <input type="email" name="email" class="form-control">
+                                                <input type="email" name="email[]" class="form-control">
                                     </div>
-                                    <div class="col-md-6">
+                                            <div class="col-md-4">
                                         <label class="form-label small fw-semibold">Địa chỉ</label>
-                                        <input type="text" name="dia_chi" class="form-control">
+                                                <input type="text" name="dia_chi[]" class="form-control">
                                     </div>
                                     <div class="col-12">
                                         <label class="form-label small fw-semibold">Ghi chú</label>
-                                        <textarea name="ghi_chu" class="form-control" rows="2"></textarea>
+                                                <textarea name="ghi_chu[]" class="form-control" rows="2"></textarea>
                                     </div>
-                                    <div class="col-12">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
                                         <button type="submit" class="btn btn-primary">
-                                            <i class="bi bi-plus-circle"></i> Thêm khách
+                                        <i class="bi bi-save"></i> Lưu danh sách khách
                                         </button>
-                                    </div>
                                 </div>
                             </form>
                         </div>
@@ -807,6 +833,74 @@ $catalogServicesMap = $catalogServicesMap ?? [];
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
     (function() {
+        // --- Thêm/xóa form khách nhanh ---
+        const guestWrapper = document.getElementById('guestFormsWrapper');
+        const addGuestBtn = document.getElementById('btnAddGuestRow');
+
+        function updateGuestIndexes() {
+            if (!guestWrapper) return;
+            const forms = guestWrapper.querySelectorAll('.guest-form');
+            forms.forEach((form, idx) => {
+                const indexSpan = form.querySelector('.guest-index');
+                if (indexSpan) {
+                    indexSpan.textContent = idx + 1;
+                }
+                const removeBtn = form.querySelector('.btn-remove-guest');
+                if (removeBtn) {
+                    removeBtn.style.display = forms.length > 1 ? 'inline-block' : 'none';
+                }
+            });
+        }
+
+        function clearGuestForm(form) {
+            form.querySelectorAll('input, textarea').forEach(input => {
+                if (input.type === 'checkbox' || input.type === 'radio') {
+                    input.checked = false;
+                } else if (input.name && !input.name.startsWith('quoc_tich')) {
+                    input.value = '';
+                }
+            });
+        }
+
+        if (guestWrapper && addGuestBtn) {
+            addGuestBtn.addEventListener('click', function() {
+                const firstForm = guestWrapper.querySelector('.guest-form');
+                if (!firstForm) return;
+
+                const clone = firstForm.cloneNode(true);
+                clearGuestForm(clone);
+
+                // gắn lại event cho nút xóa của clone
+                const removeBtn = clone.querySelector('.btn-remove-guest');
+                if (removeBtn) {
+                    removeBtn.addEventListener('click', function() {
+                        if (guestWrapper.querySelectorAll('.guest-form').length > 1) {
+                            clone.remove();
+                            updateGuestIndexes();
+                        }
+                    });
+                }
+
+                guestWrapper.appendChild(clone);
+                updateGuestIndexes();
+            });
+
+            // event xóa cho form đầu tiên
+            const firstRemove = guestWrapper.querySelector('.guest-form .btn-remove-guest');
+            if (firstRemove) {
+                firstRemove.addEventListener('click', function(e) {
+                    const form = e.currentTarget.closest('.guest-form');
+                    if (form && guestWrapper.querySelectorAll('.guest-form').length > 1) {
+                        form.remove();
+                        updateGuestIndexes();
+                    }
+                });
+            }
+
+            updateGuestIndexes();
+        }
+
+        // --- JS cho dịch vụ & nhà cung cấp ---
         const supplierCatalog = <?php echo json_encode($catalogServicesMap, JSON_UNESCAPED_UNICODE); ?>;
         const serviceTypeLabels = <?php echo json_encode($serviceTypeOptions, JSON_UNESCAPED_UNICODE); ?>;
 
