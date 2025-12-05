@@ -652,7 +652,7 @@
                 </a>
             </div>
             
-            <div class="col-md-6 col-lg-4">
+            <!-- <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/quanLyNhatKyTour" class="feature-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=400');"></div>
                     <div class="feature-icon icon-red">
@@ -673,7 +673,7 @@
                     <p>Theo dõi ưu tiên, phân công xử lý yêu cầu riêng của khách</p>
                 </a>
             </div>
-            
+             -->
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=auth/logout" class="feature-card logout-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
