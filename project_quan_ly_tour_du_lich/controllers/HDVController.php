@@ -1310,19 +1310,19 @@ class HDVController {
         
         $nhanSuId = $nhanSu['nhan_su_id'];
         
-        // Sử dụng filter để lấy yêu cầu
+        // Sử dụng filter để lấy yêu cầu (chưa set tour_id đúng nếu truyền là lich_khoi_hanh.id)
         $filters = [
             'keyword' => trim($_GET['keyword'] ?? ''),
-            'tour_id' => $tour_id > 0 ? (int)$tour_id : 0,
+            'tour_id' => 0, // sẽ set đúng sau khi lấy lich_khoi_hanh nếu cần
             'muc_do_uu_tien' => $_GET['muc_do_uu_tien'] ?? '',
             'trang_thai' => $_GET['trang_thai'] ?? '',
             'loai_yeu_cau' => $_GET['loai_yeu_cau'] ?? '',
         ];
-        
-        // Lấy tất cả yêu cầu từ các tour HDV phụ trách
-        $yeu_cau_list = $this->yeuCauDacBietModel->getAllForHDV($nhanSuId, $filters);
-        $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId);
-        
+
+        // (Xóa/hoặc comment tạm 2 dòng gọi getAllForHDV/getSummaryStatsForHDV ở đây)
+        // $yeu_cau_list = $this->yeuCauDacBietModel->getAllForHDV($nhanSuId, $filters);
+        // $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId);
+
         // Lấy thông tin tour nếu có tour_id
         $tour = null;
         if ($tour_id > 0) {
@@ -1365,6 +1365,19 @@ class HDVController {
             $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $bookings_list = array_merge($bookings_list, $bookings);
         }
+        
+// --- Chuẩn hoá filter tour_id (nếu $_GET['tour_id'] thực ra là lich_khoi_hanh.id) ---
+// Nếu đang xem chi tiết lich_khoi_hanh (đã lấy $tour phía trên), lấy tour_id thực từ $tour
+if (!empty($tour) && !empty($tour['tour_id'])) {
+    $filters['tour_id'] = (int)$tour['tour_id'];
+} else {
+    // Nếu không có $tour (không ở trang chi tiết), giữ filter tour_id nếu có từ query (hoặc 0 để lấy tất cả)
+    $filters['tour_id'] = $filters['tour_id'] ?? 0;
+}
+
+// Gọi model sau khi đã đảm bảo filters['tour_id'] đúng
+$yeu_cau_list = $this->yeuCauDacBietModel->getAllForHDV($nhanSuId, $filters);
+$stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId);
         
         require 'views/hdv/yeu_cau_dac_biet.php';
     }
@@ -1502,7 +1515,7 @@ class HDVController {
         
         if (!$nhanSu) {
             $_SESSION['error'] = 'Không tìm thấy thông tin HDV.';
-            header('Location: index.php?act=hdv/tours');
+            header('Location: index.php?act=hdv/dashboard');
             exit();
         }
         
@@ -1606,7 +1619,7 @@ class HDVController {
         }
         
         // Lấy tour - không kiểm tra quyền
-        $sql = "SELECT lkh.*, t.tour_id as tour_table_id, t.ten_tour 
+        $sql = "SELECT lkh.*, t.ten_tour, t.tour_id as tour_table_id
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
                 WHERE lkh.id = ?";
@@ -1829,7 +1842,7 @@ class HDVController {
         }
         
         // Lấy danh sách tour đã hoàn thành
-        $sql = "SELECT lkh.id, lkh.ngay_khoi_hanh, lkh.ngay_ket_thuc, t.ten_tour 
+        $sql = "SELECT lkh.id, lkh.ngay_khoi_hanh, t.ten_tour 
                 FROM lich_khoi_hanh lkh 
                 LEFT JOIN tour t ON lkh.tour_id = t.tour_id 
                 WHERE lkh.hdv_id = ? AND lkh.trang_thai = 'DaHoanThanh'

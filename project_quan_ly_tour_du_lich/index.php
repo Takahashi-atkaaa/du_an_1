@@ -111,7 +111,7 @@ match ($act) {
     'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
     'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
     'lichKhoiHanh/themYeuCauDacBiet' => (new LichKhoiHanhController())->themYeuCauDacBiet(),
-    
+    'lichKhoiHanh/themNhatKy' => (new LichKhoiHanhController())->themNhatKy(),
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
