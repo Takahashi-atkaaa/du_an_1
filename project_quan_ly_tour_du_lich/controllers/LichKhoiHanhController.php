@@ -209,6 +209,26 @@ class LichKhoiHanhController {
             $lichKhoiHanh['tong_nguoi_dat'] = $tongNguoi;
         }
         
+
+// Lấy nhật ký tour (theo tour_id) để hiển thị trong tab "Nhật ký tour"
+$nhatKyTourList = [];
+if (!empty($lichKhoiHanh['tour_id'])) {
+    // Lấy từ model Tour (trong Tour::getNhatKyTourByTourId)
+    $nhatKyTourList = $this->tourModel->getNhatKyTourByTourId($lichKhoiHanh['tour_id']);
+
+    // Nếu bạn muốn chỉ lấy nhật ký đúng ngày khởi hành này (lọc theo ngày)
+    if (!empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+        $ngayKH = date('Y-m-d', strtotime($lichKhoiHanh['ngay_khoi_hanh']));
+        $nhatKyTourList = array_values(array_filter($nhatKyTourList, function($n) use ($ngayKH) {
+            return isset($n['ngay_ghi']) && date('Y-m-d', strtotime($n['ngay_ghi'])) === $ngayKH;
+        }));
+    }
+
+    // (Tùy chọn) nếu muốn tên người ghi chép kèm theo, bạn có thể JOIN thêm bảng nhan_su/nguoi_dung
+    // hoặc post-process: lấy danh sách nhân sự map id->ho_ten và thêm vào từng entry.
+}
+        
+        
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
 
@@ -267,6 +287,7 @@ class LichKhoiHanhController {
         header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId . '&from_booking=' . $bookingId);
         exit();
     }
+
 
     // Tạo lịch khởi hành mới
     public function create() {
@@ -665,6 +686,83 @@ class LichKhoiHanhController {
         
         require 'views/admin/sua_khach_chi_tiet.php';
     }
+   
+public function themYeuCauDacBiet() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: index.php?act=lichKhoiHanh/index');
+        exit();
+    }
+
+    $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+    $lichId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+
+    if ($bookingId <= 0) {
+        $_SESSION['error'] = 'Vui lòng chọn khách/booking để tạo yêu cầu.';
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichId);
+        exit();
+    }
+
+    require_once 'models/YeuCauDacBiet.php';
+    $yeuCauModel = new YeuCauDacBiet();
+
+    // Ánh xạ giá trị loai_yeu_cau từ form sang DB
+    $loaiMap = [
+        'ThucPham' => 'an_uong',
+        'YTe' => 'suc_khoe',
+        'DichVu' => 'phong_o',
+        'NguNgu' => 'phong_o',
+        'AnToan' => 'an_toan',
+        'Khac' => 'khac'
+    ];
+    
+    $loaiInput = $_POST['loai_yeu_cau'] ?? 'Khac';
+    $loaiDb = $loaiMap[$loaiInput] ?? 'khac'; // giá trị mặc định
+
+    // Ánh xạ muc_do_uu_tien
+    $ucTienMap = [
+        'RatCao' => 'khan_cap',
+        'Cao' => 'cao',
+        'Trung' => 'trung_binh',
+        'Thap' => 'thap'
+    ];
+    
+    $ucTienInput = $_POST['muc_do_uu_tien'] ?? 'Trung';
+    $ucTienDb = $ucTienMap[$ucTienInput] ?? 'trung_binh';
+
+    // Ánh xạ trang_thai
+    $trangThaiMap = [
+        'Moi' => 'moi',
+        'DangXuLy' => 'dang_xu_ly',
+        'HoanTat' => 'da_giai_quyet',
+        'KhongTheXuLy' => 'khong_the_thuc_hien'
+    ];
+    
+    $trangThaiInput = $_POST['trang_thai'] ?? 'Moi';
+    $trangThaiDb = $trangThaiMap[$trangThaiInput] ?? 'moi';
+
+    $data = [
+        'loai_yeu_cau' => $loaiDb,
+        'tieu_de' => trim($_POST['tieu_de'] ?? 'Yêu cầu đặc biệt'),
+        'mo_ta' => $_POST['noi_dung'] ?? null,
+        'muc_do_uu_tien' => $ucTienDb,
+        'trang_thai' => $trangThaiDb,
+        'ghi_chu_hdv' => $_POST['ghi_chu'] ?? null
+    ];
+
+    $nguoiTaoId = $_SESSION['user_id'] ?? null;
+
+    $newId = $yeuCauModel->createFromAdmin($bookingId, $data, $nguoiTaoId);
+
+    if ($newId) {
+        $_SESSION['success'] = 'Đã tạo yêu cầu đặc biệt.';
+    } else {
+        $_SESSION['error'] = 'Không thể tạo yêu cầu. Vui lòng thử lại.';
+    }
+
+    // Quay về chi tiết lịch
+    header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichId);
+    exit();
+}
 
     // Xóa khách chi tiết
     public function xoaKhachChiTiet() {

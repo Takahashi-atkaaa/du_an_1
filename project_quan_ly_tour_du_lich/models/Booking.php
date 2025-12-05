@@ -200,12 +200,12 @@ class Booking
                     y.mo_ta,
                     y.loai_yeu_cau,
                     y.muc_do_uu_tien,
-                    y.trang_thai as trang_thai_yeu_cau,
+                    y.trang_thai,
                     y.ngay_tao,
                     b.booking_id,
                     b.so_nguoi,
                     b.ngay_dat,
-                    nd.ho_ten,
+                    nd.ho_ten as khach_ten,
                     nd.email,
                     nd.so_dien_thoai
                 FROM yeu_cau_dac_biet y
