@@ -462,6 +462,18 @@ class BookingController {
                 if (empty($email) && empty($soDienThoai)) {
                     throw new Exception('Vui lòng nhập email hoặc số điện thoại.');
                 }
+                // Ngày sinh: nếu nhập thì phải đủ 18 tuổi trở lên
+                if (!empty($ngaySinh)) {
+                    $dob = DateTime::createFromFormat('Y-m-d', $ngaySinh);
+                    if (!$dob) {
+                        throw new Exception('Ngày sinh không hợp lệ.');
+                    }
+                    $today = new DateTime('today');
+                    $age = $dob->diff($today)->y;
+                    if ($age < 18) {
+                        throw new Exception('Người đặt tour phải từ 18 tuổi trở lên và có thể chịu trách nhiệm pháp lý.');
+                    }
+                }
                 if ($tourId <= 0) {
                     throw new Exception('Vui lòng chọn tour.');
                 }

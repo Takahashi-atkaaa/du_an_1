@@ -995,7 +995,7 @@ class HDVController {
                                     WHERE lich_khoi_hanh_id = ? 
                                       AND booking_id IN ($placeholders)
                                     ORDER BY booking_id ASC, id ASC";
-                            $stmt = $this->nhanSuModel->conn->prepare($sql);
+                        $stmt = $this->nhanSuModel->conn->prepare($sql);
                             $params = array_merge([$tour['id']], $bookingIds);
                             $stmt->execute($params);
                             $khachChiTiet = $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -183,6 +183,13 @@ $catalogServicesMap = $catalogServicesMap ?? [];
             </div>
         <?php endif; ?>
 
+        <?php if (isset($_SESSION['warning'])): ?>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <?php echo htmlspecialchars($_SESSION['warning']); unset($_SESSION['warning']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
         <?php if (isset($_SESSION['error'])): ?>
             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                 <i class="bi bi-exclamation-triangle"></i> <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
