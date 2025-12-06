@@ -61,14 +61,16 @@ class BookingController {
         $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? '';
         $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
 
+            $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
             $data = [
                 'tour_id' => $tourId,
                 'khach_hang_id' => $khachHangId,
                 'ngay_dat' => date('Y-m-d'),
                 'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
-            'ngay_khoi_hanh' => $ngayKhoiHanh,
-            'ngay_ket_thuc' => $ngayKetThuc,
+                'ngay_khoi_hanh' => $ngayKhoiHanh,
+                'ngay_ket_thuc' => $ngayKetThuc,
                 'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
+                'tien_coc' => $tienCoc,
                 'trang_thai' => 'ChoXacNhan',
                 'ghi_chu' => $_POST['ghi_chu'] ?? null
             ];
@@ -252,6 +254,8 @@ class BookingController {
         $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
         $trangThaiCoc = $_POST['trang_thai_coc'] ?? 'ChuaCoc';
         $ghiChuCoc = trim($_POST['ghi_chu_coc'] ?? '');
+        // Tính số tiền còn lại
+        $soTienConLai = 0;
         
         // Lấy thông tin booking hiện tại
         $booking = $this->bookingModel->findById($bookingId);
@@ -298,9 +302,20 @@ class BookingController {
             
             if ($hasTienCoc) {
                 // Cập nhật với các trường mới
-                $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ? WHERE booking_id = ?";
-                $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $bookingId]);
+                // Kiểm tra cột so_tien_con_lai
+                $checkSoTienConLai = $conn->query("SHOW COLUMNS FROM booking LIKE 'so_tien_con_lai'");
+                $hasSoTienConLai = $checkSoTienConLai->rowCount() > 0;
+                $soTienConLai = $tongTien - $tienCoc;
+                if ($soTienConLai < 0) $soTienConLai = 0;
+                if ($hasSoTienConLai) {
+                    $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ?, so_tien_con_lai = ? WHERE booking_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $soTienConLai, $bookingId]);
+                } else {
+                    $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ? WHERE booking_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $bookingId]);
+                }
             } else {
                 // Nếu chưa có cột, chỉ cập nhật trạng thái booking nếu cần
                 // Hoặc có thể tự động tạo cột (không khuyến khích trong production)
