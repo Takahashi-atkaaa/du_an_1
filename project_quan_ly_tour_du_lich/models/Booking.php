@@ -79,18 +79,54 @@ class Booking
 
     // Cập nhật booking
     public function update($id, $data) {
-        $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute([
-            $data['so_nguoi'] ?? 1,
-            $data['ngay_khoi_hanh'] ?? null,
-            $data['ngay_ket_thuc'] ?? null,
-            $data['tong_tien'] ?? 0,
-            $data['trang_thai'] ?? 'ChoXacNhan',
-            $data['ghi_chu'] ?? null,
-            $id
-        ]);
-}
+        // Kiểm tra xem cột tien_coc và trang_thai_coc có tồn tại không
+        $checkTienCoc = $this->conn->query("SHOW COLUMNS FROM booking LIKE 'tien_coc'");
+        $hasTienCoc = $checkTienCoc->rowCount() > 0;
+        
+        $checkTrangThaiCoc = $this->conn->query("SHOW COLUMNS FROM booking LIKE 'trang_thai_coc'");
+        $hasTrangThaiCoc = $checkTrangThaiCoc->rowCount() > 0;
+        
+        if ($hasTienCoc && $hasTrangThaiCoc && isset($data['tien_coc'])) {
+            $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, tien_coc = ?, trang_thai_coc = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            return $stmt->execute([
+                $data['so_nguoi'] ?? 1,
+                $data['ngay_khoi_hanh'] ?? null,
+                $data['ngay_ket_thuc'] ?? null,
+                $data['tong_tien'] ?? 0,
+                $data['tien_coc'] ?? 0,
+                $data['trang_thai_coc'] ?? 'ChuaCoc',
+                $data['trang_thai'] ?? 'ChoXacNhan',
+                $data['ghi_chu'] ?? null,
+                $id
+            ]);
+        } elseif ($hasTienCoc && isset($data['tien_coc'])) {
+            $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, tien_coc = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            return $stmt->execute([
+                $data['so_nguoi'] ?? 1,
+                $data['ngay_khoi_hanh'] ?? null,
+                $data['ngay_ket_thuc'] ?? null,
+                $data['tong_tien'] ?? 0,
+                $data['tien_coc'] ?? 0,
+                $data['trang_thai'] ?? 'ChoXacNhan',
+                $data['ghi_chu'] ?? null,
+                $id
+            ]);
+        } else {
+            $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+            $stmt = $this->conn->prepare($sql);
+            return $stmt->execute([
+                $data['so_nguoi'] ?? 1,
+                $data['ngay_khoi_hanh'] ?? null,
+                $data['ngay_ket_thuc'] ?? null,
+                $data['tong_tien'] ?? 0,
+                $data['trang_thai'] ?? 'ChoXacNhan',
+                $data['ghi_chu'] ?? null,
+                $id
+            ]);
+        }
+    }
 
     // Cập nhật trạng thái booking và lưu lịch sử
     public function updateTrangThai($id, $trangThaiMoi, $nguoiThayDoiId, $ghiChu = null) {
@@ -200,12 +236,12 @@ class Booking
                     y.mo_ta,
                     y.loai_yeu_cau,
                     y.muc_do_uu_tien,
-                    y.trang_thai as trang_thai_yeu_cau,
+                    y.trang_thai,
                     y.ngay_tao,
                     b.booking_id,
                     b.so_nguoi,
                     b.ngay_dat,
-                    nd.ho_ten,
+                    nd.ho_ten as khach_ten,
                     nd.email,
                     nd.so_dien_thoai
                 FROM yeu_cau_dac_biet y

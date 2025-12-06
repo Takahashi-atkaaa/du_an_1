@@ -86,6 +86,7 @@ match ($act) {
     'booking/chiTiet' => (new BookingController())->chiTiet(),
     'booking/update' => (new BookingController())->update(),
     'booking/updateTrangThai' => (new BookingController())->updateTrangThai(),
+    'booking/updateTienCoc' => (new BookingController())->updateTienCoc(),
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
@@ -110,7 +111,8 @@ match ($act) {
     'lichKhoiHanh/themKhachChiTiet' => (new LichKhoiHanhController())->themKhachChiTiet(),
     'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
     'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
-    
+    'lichKhoiHanh/themYeuCauDacBiet' => (new LichKhoiHanhController())->themYeuCauDacBiet(),
+    'lichKhoiHanh/themNhatKy' => (new LichKhoiHanhController())->themNhatKy(),
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),

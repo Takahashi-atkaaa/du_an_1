@@ -137,7 +137,7 @@
         </div>
         
         <!-- Filter & Search -->
-        <div class="card mb-4">
+        <!-- <div class="card mb-4">
             <div class="card-body">
                 <form method="GET" action="index.php?act=hdv/yeu_cau_dac_biet">
                     <div class="row g-3">
@@ -199,7 +199,7 @@
                     </div>
                 </form>
             </div>
-        </div>
+        </div> -->
         
         <!-- Add Request Button -->
         <div class="d-flex justify-content-between align-items-center mb-4">

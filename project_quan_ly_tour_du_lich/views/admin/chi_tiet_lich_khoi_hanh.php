@@ -89,6 +89,53 @@
             justify-content: center;
             font-size: 1.25rem;
         }
+        .request-note {
+            max-width: 320px;
+            white-space: pre-line;
+        }
+        .diary-entry {
+            background-color: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #667eea;
+        }
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .entry-type-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .type-hanh_trinh { background: #e3f2fd; color: #1565c0; }
+        .type-su_co { background: #ffebee; color: #c62828; }
+        .type-phan_hoi { background: #f3e5f5; color: #6a1b9a; }
+        .type-hoat_dong { background: #e8f5e9; color: #2e7d32; }
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .image-gallery img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .image-gallery img:hover {
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body class="bg-light">
@@ -179,6 +226,13 @@ $catalogServicesMap = $catalogServicesMap ?? [];
         <?php if (isset($_SESSION['success'])): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle"></i> <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if (isset($_SESSION['warning'])): ?>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle"></i> <?php echo htmlspecialchars($_SESSION['warning']); unset($_SESSION['warning']); ?>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -297,6 +351,16 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                     <li class="nav-item" role="presentation">
                         <button class="nav-link" id="service-tab" data-bs-toggle="pill" data-bs-target="#service" type="button">
                             <i class="bi bi-gear"></i> Dịch vụ
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="special-request-tab" data-bs-toggle="pill" data-bs-target="#special-request" type="button">
+                            <i class="bi bi-heart-pulse"></i> ! Yêu cầu đặc biệt
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="diary-tab" data-bs-toggle="pill" data-bs-target="#diary" type="button">
+                            <i class="bi bi-journal-text"></i> Nhật ký tour
                         </button>
                     </li>
                 </ul>
@@ -631,6 +695,294 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                         </div>
                     </div>
 
+                                        <!-- Tab: Yêu cầu đặc biệt -->
+                    <div class="tab-pane fade" id="request" role="tabpanel">
+                        <!-- Add Request Form -->
+                        <div class="add-form-card">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-plus-circle"></i> Thêm yêu cầu đặc biệt
+                            </h6>
+                            <form method="POST" action="index.php?act=lichKhoiHanh/themYeuCauDacBiet">
+                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Khách hàng <span class="text-danger">*</span></label>
+                                        <select name="booking_id" class="form-select" required>
+                                            <option value="">-- Chọn khách hàng --</option>
+                                            <?php foreach ($bookingList as $b): ?>
+                                                <option value="<?php echo $b['booking_id']; ?>">
+                                                    <?php echo htmlspecialchars($b['ho_ten'] ?? 'N/A'); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Loại yêu cầu <span class="text-danger">*</span></label>
+                                        <select name="loai_yeu_cau" class="form-select" required>
+                                            <option value="ThucPham">Thực phẩm / Dị ứng</option>
+                                            <option value="YTe">Y tế / Sức khỏe</option>
+                                            <option value="DichVu">Yêu cầu dịch vụ</option>
+                                            <option value="NguNgu">Ngủ ngơi / Chỗ ở</option>
+                                            <option value="AnToan">An toàn / Sự cố</option>
+                                            <option value="Khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Mức độ ưu tiên <span class="text-danger">*</span></label>
+                                        <select name="muc_do_uu_tien" class="form-select" required>
+                                            <option value="Thap">Thấp</option>
+                                            <option value="Trung">Trung bình</option>
+                                            <option value="Cao">Cao</option>
+                                            <option value="RatCao">Rất cao</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Trạng thái</label>
+                                        <select name="trang_thai" class="form-select">
+                                            <option value="Moi">Mới</option>
+                                            <option value="DangXuLy">Đang xử lý</option>
+                                            <option value="HoanTat">Hoàn tất</option>
+                                            <option value="KhongTheXuLy">Không thể xử lý</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Nội dung yêu cầu <span class="text-danger">*</span></label>
+                                        <textarea name="noi_dung" class="form-control" rows="3" required></textarea>
+                                    </div>
+                                  
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Thêm yêu cầu
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Request List -->
+                        <div class="section-card card">
+                            <div class="section-header">
+                                <i class="bi bi-exclamation-lg"></i> Danh sách yêu cầu đặc biệt
+                            </div>
+                            <div class="card-body p-0">
+                                <?php if (!empty($yeuCauDacBietList)): ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-custom">
+                                            <thead>
+                                                <tr>
+                                                    <th>Khách hàng</th>
+                                                    <th>Loại yêu cầu</th>
+                                                    <th>Nội dung</th>
+                                                    <th>Ưu tiên</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Ngày tạo</th>
+                                                   
+                                                </tr>
+                                            </thead>
+                                           <!-- Tìm và thay thế phần tbody trong bảng "Danh sách yêu cầu đặc biệt" (khoảng dòng 732-790) -->
+
+<tbody>
+    <?php foreach ($yeuCauDacBietList as $yc): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($yc['khach_ten'] ?? 'N/A'); ?></td>
+            <td>
+                <span class="badge bg-info">
+                    <?php
+                    $loaiMap = [
+                        'an_uong' => 'Thực phẩm / Dị ứng',
+                        'suc_khoe' => 'Y tế / Sức khỏe',
+                        'phong_o' => 'Phòng ở',
+                        'an_toan' => 'An toàn',
+                        'khac' => 'Khác'
+                    ];
+                    echo $loaiMap[$yc['loai_yeu_cau']] ?? $yc['loai_yeu_cau'];
+                    ?>
+                </span>
+            </td>
+            <td><?php $nd = (string)($yc['mo_ta'] ?? ''); echo htmlspecialchars(mb_strlen($nd) > 50 ? mb_substr($nd, 0, 50) . '...' : $nd); ?></td>
+            <td>
+                <span class="badge <?php
+                    echo match($yc['muc_do_uu_tien']) {
+                        'khan_cap' => 'bg-danger',
+                        'cao' => 'bg-warning text-dark',
+                        'trung_binh' => 'bg-info',
+                        'thap' => 'bg-success',
+                        default => 'bg-secondary'
+                    };
+                ?>">
+                    <?php
+                    $ucTienMap = [
+                        'khan_cap' => 'Rất cao',
+                        'cao' => 'Cao',
+                        'trung_binh' => 'Trung bình',
+                        'thap' => 'Thấp'
+                    ];
+                    echo $ucTienMap[$yc['muc_do_uu_tien']] ?? $yc['muc_do_uu_tien'];
+                    ?>
+                </span>
+            </td>
+            <td>
+                <span class="badge <?php
+                    echo match($yc['trang_thai']) {
+                        'da_giai_quyet' => 'bg-success',
+                        'dang_xu_ly' => 'bg-warning text-dark',
+                        'khong_the_thuc_hien' => 'bg-danger',
+                        default => 'bg-secondary'
+                    };
+                ?>">
+                    <?php
+                    $tthaiMap = [
+                        'moi' => 'Mới',
+                        'dang_xu_ly' => 'Đang xử lý',
+                        'da_giai_quyet' => 'Hoàn tất',
+                        'khong_the_thuc_hien' => 'Không xử lý'
+                    ];
+                    echo $tthaiMap[$yc['trang_thai']] ?? $yc['trang_thai'];
+                    ?>
+                </span>
+            </td>
+            <td><small><?php echo $yc['ngay_tao'] ? date('d/m/Y H:i', strtotime($yc['ngay_tao'])) : 'N/A'; ?></small></td>
+            <td>
+                <!-- <a href="index.php?act=lichKhoiHanh/suaYeuCauDacBiet&id=<?php echo $yc['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                   class="btn btn-sm btn-info">
+                    <i class="bi bi-pencil"></i>
+                </a>
+                <a href="index.php?act=lichKhoiHanh/xoaYeuCauDacBiet&id=<?php echo $yc['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                   class="btn btn-sm btn-danger"
+                   onclick="return confirm('Xóa yêu cầu này?');">
+                    <i class="bi bi-trash"></i>
+                </a> -->
+            </td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="bi bi-exclamation-circle fs-1 opacity-25"></i>
+                                        <p class="mt-3">Chưa có yêu cầu đặc biệt nào</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Nhật ký tour -->
+                    <div class="tab-pane fade" id="log" role="tabpanel">
+                        <!-- Add Log Entry Form -->
+                        <div class="add-form-card">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-plus-circle"></i> Thêm ghi chép nhật ký
+                            </h6>
+                            <form method="POST" action="index.php?act=lichKhoiHanh/themNhatKy">
+                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Loại sự kiện <span class="text-danger">*</span></label>
+                                        <select name="loai_su_kien" class="form-select" required>
+                                            <option value="DuocLichTrinhDuaKhach">Được lịch trình đưa khách</option>
+                                            <option value="DuaKhachDenDiem">Đưa khách đến điểm</option>
+                                            <option value="CoDoanLuu">Có đoàn lưu</option>
+                                            <option value="DoanVeTour">Đoàn về tour</option>
+                                            <option value="SuCo">Sự cố</option>
+                                            <option value="YLenCap">Yêu lên cấp</option>
+                                            <option value="Khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Thời gian <span class="text-danger">*</span></label>
+                                        <input type="datetime-local" name="thoi_gian_su_kien" class="form-control" required>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Người ghi chép</label>
+                                        <input type="text" name="nguoi_ghi_chep" class="form-control" value="<?php echo htmlspecialchars($_SESSION['ho_ten'] ?? 'Admin'); ?>">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Địa điểm</label>
+                                        <input type="text" name="dia_diem" class="form-control">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Nội dung <span class="text-danger">*</span></label>
+                                        <textarea name="noi_dung" class="form-control" rows="3" required></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Thêm ghi chép
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Log List -->
+                        <div class="section-card card">
+                            <div class="section-header">
+                                <i class="bi bi-clock-history"></i> Nhật ký sự kiện tour
+                            </div>
+                            <div class="card-body">
+                                <?php if (!empty($nhatKyTourList)): ?>
+                                    <div class="timeline">
+                                        <?php foreach ($nhatKyTourList as $log): ?>
+                                            <div class="d-flex mb-4 pb-4 border-bottom">
+                                                <div class="me-3">
+                                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                                        <i class="bi bi-<?php 
+                                                            echo match($log['loai_su_kien']) {
+                                                                'DuocLichTrinhDuaKhach' => 'calendar-check',
+                                                                'DuaKhachDenDiem' => 'geo-alt',
+                                                                'CoDoanLuu' => 'stop',
+                                                                'DoanVeTour' => 'house',
+                                                                'SuCo' => 'exclamation-triangle',
+                                                                'YLenCap' => 'arrow-up-circle',
+                                                                default => 'info-circle'
+                                                            };
+                                                        ?>"></i>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fw-bold mb-1">
+                                                        <?php
+                                                        $loaiMap = [
+                                                            'DuocLichTrinhDuaKhach' => 'Được lịch trình đưa khách',
+                                                            'DuaKhachDenDiem' => 'Đưa khách đến điểm',
+                                                            'CoDoanLuu' => 'Có đoàn lưu',
+                                                            'DoanVeTour' => 'Đoàn về tour',
+                                                            'SuCo' => 'Sự cố',
+                                                            'YLenCap' => 'Yêu lên cấp',
+                                                            'Khac' => 'Khác'
+                                                        ];
+                                                        echo $loaiMap[$log['loai_su_kien']] ?? $log['loai_su_kien'];
+                                                        ?>
+                                                    </h6>
+                                                    <p class="text-muted mb-2"><?php echo htmlspecialchars($log['noi_dung']); ?></p>
+                                                    <small class="text-muted d-block">
+                                                        <i class="bi bi-calendar"></i> <?php echo $log['thoi_gian_su_kien'] ? date('d/m/Y H:i', strtotime($log['thoi_gian_su_kien'])) : 'N/A'; ?>
+                                                        <?php if ($log['dia_diem']): ?>
+                                                            | <i class="bi bi-geo-alt"></i> <?php echo htmlspecialchars($log['dia_diem']); ?>
+                                                        <?php endif; ?>
+                                                        | <i class="bi bi-person"></i> <?php echo htmlspecialchars($log['nguoi_ghi_chep'] ?? 'N/A'); ?>
+                                                    </small>
+                                                </div>
+                                                <div>
+                                                    <a href="index.php?act=lichKhoiHanh/xoaNhatKy&id=<?php echo $log['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                                       class="btn btn-sm btn-outline-danger"
+                                                       onclick="return confirm('Xóa ghi chép này?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="bi bi-clock-history fs-1 opacity-25"></i>
+                                        <p class="mt-3">Chưa có ghi chép nhật ký nào</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
                     <!-- Tab: Dịch vụ -->
                     <div class="tab-pane fade" id="service" role="tabpanel">
                         <!-- Add Service Form -->
@@ -822,6 +1174,151 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                         <p class="mt-3">Chưa có dịch vụ nào được phân bổ</p>
                                     </div>
             <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Yêu cầu đặc biệt -->
+                    <div class="tab-pane fade" id="special-request" role="tabpanel">
+                        <div class="section-card card">
+                            <div class="section-header">
+                                <i class="bi bi-heart-pulse"></i> Yêu cầu đặc biệt của khách hàng
+                            </div>
+                            <div class="card-body p-0">
+                                <?php if (!empty($yeuCauDacBietList)): ?>
+                                    <div class="table-responsive">
+                                        <table class="table table-custom">
+                                            <thead>
+                                                <tr>
+                                                    <th>Khách hàng</th>
+                                                    <th>Loại yêu cầu</th>
+                                                    <th>Mô tả</th>
+                                                    <th>Mức độ ưu tiên</th>
+                                                    <th>Trạng thái</th>
+                                                    <th>Ghi chú HDV</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <?php 
+                                                $priorityMap = [
+                                                    'khan_cap' => ['label' => 'Khẩn cấp', 'badge' => 'danger'],
+                                                    'cao' => ['label' => 'Cao', 'badge' => 'warning'],
+                                                    'trung_binh' => ['label' => 'Trung bình', 'badge' => 'info'],
+                                                    'thap' => ['label' => 'Thấp', 'badge' => 'secondary'],
+                                                ];
+                                                $statusMap = [
+                                                    'moi' => ['label' => 'Mới', 'badge' => 'secondary'],
+                                                    'dang_xu_ly' => ['label' => 'Đang xử lý', 'badge' => 'primary'],
+                                                    'da_giai_quyet' => ['label' => 'Đã giải quyết', 'badge' => 'success'],
+                                                    'khong_the_thuc_hien' => ['label' => 'Không thể thực hiện', 'badge' => 'danger'],
+                                                ];
+                                                foreach ($yeuCauDacBietList as $yc): ?>
+                                                    <tr>
+                                                        <td>
+                                                            <div class="fw-semibold"><?php echo htmlspecialchars($yc['ho_ten'] ?? 'N/A'); ?></div>
+                                                            <small class="text-muted"><?php echo htmlspecialchars($yc['email'] ?? ''); ?></small>
+                                                        </td>
+                                                        <td><?php echo htmlspecialchars($yc['loai_yeu_cau'] ?? 'Khác'); ?></td>
+                                                        <td>
+                                                            <div class="request-note"><?php echo htmlspecialchars($yc['mo_ta'] ?? ''); ?></div>
+                                                        </td>
+                                                        <td>
+                                                            <?php 
+                                                            $priority = $yc['muc_do_uu_tien'] ?? 'trung_binh';
+                                                            $priorityInfo = $priorityMap[$priority] ?? $priorityMap['trung_binh'];
+                                                            ?>
+                                                            <span class="badge bg-<?php echo $priorityInfo['badge']; ?>">
+                                                                <?php echo $priorityInfo['label']; ?>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <?php 
+                                                            $status = $yc['trang_thai'] ?? 'moi';
+                                                            $statusInfo = $statusMap[$status] ?? $statusMap['moi'];
+                                                            ?>
+                                                            <span class="badge bg-<?php echo $statusInfo['badge']; ?>">
+                                                                <?php echo $statusInfo['label']; ?>
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <small><?php echo htmlspecialchars($yc['ghi_chu_hdv'] ?? 'Chưa có'); ?></small>
+                                                        </td>
+                                                    </tr>
+                                                <?php endforeach; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="bi bi-heart-pulse fs-1 opacity-25"></i>
+                                        <p class="mt-3">Chưa có yêu cầu đặc biệt nào cho lịch khởi hành này</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab: Nhật ký tour -->
+                    <div class="tab-pane fade" id="diary" role="tabpanel">
+                        <div class="section-card card">
+                            <div class="section-header">
+                                <i class="bi bi-journal-text"></i> Nhật ký tour
+                            </div>
+                            <div class="card-body p-0">
+                                <?php if (!empty($nhatKyTourList)): ?>
+                                    <div class="p-3">
+                                        <?php foreach ($nhatKyTourList as $nhatKy): ?>
+                                            <div class="diary-entry mb-3">
+                                                <div class="entry-header">
+                                                    <div>
+                                                        <h6 class="mb-1"><?php echo htmlspecialchars($nhatKy['tieu_de'] ?? 'Nhật ký'); ?></h6>
+                                                        <small class="text-muted">
+                                                            <i class="bi bi-calendar"></i> <?php echo $nhatKy['ngay_ghi'] ? date('d/m/Y H:i', strtotime($nhatKy['ngay_ghi'])) : 'N/A'; ?>
+                                                            <?php if ($nhatKy['hdv_ten']): ?>
+                                                                | <i class="bi bi-person"></i> <?php echo htmlspecialchars($nhatKy['hdv_ten']); ?>
+                                                            <?php endif; ?>
+                                                        </small>
+                                                    </div>
+                                                    <span class="entry-type-badge type-<?php echo htmlspecialchars($nhatKy['loai_nhat_ky'] ?? 'hanh_trinh'); ?>">
+                                                        <?php 
+                                                        $loaiLabels = [
+                                                            'hanh_trinh' => 'Hành trình',
+                                                            'su_co' => 'Sự cố',
+                                                            'phan_hoi' => 'Phản hồi',
+                                                            'hoat_dong' => 'Hoạt động'
+                                                        ];
+                                                        echo $loaiLabels[$nhatKy['loai_nhat_ky']] ?? 'Hành trình';
+                                                        ?>
+                                                    </span>
+                                                </div>
+                                                <div class="entry-content">
+                                                    <p class="mb-2"><?php echo nl2br(htmlspecialchars($nhatKy['noi_dung'] ?? '')); ?></p>
+                                                    <?php if (!empty($nhatKy['cach_xu_ly'])): ?>
+                                                        <div class="alert alert-info mb-0">
+                                                            <strong>Cách xử lý:</strong> <?php echo nl2br(htmlspecialchars($nhatKy['cach_xu_ly'])); ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($nhatKy['hinh_anh'])): ?>
+                                                        <?php 
+                                                        $images = json_decode($nhatKy['hinh_anh'], true);
+                                                        if ($images && is_array($images)): ?>
+                                                            <div class="image-gallery mt-3">
+                                                                <?php foreach ($images as $img): ?>
+                                                                    <img src="<?php echo htmlspecialchars($img); ?>" alt="Hình ảnh nhật ký" onclick="window.open(this.src, '_blank')">
+                                                                <?php endforeach; ?>
+                                                            </div>
+                                                        <?php endif; ?>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="text-center py-5 text-muted">
+                                        <i class="bi bi-journal-text fs-1 opacity-25"></i>
+                                        <p class="mt-3">Chưa có nhật ký nào cho tour này</p>
+                                    </div>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

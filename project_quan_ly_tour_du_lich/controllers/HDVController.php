@@ -313,7 +313,8 @@ class HDVController {
         ];
 
         $requests = $this->yeuCauDacBietModel->getAllForHDV($nhanSuId, $filters);
-        $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId);
+     
+$stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
         $histories = $this->yeuCauDacBietModel->getHistoriesByRequestIds(array_column($requests, 'id'));
 
         // Lấy danh sách tour HDV phụ trách (unique)
@@ -995,7 +996,7 @@ class HDVController {
                                     WHERE lich_khoi_hanh_id = ? 
                                       AND booking_id IN ($placeholders)
                                     ORDER BY booking_id ASC, id ASC";
-                            $stmt = $this->nhanSuModel->conn->prepare($sql);
+                        $stmt = $this->nhanSuModel->conn->prepare($sql);
                             $params = array_merge([$tour['id']], $bookingIds);
                             $stmt->execute($params);
                             $khachChiTiet = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -1321,7 +1322,8 @@ class HDVController {
         
         // Lấy tất cả yêu cầu từ các tour HDV phụ trách
         $yeu_cau_list = $this->yeuCauDacBietModel->getAllForHDV($nhanSuId, $filters);
-        $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId);
+     
+$stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
         
         // Lấy thông tin tour nếu có tour_id
         $tour = null;
@@ -1365,6 +1367,20 @@ class HDVController {
             $bookings = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $bookings_list = array_merge($bookings_list, $bookings);
         }
+    
+// --- Chuẩn hoá filter tour_id (nếu $_GET['tour_id'] thực ra là lich_khoi_hanh.id) ---
+// Nếu đang xem chi tiết lich_khoi_hanh (đã lấy $tour phía trên), lấy tour_id thực từ $tour
+if (!empty($tour) && !empty($tour['tour_id'])) {
+    $filters['tour_id'] = (int)$tour['tour_id'];
+} else {
+    // Nếu không có $tour (không ở trang chi tiết), giữ filter tour_id nếu có từ query (hoặc 0 để lấy tất cả)
+    $filters['tour_id'] = $filters['tour_id'] ?? 0;
+}
+
+// Gọi model sau khi đã đảm bảo filters['tour_id'] đúng
+$yeu_cau_list = $this->yeuCauDacBietModel->getAllForHDV($nhanSuId, $filters);
+
+$stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
         
         require 'views/hdv/yeu_cau_dac_biet.php';
     }
