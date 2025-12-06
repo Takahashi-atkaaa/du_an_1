@@ -103,6 +103,8 @@ match ($act) {
     'lichKhoiHanh/edit' => (new LichKhoiHanhController())->edit(),
     'lichKhoiHanh/update' => (new LichKhoiHanhController())->update(),
     'lichKhoiHanh/phanBoNhanSu' => (new LichKhoiHanhController())->phanBoNhanSu(),
+    'lichKhoiHanh/tuDongPhanBoNhanSu' => (new LichKhoiHanhController())->tuDongPhanBoNhanSu(),
+    'lichKhoiHanh/checkConflict' => (new LichKhoiHanhController())->checkConflict(),
     'lichKhoiHanh/updateTrangThaiNhanSu' => (new LichKhoiHanhController())->updateTrangThaiNhanSu(),
     'lichKhoiHanh/phanBoDichVu' => (new LichKhoiHanhController())->phanBoDichVu(),
     'lichKhoiHanh/updateTrangThaiDichVu' => (new LichKhoiHanhController())->updateTrangThaiDichVu(),

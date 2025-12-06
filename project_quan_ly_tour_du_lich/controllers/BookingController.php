@@ -92,7 +92,14 @@ class BookingController {
                             'trang_thai' => 'SapKhoiHanh',
                             'ghi_chu' => 'Tạo tự động từ booking #' . $bookingId
                         ];
-                        $this->lichKhoiHanhModel->insert($lichKhoiHanhData);
+                        $lichKhoiHanhId = $this->lichKhoiHanhModel->insert($lichKhoiHanhData);
+                        if ($lichKhoiHanhId) {
+                            // Tự động phân bổ nhân sự nếu admin quên
+                            $this->tuDongPhanBoNhanSu($lichKhoiHanhId, $ngayKhoiHanh, $ngayKetThuc);
+                        }
+                    } else {
+                        // Lịch khởi hành đã có, kiểm tra và tự động phân bổ nếu chưa có
+                        $this->tuDongPhanBoNhanSu($lichKhoiHanh['id'], $ngayKhoiHanh, $ngayKetThuc);
                     }
                 }
                 
@@ -526,6 +533,14 @@ class BookingController {
                         $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
                     }
                     $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
+                    
+                    // Tự động phân bổ nhân sự khi booking được xác nhận (DaCoc)
+                    if ($trangThaiMoi === 'DaCoc' && !empty($ngayKhoiHanh)) {
+                        $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($booking['tour_id'], $ngayKhoiHanh);
+                        if ($lichKhoiHanh) {
+                            $this->tuDongPhanBoNhanSu($lichKhoiHanh['id'], $ngayKhoiHanh, $ngayKetThuc ?? $ngayKhoiHanh);
+                        }
+                    }
                 } else {
                     // Trạng thái không đổi nhưng có thay đổi khác - lưu lịch sử với trạng thái giữ nguyên
                     $historyModel = new BookingHistory();
@@ -1095,6 +1110,126 @@ class BookingController {
         
         // Gửi email
         return mail($to, $subject, $message, $headers);
+    }
+
+    /**
+     * Tự động phân bổ nhân sự (HDV) cho lịch khởi hành nếu chưa có
+     * @param int $lichKhoiHanhId ID lịch khởi hành
+     * @param string $ngayKhoiHanh Ngày khởi hành (Y-m-d)
+     * @param string $ngayKetThuc Ngày kết thúc (Y-m-d)
+     * @return bool True nếu phân bổ thành công hoặc đã có HDV, False nếu thất bại
+     */
+    private function tuDongPhanBoNhanSu($lichKhoiHanhId, $ngayKhoiHanh, $ngayKetThuc) {
+        try {
+            require_once 'models/LichKhoiHanh.php';
+            require_once 'models/PhanBoNhanSu.php';
+            require_once 'models/NhanSu.php';
+            require_once 'models/HDV.php';
+            
+            $lichKhoiHanhModel = new LichKhoiHanh();
+            $phanBoNhanSuModel = new PhanBoNhanSu();
+            $nhanSuModel = new NhanSu();
+            $hdvModel = new HDV();
+            
+            // Lấy thông tin lịch khởi hành
+            $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+            if (!$lichKhoiHanh) {
+                return false;
+            }
+            
+            // Kiểm tra xem đã có phân bổ nhân sự (HDV) chưa
+            $phanBoHienTai = $phanBoNhanSuModel->getByVaiTro($lichKhoiHanhId, 'HDV');
+            if (!empty($phanBoHienTai)) {
+                // Đã có HDV được phân bổ, không cần làm gì
+                return true;
+            }
+            
+            // Kiểm tra xem lịch khởi hành đã có hdv_id chưa
+            if (!empty($lichKhoiHanh['hdv_id'])) {
+                // Đã có HDV chính, thêm vào bảng phan_bo_nhan_su
+                $phanBoData = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'nhan_su_id' => $lichKhoiHanh['hdv_id'],
+                    'vai_tro' => 'HDV',
+                    'ghi_chu' => 'Tự động phân bổ từ hdv_id',
+                    'trang_thai' => 'ChoXacNhan'
+                ];
+                return $phanBoNhanSuModel->insert($phanBoData) !== false;
+            }
+            
+            // Chưa có HDV, tìm HDV rảnh
+            if (empty($ngayKhoiHanh) || empty($ngayKetThuc)) {
+                return false;
+            }
+            
+            // Lấy danh sách HDV
+            $hdvList = $nhanSuModel->getByRole('HDV');
+            if (empty($hdvList)) {
+                return false; // Không có HDV nào
+            }
+            
+            // Tạo startTime và endTime để kiểm tra rảnh
+            $startTime = $ngayKhoiHanh . ' 00:00:00';
+            $endTime = $ngayKetThuc . ' 23:59:59';
+            
+            // Tìm HDV rảnh (ưu tiên HDV ít tour nhất)
+            $hdvRanh = null;
+            $minTours = PHP_INT_MAX;
+            
+            foreach ($hdvList as $hdv) {
+                if (empty($hdv['nhan_su_id'])) {
+                    continue;
+                }
+                
+                // Kiểm tra HDV có rảnh không
+                if ($hdvModel->isAvailable($hdv['nhan_su_id'], $startTime, $endTime)) {
+                    // Đếm số tour đang có (để ưu tiên HDV ít tour nhất)
+                    $schedules = $hdvModel->getSchedule($hdv['nhan_su_id']);
+                    $soTour = count($schedules);
+                    
+                    if ($soTour < $minTours) {
+                        $minTours = $soTour;
+                        $hdvRanh = $hdv;
+                    }
+                }
+            }
+            
+            // Nếu tìm thấy HDV rảnh, phân bổ
+            if ($hdvRanh && !empty($hdvRanh['nhan_su_id'])) {
+                // Cập nhật hdv_id vào lịch khởi hành
+                $lichKhoiHanhModel->assignHDV($lichKhoiHanhId, $hdvRanh['nhan_su_id']);
+                
+                // Thêm vào bảng phan_bo_nhan_su
+                $phanBoData = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'nhan_su_id' => $hdvRanh['nhan_su_id'],
+                    'vai_tro' => 'HDV',
+                    'ghi_chu' => 'Tự động phân bổ - HDV rảnh',
+                    'trang_thai' => 'ChoXacNhan'
+                ];
+                
+                $result = $phanBoNhanSuModel->insert($phanBoData);
+                
+                // Thêm vào lịch làm việc của HDV
+                if ($result) {
+                    $hdvModel->addSchedule(
+                        $hdvRanh['nhan_su_id'],
+                        $lichKhoiHanh['tour_id'] ?? null,
+                        $startTime,
+                        $endTime,
+                        'Tự động phân bổ từ booking'
+                    );
+                }
+                
+                return $result !== false;
+            }
+            
+            return false; // Không tìm thấy HDV rảnh
+        } catch (Exception $e) {
+            // Log error nếu cần
+            error_log("Lỗi tự động phân bổ nhân sự: " . $e->getMessage());
+            return false;
+        }
     }
 
 }
