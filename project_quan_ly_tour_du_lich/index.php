@@ -86,6 +86,7 @@ match ($act) {
     'booking/chiTiet' => (new BookingController())->chiTiet(),
     'booking/update' => (new BookingController())->update(),
     'booking/updateTrangThai' => (new BookingController())->updateTrangThai(),
+    'booking/updateTienCoc' => (new BookingController())->updateTienCoc(),
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),

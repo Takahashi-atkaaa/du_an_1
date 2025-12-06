@@ -145,6 +145,25 @@ class LichKhoiHanhController {
             );
         }
         
+        // Lấy nhật ký tour cho tour này
+        $nhatKyTourList = [];
+        if (!empty($lichKhoiHanh['tour_id'])) {
+            require_once 'models/NhatKyTour.php';
+            $nhatKyTourModel = new NhatKyTour();
+            // Lấy tất cả nhật ký của tour này (không giới hạn theo HDV)
+            $conn = connectDB();
+            $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
+                    FROM nhat_ky_tour nkt
+                    LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                    LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                    LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                    WHERE nkt.tour_id = ?
+                    ORDER BY nkt.ngay_ghi DESC, nkt.id DESC";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([(int)$lichKhoiHanh['tour_id']]);
+            $nhatKyTourList = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        
         // Lấy danh sách booking và khách chi tiết cho lịch khởi hành
         $bookingList = [];
         $danhSachKhachChiTiet = [];

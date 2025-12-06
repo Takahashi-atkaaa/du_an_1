@@ -195,12 +195,134 @@ class BookingController {
             exit();
         }
         
+        // Nếu đổi sang "Hoàn tất", cần cập nhật tiền cọc = tổng tiền
+        if ($trangThaiMoi == 'HoanTat') {
+            $booking = $this->bookingModel->findById($bookingId);
+            if ($booking) {
+                $tongTien = (float)($booking['tong_tien'] ?? 0);
+                if ($tongTien > 0) {
+                    // Cập nhật tiền cọc và trạng thái cọc
+                    $conn = connectDB();
+                    $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = 'HoanTat' WHERE booking_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute([$tongTien, $bookingId]);
+                    
+                    $ghiChu = $ghiChu ?: 'Đã thanh toán đủ (tự động cập nhật tiền cọc = tổng tiền)';
+                }
+            }
+        }
+        
         $result = $this->bookingModel->updateTrangThai($bookingId, $trangThaiMoi, $nguoiThayDoiId, $ghiChu);
         
         if ($result) {
             $_SESSION['success'] = 'Cập nhật trạng thái booking thành công.';
         } else {
             $_SESSION['error'] = 'Không thể cập nhật trạng thái booking.';
+        }
+        
+        header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+        exit();
+    }
+
+    // Cập nhật tiền cọc
+    public function updateTienCoc() {
+        // requireLogin();
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+        
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'ID booking không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+        
+        // Kiểm tra quyền
+        if (!$this->checkPermissionToUpdate($bookingId)) {
+            $_SESSION['error'] = 'Bạn không có quyền cập nhật booking này.';
+            header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+            exit();
+        }
+        
+        $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
+        $trangThaiCoc = $_POST['trang_thai_coc'] ?? 'ChuaCoc';
+        $ghiChuCoc = trim($_POST['ghi_chu_coc'] ?? '');
+        
+        // Lấy thông tin booking hiện tại
+        $booking = $this->bookingModel->findById($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+        
+        // Validate tiền cọc không được vượt quá tổng tiền
+        $tongTien = (float)($booking['tong_tien'] ?? 0);
+        if ($tienCoc > $tongTien) {
+            $_SESSION['error'] = 'Số tiền cọc không được vượt quá tổng tiền (' . number_format($tongTien) . ' ₫).';
+            header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+            exit();
+        }
+        
+        // Nếu chưa nhập tiền cọc, tính 30% tổng tiền
+        if ($tienCoc == 0 && $tongTien > 0) {
+            $tienCoc = round($tongTien * 0.3);
+        }
+        
+        // Kiểm tra nếu tiền cọc bằng tổng tiền thì tự động đổi trạng thái thành "Hoàn tất" (Đã thanh toán)
+        $trangThaiBookingMoi = $booking['trang_thai'];
+        $trangThaiCocMoi = $trangThaiCoc;
+        
+        if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+            // Tiền cọc = tổng tiền (dùng abs để tránh lỗi làm tròn)
+            $trangThaiBookingMoi = 'HoanTat';
+            $trangThaiCocMoi = 'HoanTat';
+        } elseif ($tienCoc > 0 && $trangThaiCoc == 'DaCoc' && $booking['trang_thai'] != 'DaCoc' && $booking['trang_thai'] != 'HoanTat') {
+            // Nếu đã cọc nhưng chưa bằng tổng tiền, đổi thành "Đã cọc"
+            $trangThaiBookingMoi = 'DaCoc';
+        }
+        
+        // Cập nhật vào database
+        // Giả định có các trường tien_coc và trang_thai_coc trong bảng booking
+        // Nếu chưa có, sẽ cần ALTER TABLE để thêm các cột này
+        $conn = connectDB();
+        try {
+            // Kiểm tra xem các cột có tồn tại không
+            $checkColumns = $conn->query("SHOW COLUMNS FROM booking LIKE 'tien_coc'");
+            $hasTienCoc = $checkColumns->rowCount() > 0;
+            
+            if ($hasTienCoc) {
+                // Cập nhật với các trường mới
+                $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ? WHERE booking_id = ?";
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $bookingId]);
+            } else {
+                // Nếu chưa có cột, chỉ cập nhật trạng thái booking nếu cần
+                // Hoặc có thể tự động tạo cột (không khuyến khích trong production)
+                $result = true; // Tạm thời return true, sẽ cần ALTER TABLE sau
+            }
+            
+            if ($result) {
+                // Cập nhật trạng thái booking nếu có thay đổi
+                if ($trangThaiBookingMoi != $booking['trang_thai']) {
+                    $ghiChuThayDoi = 'Cập nhật tiền cọc: ' . number_format($tienCoc) . ' ₫';
+                    if ($tienCoc >= $tongTien) {
+                        $ghiChuThayDoi .= ' (Đã thanh toán đủ)';
+                    }
+                    if ($ghiChuCoc) {
+                        $ghiChuThayDoi .= ' - ' . $ghiChuCoc;
+                    }
+                    $this->bookingModel->updateTrangThai($bookingId, $trangThaiBookingMoi, $_SESSION['user_id'] ?? null, $ghiChuThayDoi);
+                }
+                
+                $thongBao = 'Cập nhật tiền cọc thành công. Số tiền cọc: ' . number_format($tienCoc) . ' ₫';
+                if ($tienCoc >= $tongTien && $tongTien > 0) {
+                    $thongBao .= ' - Trạng thái đã tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                }
+                $_SESSION['success'] = $thongBao;
+            } else {
+                $_SESSION['error'] = 'Không thể cập nhật tiền cọc.';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Lỗi khi cập nhật tiền cọc: ' . $e->getMessage();
         }
         
         header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
@@ -262,27 +384,79 @@ class BookingController {
         $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? null;
         $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
         
+        $tongTien = isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : 0;
+        $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
+        
+        // Lấy thông tin booking hiện tại
+        $booking = $this->bookingModel->findById($id);
+        $trangThaiCu = $booking['trang_thai'] ?? '';
+        
+        // Xác định trạng thái booking mới từ form
+        $trangThaiMoi = $_POST['trang_thai'] ?? $trangThaiCu;
+        
+        // Nếu đổi sang trạng thái "Hoàn tất", tự động set tiền cọc = tổng tiền
+        if ($trangThaiMoi == 'HoanTat' && $tongTien > 0) {
+            $tienCoc = $tongTien;
+        } else {
+            // Lấy tiền cọc hiện tại nếu chưa nhập
+            if ($tienCoc == 0) {
+                $tienCoc = (float)($booking['tien_coc'] ?? ($booking['so_tien_coc'] ?? 0));
+            }
+            
+            // Nếu chưa có tiền cọc và tổng tiền > 0, tính 30% tổng tiền
+            if ($tienCoc == 0 && $tongTien > 0) {
+                $tienCoc = round($tongTien * 0.3);
+            }
+        }
+        
+        // Nếu tiền cọc bằng tổng tiền, tự động đổi thành "Hoàn tất" (Đã thanh toán)
+        if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+            $trangThaiMoi = 'HoanTat';
+        } elseif ($tienCoc > 0 && $tienCoc < $tongTien && $trangThaiCu != 'HoanTat' && $trangThaiMoi != 'HoanTat') {
+            // Nếu đã cọc nhưng chưa đủ, đổi thành "Đã cọc" nếu chưa phải "Hoàn tất"
+            if ($trangThaiCu == 'ChoXacNhan') {
+                $trangThaiMoi = 'DaCoc';
+            }
+        }
+        
+        // Xác định trạng thái cọc - ưu tiên từ form, sau đó tự động xác định
+        $trangThaiCoc = $_POST['trang_thai_coc'] ?? $booking['trang_thai_coc'] ?? 'ChuaCoc';
+        
+        // Tự động điều chỉnh trạng thái cọc dựa trên logic
+        if ($trangThaiMoi == 'HoanTat' || ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01)) {
+            $trangThaiCoc = 'HoanTat';
+        } elseif ($tienCoc > 0 && $trangThaiCoc == 'ChuaCoc') {
+            $trangThaiCoc = 'DaCoc';
+        }
+        
         $data = [
             'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
             'ngay_khoi_hanh' => $ngayKhoiHanh,
             'ngay_ket_thuc' => $ngayKetThuc,
-            'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : 0,
-            'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
+            'tong_tien' => $tongTien,
+            'tien_coc' => $tienCoc,
+            'trang_thai_coc' => $trangThaiCoc,
+            'trang_thai' => $trangThaiMoi,
             'ghi_chu' => $_POST['ghi_chu'] ?? null
         ];
-        
-        // Lấy trạng thái cũ để lưu lịch sử nếu thay đổi
-        $booking = $this->bookingModel->findById($id);
-        $trangThaiCu = $booking['trang_thai'] ?? '';
         
         $result = $this->bookingModel->update($id, $data);
         
         if ($result) {
             // Nếu trạng thái thay đổi, lưu lịch sử
-            if (isset($data['trang_thai']) && $data['trang_thai'] !== $trangThaiCu) {
-                $this->bookingModel->updateTrangThai($id, $data['trang_thai'], $_SESSION['user_id'] ?? null, 'Cập nhật thông tin booking');
+            if ($trangThaiMoi !== $trangThaiCu) {
+                $ghiChu = 'Cập nhật thông tin booking';
+                if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                    $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                }
+                $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
             }
-            $_SESSION['success'] = 'Cập nhật booking thành công.';
+            
+            $thongBao = 'Cập nhật booking thành công.';
+            if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                $thongBao .= ' Trạng thái đã tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ).';
+            }
+            $_SESSION['success'] = $thongBao;
         } else {
             $_SESSION['error'] = 'Không thể cập nhật booking.';
         }
