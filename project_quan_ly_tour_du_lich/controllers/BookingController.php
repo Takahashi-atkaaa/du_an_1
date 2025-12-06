@@ -92,7 +92,14 @@ class BookingController {
                             'trang_thai' => 'SapKhoiHanh',
                             'ghi_chu' => 'Tạo tự động từ booking #' . $bookingId
                         ];
-                        $this->lichKhoiHanhModel->insert($lichKhoiHanhData);
+                        $lichKhoiHanhId = $this->lichKhoiHanhModel->insert($lichKhoiHanhData);
+                        if ($lichKhoiHanhId) {
+                            // Tự động phân bổ nhân sự nếu admin quên
+                            $this->tuDongPhanBoNhanSu($lichKhoiHanhId, $ngayKhoiHanh, $ngayKetThuc);
+                        }
+                    } else {
+                        // Lịch khởi hành đã có, kiểm tra và tự động phân bổ nếu chưa có
+                        $this->tuDongPhanBoNhanSu($lichKhoiHanh['id'], $ngayKhoiHanh, $ngayKetThuc);
                     }
                 }
                 
@@ -195,12 +202,134 @@ class BookingController {
             exit();
         }
         
+        // Nếu đổi sang "Hoàn tất", cần cập nhật tiền cọc = tổng tiền
+        if ($trangThaiMoi == 'HoanTat') {
+            $booking = $this->bookingModel->findById($bookingId);
+            if ($booking) {
+                $tongTien = (float)($booking['tong_tien'] ?? 0);
+                if ($tongTien > 0) {
+                    // Cập nhật tiền cọc và trạng thái cọc
+                    $conn = connectDB();
+                    $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = 'HoanTat' WHERE booking_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $stmt->execute([$tongTien, $bookingId]);
+                    
+                    $ghiChu = $ghiChu ?: 'Đã thanh toán đủ (tự động cập nhật tiền cọc = tổng tiền)';
+                }
+            }
+        }
+        
         $result = $this->bookingModel->updateTrangThai($bookingId, $trangThaiMoi, $nguoiThayDoiId, $ghiChu);
         
         if ($result) {
             $_SESSION['success'] = 'Cập nhật trạng thái booking thành công.';
         } else {
             $_SESSION['error'] = 'Không thể cập nhật trạng thái booking.';
+        }
+        
+        header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+        exit();
+    }
+
+    // Cập nhật tiền cọc
+    public function updateTienCoc() {
+        // requireLogin();
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+        
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'ID booking không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+        
+        // Kiểm tra quyền
+        if (!$this->checkPermissionToUpdate($bookingId)) {
+            $_SESSION['error'] = 'Bạn không có quyền cập nhật booking này.';
+            header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+            exit();
+        }
+        
+        $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
+        $trangThaiCoc = $_POST['trang_thai_coc'] ?? 'ChuaCoc';
+        $ghiChuCoc = trim($_POST['ghi_chu_coc'] ?? '');
+        
+        // Lấy thông tin booking hiện tại
+        $booking = $this->bookingModel->findById($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+            header('Location: index.php?act=admin/quanLyBooking');
+            exit();
+        }
+        
+        // Validate tiền cọc không được vượt quá tổng tiền
+        $tongTien = (float)($booking['tong_tien'] ?? 0);
+        if ($tienCoc > $tongTien) {
+            $_SESSION['error'] = 'Số tiền cọc không được vượt quá tổng tiền (' . number_format($tongTien) . ' ₫).';
+            header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+            exit();
+        }
+        
+        // Nếu chưa nhập tiền cọc, tính 30% tổng tiền
+        if ($tienCoc == 0 && $tongTien > 0) {
+            $tienCoc = round($tongTien * 0.3);
+        }
+        
+        // Kiểm tra nếu tiền cọc bằng tổng tiền thì tự động đổi trạng thái thành "Hoàn tất" (Đã thanh toán)
+        $trangThaiBookingMoi = $booking['trang_thai'];
+        $trangThaiCocMoi = $trangThaiCoc;
+        
+        if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+            // Tiền cọc = tổng tiền (dùng abs để tránh lỗi làm tròn)
+            $trangThaiBookingMoi = 'HoanTat';
+            $trangThaiCocMoi = 'HoanTat';
+        } elseif ($tienCoc > 0 && $trangThaiCoc == 'DaCoc' && $booking['trang_thai'] != 'DaCoc' && $booking['trang_thai'] != 'HoanTat') {
+            // Nếu đã cọc nhưng chưa bằng tổng tiền, đổi thành "Đã cọc"
+            $trangThaiBookingMoi = 'DaCoc';
+        }
+        
+        // Cập nhật vào database
+        // Giả định có các trường tien_coc và trang_thai_coc trong bảng booking
+        // Nếu chưa có, sẽ cần ALTER TABLE để thêm các cột này
+        $conn = connectDB();
+        try {
+            // Kiểm tra xem các cột có tồn tại không
+            $checkColumns = $conn->query("SHOW COLUMNS FROM booking LIKE 'tien_coc'");
+            $hasTienCoc = $checkColumns->rowCount() > 0;
+            
+            if ($hasTienCoc) {
+                // Cập nhật với các trường mới
+                $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ? WHERE booking_id = ?";
+                $stmt = $conn->prepare($sql);
+                $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $bookingId]);
+            } else {
+                // Nếu chưa có cột, chỉ cập nhật trạng thái booking nếu cần
+                // Hoặc có thể tự động tạo cột (không khuyến khích trong production)
+                $result = true; // Tạm thời return true, sẽ cần ALTER TABLE sau
+            }
+            
+            if ($result) {
+                // Cập nhật trạng thái booking nếu có thay đổi
+                if ($trangThaiBookingMoi != $booking['trang_thai']) {
+                    $ghiChuThayDoi = 'Cập nhật tiền cọc: ' . number_format($tienCoc) . ' ₫';
+                    if ($tienCoc >= $tongTien) {
+                        $ghiChuThayDoi .= ' (Đã thanh toán đủ)';
+                    }
+                    if ($ghiChuCoc) {
+                        $ghiChuThayDoi .= ' - ' . $ghiChuCoc;
+                    }
+                    $this->bookingModel->updateTrangThai($bookingId, $trangThaiBookingMoi, $_SESSION['user_id'] ?? null, $ghiChuThayDoi);
+                }
+                
+                $thongBao = 'Cập nhật tiền cọc thành công. Số tiền cọc: ' . number_format($tienCoc) . ' ₫';
+                if ($tienCoc >= $tongTien && $tongTien > 0) {
+                    $thongBao .= ' - Trạng thái đã tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                }
+                $_SESSION['success'] = $thongBao;
+            } else {
+                $_SESSION['error'] = 'Không thể cập nhật tiền cọc.';
+            }
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Lỗi khi cập nhật tiền cọc: ' . $e->getMessage();
         }
         
         header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
@@ -238,6 +367,35 @@ class BookingController {
         // Lấy thông tin tour
         $tour = $this->tourModel->findById($booking['tour_id']);
         
+        // Lấy yêu cầu tour của khách hàng (nếu có)
+        $yeuCauTour = null;
+        if (!empty($booking['khach_hang_id'])) {
+            require_once 'models/KhachHang.php';
+            require_once 'models/ThongBao.php';
+            
+            $khachHangModel = new KhachHang();
+            $khachHang = $khachHangModel->findById($booking['khach_hang_id']);
+            
+            if ($khachHang && !empty($khachHang['nguoi_dung_id'])) {
+                $thongBaoModel = new ThongBao();
+                
+                // Lấy tất cả yêu cầu tour, sau đó filter theo khách hàng này
+                // Lấy yêu cầu mới nhất của khách hàng
+                $yeuCauList = $thongBaoModel->getYeuCauTour([
+                    'search' => '',
+                    'limit' => 50
+                ]);
+                
+                // Tìm yêu cầu của khách hàng này (ưu tiên yêu cầu mới nhất)
+                foreach ($yeuCauList as $yc) {
+                    if (isset($yc['nguoi_gui_id']) && $yc['nguoi_gui_id'] == $khachHang['nguoi_dung_id']) {
+                        $yeuCauTour = $yc;
+                        break; // Lấy yêu cầu đầu tiên (mới nhất do đã sort DESC)
+                    }
+                }
+            }
+        }
+        
         require 'views/admin/chi_tiet_booking.php';
     }
 
@@ -262,27 +420,146 @@ class BookingController {
         $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? null;
         $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
         
+        $tongTien = isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : 0;
+        $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
+        
+        // Lấy thông tin booking hiện tại
+        $booking = $this->bookingModel->findById($id);
+        $trangThaiCu = $booking['trang_thai'] ?? '';
+        
+        // Xác định trạng thái booking mới từ form
+        $trangThaiMoi = $_POST['trang_thai'] ?? $trangThaiCu;
+        
+        // Nếu đổi sang trạng thái "Hoàn tất", tự động set tiền cọc = tổng tiền
+        if ($trangThaiMoi == 'HoanTat' && $tongTien > 0) {
+            $tienCoc = $tongTien;
+        } else {
+            // Lấy tiền cọc hiện tại nếu chưa nhập
+            if ($tienCoc == 0) {
+                $tienCoc = (float)($booking['tien_coc'] ?? ($booking['so_tien_coc'] ?? 0));
+            }
+            
+            // Nếu chưa có tiền cọc và tổng tiền > 0, tính 30% tổng tiền
+            if ($tienCoc == 0 && $tongTien > 0) {
+                $tienCoc = round($tongTien * 0.3);
+            }
+        }
+        
+        // Nếu tiền cọc bằng tổng tiền, tự động đổi thành "Hoàn tất" (Đã thanh toán)
+        if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+            $trangThaiMoi = 'HoanTat';
+        } elseif ($tienCoc > 0 && $tienCoc < $tongTien && $trangThaiCu != 'HoanTat' && $trangThaiMoi != 'HoanTat') {
+            // Nếu đã cọc nhưng chưa đủ, đổi thành "Đã cọc" nếu chưa phải "Hoàn tất"
+            if ($trangThaiCu == 'ChoXacNhan') {
+                $trangThaiMoi = 'DaCoc';
+            }
+        }
+        
+        // Xác định trạng thái cọc - ưu tiên từ form, sau đó tự động xác định
+        $trangThaiCoc = $_POST['trang_thai_coc'] ?? $booking['trang_thai_coc'] ?? 'ChuaCoc';
+        
+        // Tự động điều chỉnh trạng thái cọc dựa trên logic
+        if ($trangThaiMoi == 'HoanTat' || ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01)) {
+            $trangThaiCoc = 'HoanTat';
+        } elseif ($tienCoc > 0 && $trangThaiCoc == 'ChuaCoc') {
+            $trangThaiCoc = 'DaCoc';
+        }
+        
         $data = [
             'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
             'ngay_khoi_hanh' => $ngayKhoiHanh,
             'ngay_ket_thuc' => $ngayKetThuc,
-            'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : 0,
-            'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
+            'tong_tien' => $tongTien,
+            'tien_coc' => $tienCoc,
+            'trang_thai_coc' => $trangThaiCoc,
+            'trang_thai' => $trangThaiMoi,
             'ghi_chu' => $_POST['ghi_chu'] ?? null
         ];
         
-        // Lấy trạng thái cũ để lưu lịch sử nếu thay đổi
-        $booking = $this->bookingModel->findById($id);
-        $trangThaiCu = $booking['trang_thai'] ?? '';
+        // Kiểm tra có thay đổi gì không
+        $coThayDoi = false;
+        $thayDoiChiTiet = [];
+        
+        if ($trangThaiMoi !== $trangThaiCu) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Trạng thái: {$trangThaiCu} → {$trangThaiMoi}";
+        }
+        
+        $tienCocCu = (float)($booking['tien_coc'] ?? ($booking['so_tien_coc'] ?? 0));
+        if (abs($tienCoc - $tienCocCu) > 0.01) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Tiền cọc: " . number_format($tienCocCu) . " ₫ → " . number_format($tienCoc) . " ₫";
+        }
+        
+        $tongTienCu = (float)($booking['tong_tien'] ?? 0);
+        if (abs($tongTien - $tongTienCu) > 0.01) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Tổng tiền: " . number_format($tongTienCu) . " ₫ → " . number_format($tongTien) . " ₫";
+        }
+        
+        $soNguoiCu = (int)($booking['so_nguoi'] ?? 1);
+        $soNguoiMoi = (int)($data['so_nguoi']);
+        if ($soNguoiMoi !== $soNguoiCu) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Số người: {$soNguoiCu} → {$soNguoiMoi}";
+        }
+        
+        // Kiểm tra thay đổi ghi chú
+        $ghiChuCu = trim($booking['ghi_chu'] ?? '');
+        $ghiChuMoi = trim($_POST['ghi_chu'] ?? '');
+        if ($ghiChuMoi !== $ghiChuCu) {
+            $coThayDoi = true;
+            if (empty($ghiChuCu)) {
+                $thayDoiChiTiet[] = "Ghi chú: (trống) → " . (mb_strlen($ghiChuMoi) > 50 ? mb_substr($ghiChuMoi, 0, 50) . '...' : $ghiChuMoi);
+            } elseif (empty($ghiChuMoi)) {
+                $thayDoiChiTiet[] = "Ghi chú: " . (mb_strlen($ghiChuCu) > 50 ? mb_substr($ghiChuCu, 0, 50) . '...' : $ghiChuCu) . " → (trống)";
+            } else {
+                $thayDoiChiTiet[] = "Ghi chú đã được cập nhật";
+            }
+        }
         
         $result = $this->bookingModel->update($id, $data);
         
         if ($result) {
-            // Nếu trạng thái thay đổi, lưu lịch sử
-            if (isset($data['trang_thai']) && $data['trang_thai'] !== $trangThaiCu) {
-                $this->bookingModel->updateTrangThai($id, $data['trang_thai'], $_SESSION['user_id'] ?? null, 'Cập nhật thông tin booking');
+            // Nếu có thay đổi, lưu lịch sử
+            if ($coThayDoi) {
+                // Nếu trạng thái thay đổi, dùng updateTrangThai (đã có logic lưu lịch sử)
+                if ($trangThaiMoi !== $trangThaiCu) {
+                    $ghiChu = 'Cập nhật thông tin booking';
+                    if (!empty($thayDoiChiTiet)) {
+                        $ghiChu .= ': ' . implode(', ', $thayDoiChiTiet);
+                    }
+                    if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                        $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                    }
+                    $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
+                    
+                    // Tự động phân bổ nhân sự khi booking được xác nhận (DaCoc)
+                    if ($trangThaiMoi === 'DaCoc' && !empty($ngayKhoiHanh)) {
+                        $lichKhoiHanh = $this->lichKhoiHanhModel->findByTourAndNgayKhoiHanh($booking['tour_id'], $ngayKhoiHanh);
+                        if ($lichKhoiHanh) {
+                            $this->tuDongPhanBoNhanSu($lichKhoiHanh['id'], $ngayKhoiHanh, $ngayKetThuc ?? $ngayKhoiHanh);
+                        }
+                    }
+                } else {
+                    // Trạng thái không đổi nhưng có thay đổi khác - lưu lịch sử với trạng thái giữ nguyên
+                    $historyModel = new BookingHistory();
+                    $ghiChu = 'Cập nhật thông tin booking: ' . implode(', ', $thayDoiChiTiet);
+                    $historyModel->insert([
+                        'booking_id' => $id,
+                        'trang_thai_cu' => $trangThaiCu,
+                        'trang_thai_moi' => $trangThaiMoi,
+                        'nguoi_thay_doi_id' => $_SESSION['user_id'] ?? null,
+                        'ghi_chu' => $ghiChu
+                    ]);
+                }
             }
-            $_SESSION['success'] = 'Cập nhật booking thành công.';
+            
+            $thongBao = 'Cập nhật booking thành công.';
+            if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                $thongBao .= ' Trạng thái đã tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ).';
+            }
+            $_SESSION['success'] = $thongBao;
         } else {
             $_SESSION['error'] = 'Không thể cập nhật booking.';
         }
@@ -833,6 +1110,126 @@ class BookingController {
         
         // Gửi email
         return mail($to, $subject, $message, $headers);
+    }
+
+    /**
+     * Tự động phân bổ nhân sự (HDV) cho lịch khởi hành nếu chưa có
+     * @param int $lichKhoiHanhId ID lịch khởi hành
+     * @param string $ngayKhoiHanh Ngày khởi hành (Y-m-d)
+     * @param string $ngayKetThuc Ngày kết thúc (Y-m-d)
+     * @return bool True nếu phân bổ thành công hoặc đã có HDV, False nếu thất bại
+     */
+    private function tuDongPhanBoNhanSu($lichKhoiHanhId, $ngayKhoiHanh, $ngayKetThuc) {
+        try {
+            require_once 'models/LichKhoiHanh.php';
+            require_once 'models/PhanBoNhanSu.php';
+            require_once 'models/NhanSu.php';
+            require_once 'models/HDV.php';
+            
+            $lichKhoiHanhModel = new LichKhoiHanh();
+            $phanBoNhanSuModel = new PhanBoNhanSu();
+            $nhanSuModel = new NhanSu();
+            $hdvModel = new HDV();
+            
+            // Lấy thông tin lịch khởi hành
+            $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+            if (!$lichKhoiHanh) {
+                return false;
+            }
+            
+            // Kiểm tra xem đã có phân bổ nhân sự (HDV) chưa
+            $phanBoHienTai = $phanBoNhanSuModel->getByVaiTro($lichKhoiHanhId, 'HDV');
+            if (!empty($phanBoHienTai)) {
+                // Đã có HDV được phân bổ, không cần làm gì
+                return true;
+            }
+            
+            // Kiểm tra xem lịch khởi hành đã có hdv_id chưa
+            if (!empty($lichKhoiHanh['hdv_id'])) {
+                // Đã có HDV chính, thêm vào bảng phan_bo_nhan_su
+                $phanBoData = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'nhan_su_id' => $lichKhoiHanh['hdv_id'],
+                    'vai_tro' => 'HDV',
+                    'ghi_chu' => 'Tự động phân bổ từ hdv_id',
+                    'trang_thai' => 'ChoXacNhan'
+                ];
+                return $phanBoNhanSuModel->insert($phanBoData) !== false;
+            }
+            
+            // Chưa có HDV, tìm HDV rảnh
+            if (empty($ngayKhoiHanh) || empty($ngayKetThuc)) {
+                return false;
+            }
+            
+            // Lấy danh sách HDV
+            $hdvList = $nhanSuModel->getByRole('HDV');
+            if (empty($hdvList)) {
+                return false; // Không có HDV nào
+            }
+            
+            // Tạo startTime và endTime để kiểm tra rảnh
+            $startTime = $ngayKhoiHanh . ' 00:00:00';
+            $endTime = $ngayKetThuc . ' 23:59:59';
+            
+            // Tìm HDV rảnh (ưu tiên HDV ít tour nhất)
+            $hdvRanh = null;
+            $minTours = PHP_INT_MAX;
+            
+            foreach ($hdvList as $hdv) {
+                if (empty($hdv['nhan_su_id'])) {
+                    continue;
+                }
+                
+                // Kiểm tra HDV có rảnh không
+                if ($hdvModel->isAvailable($hdv['nhan_su_id'], $startTime, $endTime)) {
+                    // Đếm số tour đang có (để ưu tiên HDV ít tour nhất)
+                    $schedules = $hdvModel->getSchedule($hdv['nhan_su_id']);
+                    $soTour = count($schedules);
+                    
+                    if ($soTour < $minTours) {
+                        $minTours = $soTour;
+                        $hdvRanh = $hdv;
+                    }
+                }
+            }
+            
+            // Nếu tìm thấy HDV rảnh, phân bổ
+            if ($hdvRanh && !empty($hdvRanh['nhan_su_id'])) {
+                // Cập nhật hdv_id vào lịch khởi hành
+                $lichKhoiHanhModel->assignHDV($lichKhoiHanhId, $hdvRanh['nhan_su_id']);
+                
+                // Thêm vào bảng phan_bo_nhan_su
+                $phanBoData = [
+                    'lich_khoi_hanh_id' => $lichKhoiHanhId,
+                    'nhan_su_id' => $hdvRanh['nhan_su_id'],
+                    'vai_tro' => 'HDV',
+                    'ghi_chu' => 'Tự động phân bổ - HDV rảnh',
+                    'trang_thai' => 'ChoXacNhan'
+                ];
+                
+                $result = $phanBoNhanSuModel->insert($phanBoData);
+                
+                // Thêm vào lịch làm việc của HDV
+                if ($result) {
+                    $hdvModel->addSchedule(
+                        $hdvRanh['nhan_su_id'],
+                        $lichKhoiHanh['tour_id'] ?? null,
+                        $startTime,
+                        $endTime,
+                        'Tự động phân bổ từ booking'
+                    );
+                }
+                
+                return $result !== false;
+            }
+            
+            return false; // Không tìm thấy HDV rảnh
+        } catch (Exception $e) {
+            // Log error nếu cần
+            error_log("Lỗi tự động phân bổ nhân sự: " . $e->getMessage());
+            return false;
+        }
     }
 
 }

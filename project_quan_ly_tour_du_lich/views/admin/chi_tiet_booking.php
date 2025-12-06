@@ -248,9 +248,70 @@
                                 </strong>
                             </div>
                         </div>
+                        <?php
+                        // Tính toán thông tin tiền cọc
+                        $tongTien = (float)($booking['tong_tien'] ?? 0);
+                        $tienCoc = (float)($booking['tien_coc'] ?? ($booking['so_tien_coc'] ?? 0));
+                        
+                        // Nếu trạng thái là "Hoàn tất", tiền cọc = tổng tiền (đã thanh toán đủ)
+                        if ($booking['trang_thai'] == 'HoanTat' && $tongTien > 0) {
+                            $tienCoc = $tongTien;
+                            $trangThaiCoc = 'HoanTat';
+                        } else {
+                            // Nếu chưa có tiền cọc trong DB, tính 30% tổng tiền làm mặc định
+                            if ($tienCoc == 0 && $tongTien > 0) {
+                                $tienCoc = round($tongTien * 0.3);
+                            }
+                            $trangThaiCoc = $booking['trang_thai_coc'] ?? ($booking['trang_thai'] == 'DaCoc' ? 'DaCoc' : 'ChuaCoc');
+                        }
+                        $tienConLai = max(0, $tongTien - $tienCoc);
+                        ?>
                         <div class="info-row">
                             <div class="info-label">
-                                <i class="bi bi-flag text-danger"></i> Trạng thái
+                                <i class="bi bi-wallet2 text-primary"></i> Số tiền cọc
+                            </div>
+                            <div class="info-value">
+                                <strong class="text-primary fs-5">
+                                    <?php echo number_format($tienCoc); ?> ₫
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-check-circle text-info"></i> Trạng thái cọc
+                            </div>
+                            <div class="info-value">
+                                <?php
+                                $trangThaiCocLabels = [
+                                    'DaCoc' => 'Đã cọc',
+                                    'ChuaCoc' => 'Chưa cọc',
+                                    'HoanTat' => 'Hoàn tất'
+                                ];
+                                $trangThaiCocBadge = $trangThaiCoc == 'DaCoc' ? 'success' : ($trangThaiCoc == 'HoanTat' ? 'success' : 'warning');
+                                ?>
+                                <span class="badge bg-<?php echo $trangThaiCocBadge; ?> rounded-pill">
+                                    <?php echo $trangThaiCocLabels[$trangThaiCoc] ?? $trangThaiCoc; ?>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-cash-stack text-warning"></i> Số tiền còn lại
+                            </div>
+                            <div class="info-value">
+                                <strong class="text-warning fs-5">
+                                    <?php echo number_format($tienConLai); ?> ₫
+                                </strong>
+                                <?php if ($tienConLai > 0): ?>
+                                    <small class="text-muted d-block mt-1">
+                                        (<?php echo round(($tienConLai / $tongTien) * 100, 1); ?>% tổng tiền)
+                                    </small>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="info-row">
+                            <div class="info-label">
+                                <i class="bi bi-flag text-danger"></i> Trạng thái booking
                             </div>
                             <div class="info-value">
                                 <?php
@@ -322,60 +383,98 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Yêu cầu Tour (nếu có) -->
+                <?php if (!empty($yeuCauTour)): ?>
+                    <?php
+                        // Parse thông tin từ nội dung
+                        $thongTinYeuCau = [];
+                        foreach (explode("\n", $yeuCauTour['noi_dung'] ?? '') as $row) {
+                            $kv = explode(": ", $row, 2);
+                            if (count($kv) == 2) {
+                                $thongTinYeuCau[$kv[0]] = $kv[1];
+                            }
+                        }
+                    ?>
+                    <div class="info-card card mt-3">
+                        <div class="card-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="bi bi-star-fill"></i> Yêu cầu Tour từ Khách hàng
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-geo-alt-fill text-primary"></i> Địa điểm
+                                </div>
+                                <div class="info-value fw-semibold">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Địa điểm'] ?? 'N/A'); ?>
+                                </div>
+                            </div>
+                            <?php if (!empty($thongTinYeuCau['Thời gian'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-calendar-range text-info"></i> Thời gian
+                                </div>
+                                <div class="info-value">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Thời gian']); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($thongTinYeuCau['Số người'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-people-fill text-success"></i> Số người
+                                </div>
+                                <div class="info-value">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Số người']); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($thongTinYeuCau['Ngân sách'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-wallet2 text-warning"></i> Ngân sách
+                                </div>
+                                <div class="info-value">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Ngân sách']); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($thongTinYeuCau['Yêu cầu đặc biệt'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-list-check text-danger"></i> Yêu cầu đặc biệt
+                                </div>
+                                <div class="info-value">
+                                    <?php echo nl2br(htmlspecialchars($thongTinYeuCau['Yêu cầu đặc biệt'])); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-clock text-muted"></i> Thời gian gửi
+                                </div>
+                                <div class="info-value">
+                                    <small><?php echo date('d/m/Y H:i', strtotime($yeuCauTour['created_at'])); ?></small>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <a href="index.php?act=admin/chiTietYeuCauTour&id=<?php echo $yeuCauTour['id']; ?>" 
+                                   class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="bi bi-eye me-2"></i>Xem chi tiết & Phản hồi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Right Column - Forms -->
             <div class="col-lg-6">
                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
-                    <!-- Cập nhật trạng thái -->
+                    <!-- Cập nhật thông tin Booking -->
                     <div class="form-card card">
                         <div class="card-header">
-                            <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" action="index.php?act=booking/updateTrangThai">
-                                <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-flag text-primary"></i> Trạng thái mới
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="trang_thai" class="form-select" required>
-                                        <option value="ChoXacNhan" <?php echo $currentStatus == 'ChoXacNhan' ? 'selected' : ''; ?>>
-                                            Chờ xác nhận
-                                        </option>
-                                        <option value="DaCoc" <?php echo $currentStatus == 'DaCoc' ? 'selected' : ''; ?>>
-                                            Đã cọc
-                                        </option>
-                                        <option value="HoanTat" <?php echo $currentStatus == 'HoanTat' ? 'selected' : ''; ?>>
-                                            Hoàn tất
-                                        </option>
-                                        <option value="Huy" <?php echo $currentStatus == 'Huy' ? 'selected' : ''; ?>>
-                                            Hủy
-                                        </option>
-                                    </select>
-                                </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-pencil text-secondary"></i> Ghi chú
-                                    </label>
-                                    <textarea name="ghi_chu" class="form-control" rows="3" 
-                                              placeholder="Thêm ghi chú về việc thay đổi trạng thái..."></textarea>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-check-circle"></i> Cập nhật trạng thái
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Cập nhật thông tin -->
-                    <div class="form-card card">
-                        <div class="card-header">
-                            <i class="bi bi-pencil-square"></i> Cập nhật thông tin
+                            <i class="bi bi-pencil-square"></i> Cập nhật thông tin Booking
                         </div>
                         <div class="card-body">
                             <form method="POST" action="index.php?act=booking/update">
@@ -393,6 +492,18 @@
 
                                     <div class="col-md-6">
                                         <label class="form-label fw-semibold">
+                                            <i class="bi bi-cash-coin text-success"></i> Tổng tiền
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" name="tong_tien" id="tongTienInput" class="form-control" 
+                                                   value="<?php echo $booking['tong_tien']; ?>" step="1000" min="0" required>
+                                            <span class="input-group-text">₫</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
                                             <i class="bi bi-calendar-event text-warning"></i> Ngày khởi hành
                                         </label>
                                         <input type="date" name="ngay_khoi_hanh" class="form-control" 
@@ -403,28 +514,28 @@
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
                                         </label>
-                                       <input type="date" name="ngay_ket_thuc" class="form-control"
-                                              value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
+                                        <input type="date" name="ngay_ket_thuc" class="form-control"
+                                               value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
                                         <small class="text-muted">Để trống sẽ dùng ngày khởi hành</small>
                                     </div>
 
-                                    <div class="col-12">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-semibold">
-                                            <i class="bi bi-cash-coin text-success"></i> Tổng tiền
-                                            <span class="text-danger">*</span>
+                                            <i class="bi bi-wallet2 text-primary"></i> Tiền cọc
                                         </label>
                                         <div class="input-group">
-                                            <input type="number" name="tong_tien" class="form-control" 
-                                                   value="<?php echo $booking['tong_tien']; ?>" step="1000" min="0" required>
+                                            <input type="number" name="tien_coc" id="tienCocInput" class="form-control" 
+                                                   value="<?php echo $tienCoc; ?>" step="1000" min="0">
                                             <span class="input-group-text">₫</span>
                                         </div>
+                                        <small class="text-muted">Để trống sẽ tự động tính 30% tổng tiền</small>
                                     </div>
 
-                                    <div class="col-12">
+                                    <div class="col-md-6">
                                         <label class="form-label fw-semibold">
-                                            <i class="bi bi-flag text-danger"></i> Trạng thái
+                                            <i class="bi bi-flag text-danger"></i> Trạng thái Booking
                                         </label>
-                                        <select name="trang_thai" class="form-select">
+                                        <select name="trang_thai" id="trangThaiSelect" class="form-select">
                                             <option value="ChoXacNhan" <?php echo $currentStatus == 'ChoXacNhan' ? 'selected' : ''; ?>>
                                                 Chờ xác nhận
                                             </option>
@@ -440,6 +551,30 @@
                                         </select>
                                     </div>
 
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-check-circle text-info"></i> Trạng thái cọc
+                                        </label>
+                                        <select name="trang_thai_coc" id="trangThaiCocSelect" class="form-select">
+                                            <option value="ChuaCoc" <?php echo $trangThaiCoc == 'ChuaCoc' ? 'selected' : ''; ?>>
+                                                Chưa cọc
+                                            </option>
+                                            <option value="DaCoc" <?php echo $trangThaiCoc == 'DaCoc' ? 'selected' : ''; ?>>
+                                                Đã cọc
+                                            </option>
+                                            <option value="HoanTat" <?php echo $trangThaiCoc == 'HoanTat' ? 'selected' : ''; ?>>
+                                                Hoàn tất thanh toán
+                                            </option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-12">
+                                        <div id="tienCocWarning" class="alert alert-info mb-0" style="display: none;">
+                                            <i class="bi bi-info-circle"></i> 
+                                            <strong>Lưu ý:</strong> Khi chọn "Hoàn tất", tiền cọc sẽ tự động bằng tổng tiền (đã thanh toán đủ).
+                                        </div>
+                                    </div>
+
                                     <div class="col-12">
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-pencil-square text-secondary"></i> Ghi chú
@@ -448,7 +583,7 @@
                                     </div>
 
                                     <div class="col-12">
-                                        <button type="submit" class="btn btn-success w-100">
+                                        <button type="submit" class="btn btn-success w-100 btn-lg">
                                             <i class="bi bi-save"></i> Lưu thay đổi
                                         </button>
                                     </div>
@@ -531,6 +666,98 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Tự động đồng bộ trạng thái khi thay đổi tiền cọc hoặc trạng thái
+        (function() {
+            const tienCocInput = document.getElementById('tienCocInput');
+            const tongTienInput = document.getElementById('tongTienInput');
+            const trangThaiSelect = document.getElementById('trangThaiSelect');
+            const trangThaiCocSelect = document.getElementById('trangThaiCocSelect');
+            const tienCocWarning = document.getElementById('tienCocWarning');
+            
+            function getTongTien() {
+                return parseFloat(tongTienInput?.value) || 0;
+            }
+            
+            function updateWarning() {
+                if (!tienCocWarning) return;
+                const tongTien = getTongTien();
+                const trangThai = trangThaiSelect?.value || '';
+                const tienCoc = parseFloat(tienCocInput?.value) || 0;
+                
+                if (trangThai === 'HoanTat' || (tongTien > 0 && Math.abs(tienCoc - tongTien) < 0.01)) {
+                    tienCocWarning.style.display = 'block';
+                } else {
+                    tienCocWarning.style.display = 'none';
+                }
+            }
+            
+            // Khi thay đổi tiền cọc
+            if (tienCocInput) {
+                tienCocInput.addEventListener('input', function() {
+                    const tongTien = getTongTien();
+                    const tienCoc = parseFloat(this.value) || 0;
+                    
+                    if (tongTien > 0 && Math.abs(tienCoc - tongTien) < 0.01) {
+                        // Tiền cọc = tổng tiền → Hoàn tất
+                        if (trangThaiSelect) trangThaiSelect.value = 'HoanTat';
+                        if (trangThaiCocSelect) trangThaiCocSelect.value = 'HoanTat';
+                    } else if (tienCoc > 0 && tienCoc < tongTien) {
+                        // Đã cọc một phần
+                        if (trangThaiSelect && trangThaiSelect.value === 'ChoXacNhan') {
+                            trangThaiSelect.value = 'DaCoc';
+                        }
+                        if (trangThaiCocSelect && trangThaiCocSelect.value === 'ChuaCoc') {
+                            trangThaiCocSelect.value = 'DaCoc';
+                        }
+                    }
+                    updateWarning();
+                });
+            }
+            
+            // Khi thay đổi tổng tiền
+            if (tongTienInput) {
+                tongTienInput.addEventListener('input', function() {
+                    const tongTien = getTongTien();
+                    const tienCoc = parseFloat(tienCocInput?.value) || 0;
+                    
+                    // Nếu tiền cọc > tổng tiền mới, giảm tiền cọc xuống
+                    if (tienCoc > tongTien && tongTien > 0) {
+                        if (tienCocInput) tienCocInput.value = tongTien;
+                    }
+                    updateWarning();
+                });
+            }
+            
+            // Khi thay đổi trạng thái booking
+            if (trangThaiSelect) {
+                trangThaiSelect.addEventListener('change', function() {
+                    const tongTien = getTongTien();
+                    if (this.value === 'HoanTat' && tongTien > 0) {
+                        // Hoàn tất → set tiền cọc = tổng tiền
+                        if (tienCocInput) tienCocInput.value = tongTien;
+                        if (trangThaiCocSelect) trangThaiCocSelect.value = 'HoanTat';
+                    }
+                    updateWarning();
+                });
+            }
+            
+            // Khi thay đổi trạng thái cọc
+            if (trangThaiCocSelect) {
+                trangThaiCocSelect.addEventListener('change', function() {
+                    const tongTien = getTongTien();
+                    if (this.value === 'HoanTat' && tongTien > 0) {
+                        if (tienCocInput) tienCocInput.value = tongTien;
+                        if (trangThaiSelect) trangThaiSelect.value = 'HoanTat';
+                    }
+                    updateWarning();
+                });
+            }
+            
+            // Kiểm tra khi trang load
+            updateWarning();
+        })();
+    </script>
 </body>
 </html>
 

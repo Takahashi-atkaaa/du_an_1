@@ -7,6 +7,7 @@ require_once 'models/NhanSu.php';
 require_once 'models/NhaCungCap.php';
 require_once 'models/DichVuNhaCungCap.php';
 require_once 'models/Booking.php';
+require_once 'models/NhatKyTour.php';
 
 class LichKhoiHanhController {
     private $lichKhoiHanhModel;
@@ -102,10 +103,11 @@ class LichKhoiHanhController {
         // Lấy phân bổ nhân sự
         $phanBoNhanSu = $this->phanBoNhanSuModel->getByLichKhoiHanh($id);
 
-        // Nếu admin chưa phân bổ HDV, hệ thống sẽ tự đôngj chọn 1 HDV phù hợp
+        // Tự động phân bổ nếu chưa có (sử dụng method từ PhanBoNhanSu)
         if (
             (empty($lichKhoiHanh['hdv_id']) || (int)$lichKhoiHanh['hdv_id'] === 0)
             && (empty($phanBoNhanSu) || count($phanBoNhanSu) === 0)
+            && !empty($lichKhoiHanh['ngay_khoi_hanh'])
         ) {
             $autoNhanSuId = $this->phanBoNhanSuModel->autoAssignHDVIfMissing($id);
             if ($autoNhanSuId) {
@@ -143,6 +145,25 @@ class LichKhoiHanhController {
                 $lichKhoiHanh['tour_id'],
                 $lichKhoiHanh['ngay_khoi_hanh']
             );
+        }
+        
+        // Lấy nhật ký tour cho tour này
+        $nhatKyTourList = [];
+        if (!empty($lichKhoiHanh['tour_id'])) {
+            require_once 'models/NhatKyTour.php';
+            $nhatKyTourModel = new NhatKyTour();
+            // Lấy tất cả nhật ký của tour này (không giới hạn theo HDV)
+            $conn = connectDB();
+            $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
+                    FROM nhat_ky_tour nkt
+                    LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                    LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                    LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                    WHERE nkt.tour_id = ?
+                    ORDER BY nkt.ngay_ghi DESC, nkt.id DESC";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([(int)$lichKhoiHanh['tour_id']]);
+            $nhatKyTourList = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         
         // Lấy danh sách booking và khách chi tiết cho lịch khởi hành
@@ -222,6 +243,98 @@ class LichKhoiHanhController {
             $lichKhoiHanh['tong_nguoi_dat'] = $tongNguoi;
         }
         
+
+// Lấy nhật ký tour (theo tour_id) để hiển thị trong tab "Nhật ký tour"
+$nhatKyTourList = [];
+if (!empty($lichKhoiHanh['tour_id'])) {
+    // Lấy từ model Tour (trong Tour::getNhatKyTourByTourId)
+    $nhatKyTourList = $this->tourModel->getNhatKyTourByTourId($lichKhoiHanh['tour_id']);
+
+
+    // Nếu bạn muốn chỉ lấy nhật ký đúng ngày khởi hành này (lọc theo ngày)
+    if (!empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+        $ngayKH = date('Y-m-d', strtotime($lichKhoiHanh['ngay_khoi_hanh']));
+        $nhatKyTourList = array_values(array_filter($nhatKyTourList, function($n) use ($ngayKH) {
+            return isset($n['ngay_ghi']) && date('Y-m-d', strtotime($n['ngay_ghi'])) === $ngayKH;
+        }));
+    }
+
+    // (Tùy chọn) nếu muốn tên người ghi chép kèm theo, bạn có thể JOIN thêm bảng nhan_su/nguoi_dung
+    // hoặc post-process: lấy danh sách nhân sự map id->ho_ten và thêm vào từng entry.
+}
+
+// --- Bắt đầu: Lấy nhật ký tour (theo HDV nếu có) ---
+$nhatKyTourList = [];
+
+if (!empty($lichKhoiHanh['tour_id'])) {
+    require_once 'models/NhatKyTour.php';
+    $nhatKyModel = new NhatKyTour();
+
+    // 1) Xác định HDV chính của lịch (hdv_id trong lich_khoi_hanh)
+    $hdvId = $lichKhoiHanh['hdv_id'] ?? null;
+
+    // Nếu không có hdv_id trực tiếp, fallback lấy từ phân bổ nhân sự (nếu có)
+    if (empty($hdvId) && !empty($phanBoNhanSu) && is_array($phanBoNhanSu)) {
+        foreach ($phanBoNhanSu as $p) {
+            if (!empty($p['nhan_su_id'])) {
+                $hdvId = $p['nhan_su_id'];
+                break;
+            }
+        }
+    }
+
+    // 2) Lấy nhật ký: ưu tiên nhật ký của HDV nếu có, nếu không lấy theo tour chung
+    if (!empty($hdvId)) {
+        $nhatKyTourList = $nhatKyModel->getByHDVAndTour($hdvId, $lichKhoiHanh['tour_id']);
+    } else {
+        // fallback: lấy theo tour (toàn bộ nhật ký liên quan đến tour)
+        $nhatKyTourList = $this->tourModel->getNhatKyTourByTourId($lichKhoiHanh['tour_id']);
+    }
+
+    // 3) Nếu cần chỉ hiển thị nhật ký đúng ngày khởi hành => lọc theo ngày
+    if (!empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+        $ngayKH = date('Y-m-d', strtotime($lichKhoiHanh['ngay_khoi_hanh']));
+        $nhatKyTourList = array_values(array_filter($nhatKyTourList, function($n) use ($ngayKH) {
+            // Các model có thể trả 'thoi_gian_su_kien' hoặc 'ngay_ghi' hoặc 'thoi_tiet'
+            $dateCandidate = $n['thoi_gian_su_kien'] ?? $n['ngay_ghi'] ?? $n['thoi_tiet'] ?? null;
+            if (!$dateCandidate) return false;
+            return date('Y-m-d', strtotime($dateCandidate)) === $ngayKH;
+        }));
+    }
+
+    // 4) Post-process: chuẩn hoá tên khóa để view dùng chung (loai_su_kien, thoi_gian_su_kien, nguoi_ghi_chep, dia_diem)
+    foreach ($nhatKyTourList as &$log) {
+        // loại sự kiện
+        if (!isset($log['loai_su_kien']) && isset($log['loai_nhat_ky'])) {
+            $log['loai_su_kien'] = $log['loai_nhat_ky'];
+        }
+
+        // thời gian sự kiện
+        if (empty($log['thoi_gian_su_kien'])) {
+            if (!empty($log['ngay_ghi'])) $log['thoi_gian_su_kien'] = $log['ngay_ghi'];
+            elseif (!empty($log['thoi_tiet'])) $log['thoi_gian_su_kien'] = $log['thoi_tiet'];
+            else $log['thoi_gian_su_kien'] = null;
+        }
+
+        // dia_diem (nếu DB không có cột dia_diem, dùng null)
+        $log['dia_diem'] = $log['dia_diem'] ?? ($log['thoi_tiet'] ?? null);
+
+        // người ghi chép: nếu model trả tên hoặc nếu biết hdvId, lấy tên từ model NhanSu
+        if (empty($log['nguoi_ghi_chep'])) {
+            if (!empty($hdvId)) {
+                $hdvInfo = $this->nhanSuModel->findById($hdvId);
+                $log['nguoi_ghi_chep'] = $hdvInfo['ho_ten'] ?? ($_SESSION['ho_ten'] ?? 'HDV');
+            } else {
+                // fallback: nếu model trả hdv_ho_ten do join ở Tour::getNhatKyTourByTourId
+                $log['nguoi_ghi_chep'] = $log['hdv_ho_ten'] ?? ($_SESSION['ho_ten'] ?? 'HDV');
+            }
+        }
+    }
+    unset($log);
+}
+// --- Kết thúc khối nhật ký ---
+        
+        
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
 
@@ -280,6 +393,7 @@ class LichKhoiHanhController {
         header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId . '&from_booking=' . $bookingId);
         exit();
     }
+
 
     // Tạo lịch khởi hành mới
     public function create() {
@@ -369,6 +483,44 @@ class LichKhoiHanhController {
         }
     }
 
+    // Tự động phân bổ nhân sự (method mới)
+    public function tuDongPhanBoNhanSu() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($id <= 0) {
+            $_SESSION['error'] = 'ID lịch khởi hành không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit();
+        }
+        
+        $lichKhoiHanh = $this->lichKhoiHanhModel->findById($id);
+        if (!$lichKhoiHanh) {
+            $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit();
+        }
+        
+        // Kiểm tra xem đã có phân bổ chưa
+        $phanBoNhanSu = $this->phanBoNhanSuModel->getByLichKhoiHanh($id);
+        if (!empty($phanBoNhanSu)) {
+            $_SESSION['info'] = 'Lịch khởi hành đã có nhân sự được phân bổ.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $id);
+            exit();
+        }
+        
+        // Gọi method tự động phân bổ từ model
+        $result = $this->phanBoNhanSuModel->autoAssignHDVIfMissing($id);
+        
+        if ($result) {
+            $_SESSION['success'] = 'Đã tự động phân bổ HDV thành công!';
+        } else {
+            $_SESSION['error'] = 'Không tìm thấy HDV phù hợp để phân bổ. Vui lòng kiểm tra lại lịch làm việc của HDV hoặc thêm HDV mới vào hệ thống.';
+        }
+        
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $id);
+        exit();
+    }
+
     // Phân bổ nhân sự
     public function phanBoNhanSu() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -406,9 +558,9 @@ class LichKhoiHanhController {
                             }
                             $list[] = $label;
                         }
-                        $_SESSION['warning'] = 'Nhân sự này đang được phân công vào các lịch trùng ngày: ' 
-                            . implode(', ', $list) 
-                            . '. Vẫn cho phép phân bổ, nhưng HDV cần cân nhắc tránh quá tải.';
+                        $_SESSION['warning'] = '<strong>CẢNH BÁO:</strong> Nhân sự này đang được phân công vào các lịch trùng ngày:<br>' 
+                            . '<ul><li>' . implode('</li><li>', $list) . '</li></ul>'
+                            . '<strong>Vẫn cho phép phân bổ, nhưng HDV cần cân nhắc tránh quá tải.</strong>';
                     }
                 }
 
@@ -425,6 +577,58 @@ class LichKhoiHanhController {
             header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
             exit();
         }
+    }
+
+    // API: Kiểm tra trùng lịch khi chọn nhân sự (AJAX)
+    public function checkConflict() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+        
+        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+        $nhanSuId = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
+        $vaiTro = $_POST['vai_tro'] ?? '';
+        
+        if ($lichKhoiHanhId <= 0 || $nhanSuId <= 0) {
+            echo json_encode(['hasConflict' => false]);
+            exit();
+        }
+        
+        // Chỉ kiểm tra conflict cho HDV
+        if ($vaiTro === 'HDV') {
+            $conflicts = $this->phanBoNhanSuModel->getScheduleConflictsForStaff($lichKhoiHanhId, $nhanSuId);
+            if (!empty($conflicts)) {
+                $conflictList = [];
+                foreach ($conflicts as $c) {
+                    $from = $c['ngay_khoi_hanh'] ?? '';
+                    $to   = $c['ngay_ket_thuc'] ?? $from;
+                    $label = 'Lịch #' . $c['id'];
+                    if (!empty($c['ten_tour'])) {
+                        $label .= ' - ' . $c['ten_tour'];
+                    }
+                    if ($from) {
+                        $label .= ' (' . date('d/m/Y', strtotime($from));
+                        if ($to && $to !== $from) {
+                            $label .= ' → ' . date('d/m/Y', strtotime($to));
+                        }
+                        $label .= ')';
+                    }
+                    $conflictList[] = $label;
+                }
+                echo json_encode([
+                    'hasConflict' => true,
+                    'conflicts' => $conflictList,
+                    'message' => 'CẢNH BÁO: Nhân sự này đang được phân công vào các lịch trùng ngày: ' . implode(', ', $conflictList)
+                ]);
+                exit();
+            }
+        }
+        
+        echo json_encode(['hasConflict' => false]);
+        exit();
     }
 
     // Cập nhật trạng thái phân bổ nhân sự (HDV)
@@ -705,6 +909,83 @@ class LichKhoiHanhController {
         
         require 'views/admin/sua_khach_chi_tiet.php';
     }
+   
+public function themYeuCauDacBiet() {
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+        header('Location: index.php?act=lichKhoiHanh/index');
+        exit();
+    }
+
+    $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+    $lichId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+
+    if ($bookingId <= 0) {
+        $_SESSION['error'] = 'Vui lòng chọn khách/booking để tạo yêu cầu.';
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichId);
+        exit();
+    }
+
+    require_once 'models/YeuCauDacBiet.php';
+    $yeuCauModel = new YeuCauDacBiet();
+
+    // Ánh xạ giá trị loai_yeu_cau từ form sang DB
+    $loaiMap = [
+        'ThucPham' => 'an_uong',
+        'YTe' => 'suc_khoe',
+        'DichVu' => 'phong_o',
+        'NguNgu' => 'phong_o',
+        'AnToan' => 'an_toan',
+        'Khac' => 'khac'
+    ];
+    
+    $loaiInput = $_POST['loai_yeu_cau'] ?? 'Khac';
+    $loaiDb = $loaiMap[$loaiInput] ?? 'khac'; // giá trị mặc định
+
+    // Ánh xạ muc_do_uu_tien
+    $ucTienMap = [
+        'RatCao' => 'khan_cap',
+        'Cao' => 'cao',
+        'Trung' => 'trung_binh',
+        'Thap' => 'thap'
+    ];
+    
+    $ucTienInput = $_POST['muc_do_uu_tien'] ?? 'Trung';
+    $ucTienDb = $ucTienMap[$ucTienInput] ?? 'trung_binh';
+
+    // Ánh xạ trang_thai
+    $trangThaiMap = [
+        'Moi' => 'moi',
+        'DangXuLy' => 'dang_xu_ly',
+        'HoanTat' => 'da_giai_quyet',
+        'KhongTheXuLy' => 'khong_the_thuc_hien'
+    ];
+    
+    $trangThaiInput = $_POST['trang_thai'] ?? 'Moi';
+    $trangThaiDb = $trangThaiMap[$trangThaiInput] ?? 'moi';
+
+    $data = [
+        'loai_yeu_cau' => $loaiDb,
+        'tieu_de' => trim($_POST['tieu_de'] ?? 'Yêu cầu đặc biệt'),
+        'mo_ta' => $_POST['noi_dung'] ?? null,
+        'muc_do_uu_tien' => $ucTienDb,
+        'trang_thai' => $trangThaiDb,
+        'ghi_chu_hdv' => $_POST['ghi_chu'] ?? null
+    ];
+
+    $nguoiTaoId = $_SESSION['user_id'] ?? null;
+
+    $newId = $yeuCauModel->createFromAdmin($bookingId, $data, $nguoiTaoId);
+
+    if ($newId) {
+        $_SESSION['success'] = 'Đã tạo yêu cầu đặc biệt.';
+    } else {
+        $_SESSION['error'] = 'Không thể tạo yêu cầu. Vui lòng thử lại.';
+    }
+
+    // Quay về chi tiết lịch
+    header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichId);
+    exit();
+}
 
     // Xóa khách chi tiết
     public function xoaKhachChiTiet() {
@@ -728,6 +1009,92 @@ class LichKhoiHanhController {
         
         header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
         exit();
+    }
+
+    public function themNhatKy() {
+        // Chỉ chấp nhận POST
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit;
+        }
+
+        // Lấy dữ liệu form
+        $lichId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+        $loaiSuKien = $_POST['loai_su_kien'] ?? null;
+        $thoiGian = $_POST['thoi_gian_su_kien'] ?? null; // có thể là datetime-local
+        $nguoiGhiChep = trim($_POST['nguoi_ghi_chep'] ?? ($_SESSION['ho_ten'] ?? 'Admin'));
+        $diaDiem = $_POST['dia_diem'] ?? null;
+        $noiDung = trim($_POST['noi_dung'] ?? '');
+
+        if ($lichId <= 0) {
+            $_SESSION['error'] = 'Lịch khởi hành không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit;
+        }
+
+        // Lấy thông tin lich_khoi_hanh để có tour_id và hdv_id
+        require_once 'models/LichKhoiHanh.php';
+        $lkModel = new LichKhoiHanh();
+        $lich = $lkModel->findById($lichId);
+        if (!$lich) {
+            $_SESSION['error'] = 'Không tìm thấy lịch khởi hành.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit;
+        }
+
+        $tourId = $lich['tour_id'] ?? null;
+        $hdvId = $lich['hdv_id'] ?? null;
+
+        // Nếu không có hdv_id, thử lấy từ phân bổ nhân sự (nếu có)
+        if (empty($hdvId)) {
+            if (!empty($this->phanBoNhanSuModel)) {
+                $pbn = $this->phanBoNhanSuModel->getByLichKhoiHanh($lichId);
+                if (!empty($pbn) && isset($pbn[0]['nhan_su_id'])) {
+                    $hdvId = $pbn[0]['nhan_su_id'];
+                }
+            }
+        }
+
+        // Chuẩn bị dữ liệu chèn
+        // Model NhatKyTour::insert(tour_id, nhan_su_id, noi_dung, ngay_ghi) tồn tại và sử dụng CURDATE nếu muốn
+        require_once 'models/NhatKyTour.php';
+        $nktModel = new NhatKyTour();
+
+        // Dựng nội dung lưu: có thể lưu loại sự kiện + nội dung
+        $contentToSave = $noiDung;
+        if ($loaiSuKien) {
+            $contentToSave = ($loaiSuKien . ($contentToSave ? ' - ' . $contentToSave : ''));
+        }
+
+        // Map thời gian: nếu client gửi datetime-local như "2025-12-05T14:30", chuyển về 'Y-m-d H:i:s'
+        $ngayGhi = null;
+        if (!empty($thoiGian)) {
+            // một số browser gửi "YYYY-MM-DDTHH:MM"
+            $thoiGian = str_replace('T', ' ', $thoiGian);
+            $ngayGhi = date('Y-m-d H:i:s', strtotime($thoiGian));
+        } else {
+            $ngayGhi = date('Y-m-d H:i:s');
+        }
+
+        // Gọi model insert. NhatKyTour::insert chỉ chấp nhận (tour_id, nhan_su_id, noi_dung, ngay_ghi)
+        $insertData = [
+            'tour_id' => $tourId ?? 0,
+            'nhan_su_id' => $hdvId ?? 0,
+            'noi_dung' => $contentToSave,
+            'ngay_ghi' => $ngayGhi
+        ];
+
+        $ok = $nktModel->insert($insertData);
+
+        if ($ok) {
+            $_SESSION['success'] = 'Đã thêm ghi chép nhật ký.';
+        } else {
+            $_SESSION['error'] = 'Lỗi khi thêm nhật ký.';
+        }
+
+        // Quay về chi tiết lịch khởi hành
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichId);
+        exit;
     }
 }
 

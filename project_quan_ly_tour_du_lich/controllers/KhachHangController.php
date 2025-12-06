@@ -5,6 +5,43 @@ class KhachHangController {
     public function __construct() {
         requireLogin();
     }
+
+    // Gửi yêu cầu tour theo mong muốn
+    public function guiYeuCauTour() {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            require_once 'models/ThongBao.php';
+            require_once 'models/NguoiDung.php';
+            $thongBaoModel = new ThongBao();
+            $nguoiDungModel = new NguoiDung();
+            $user = $nguoiDungModel->findById($_SESSION['user_id']);
+            $noi_dung =
+                'Tên: ' . ($user['ho_ten'] ?? '') . "\n" .
+                'Email: ' . ($user['email'] ?? '') . "\n" .
+                'Số điện thoại: ' . ($user['so_dien_thoai'] ?? '') . "\n" .
+                'Địa điểm: ' . ($_POST['dia_diem'] ?? '') . "\n" .
+                'Thời gian: ' . ($_POST['thoi_gian'] ?? '') . "\n" .
+                'Số người: ' . ($_POST['so_nguoi'] ?? '') . "\n" .
+                'Yêu cầu đặc biệt: ' . ($_POST['yeu_cau_dac_biet'] ?? '');
+            $data = [
+                'tieu_de' => 'Yêu cầu tour theo mong muốn',
+                'noi_dung' => $noi_dung,
+                'loai_thong_bao' => 'KhachHang',
+                'muc_do_uu_tien' => 'TrungBinh',
+                'nguoi_gui_id' => $_SESSION['user_id'],
+                'vai_tro_nhan' => 'Admin',
+                'trang_thai' => 'DaGui'
+            ];
+            $thongBaoModel->insert($data);
+            $_SESSION['success'] = 'Yêu cầu của bạn đã được gửi đến admin. Chúng tôi sẽ liên hệ lại sớm nhất!';
+            header('Location: index.php?act=khachHang/guiYeuCauTour');
+            exit();
+        }
+        // Lấy tất cả yêu cầu tour của khách hàng này
+        require_once 'models/ThongBao.php';
+        $thongBaoModel = new ThongBao();
+        $allYeuCau = $thongBaoModel->getAllByKhachHang($_SESSION['user_id']);
+        require 'views/khach_hang/yeu_cau_tour.php';
+    }
     
     // Dashboard khách hàng
     public function dashboard() {
@@ -12,12 +49,14 @@ class KhachHangController {
         require_once 'models/KhachHang.php';
         require_once 'models/ThongBao.php';
         require_once 'models/Tour.php';
-        
+        require_once 'models/DanhGia.php';
+
         $bookingModel = new Booking();
         $khachHangModel = new KhachHang();
         $thongBaoModel = new ThongBao();
         $tourModel = new Tour();
-        
+        $danhGiaModel = new DanhGia();
+
         // Lấy thông tin khách hàng
         $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
         if (!$khachHang) {
@@ -25,14 +64,14 @@ class KhachHangController {
             header('Location: index.php?act=auth/profile');
             exit();
         }
-        
+
         // Lấy booking của khách hàng
         $bookings = $bookingModel->getByKhachHangId($khachHang['khach_hang_id']);
-        
+
         // Lấy thông báo chưa đọc
         $thongBaoChuaDoc = $thongBaoModel->countChuaDoc($_SESSION['user_id']);
         $thongBaoList = $thongBaoModel->getByNguoiDung($_SESSION['user_id'], 5);
-        
+
         // Lấy tour sắp tới (booking có ngày khởi hành >= hôm nay)
         $tourSapToi = [];
         $today = date('Y-m-d');
@@ -42,13 +81,47 @@ class KhachHangController {
                 $tourSapToi[] = $booking;
             }
         }
-        
+
         // Thống kê
         $tongBooking = count($bookings);
         $bookingChoXacNhan = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'ChoXacNhan'));
         $bookingDaCoc = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'DaCoc'));
         $bookingHoanTat = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'HoanTat'));
-        
+
+        // Lấy 3 đánh giá tốt nhất (điểm cao nhất, mới nhất)
+        $allDanhGia = $danhGiaModel->filter(['diem_min' => 4]);
+        usort($allDanhGia, function($a, $b) {
+            if ($b['diem'] == $a['diem']) {
+                return strtotime($b['ngay_danh_gia']) - strtotime($a['ngay_danh_gia']);
+            }
+            return $b['diem'] - $a['diem'];
+        });
+        $danhGiaTot = array_slice($allDanhGia, 0, 3);
+
+        // Lấy danh sách tour và lọc theo tên, loại tour nếu có
+        $allTours = $tourModel->getAll();
+        // Lọc theo loại tour nếu có
+        if (!empty($_GET['loai_tour'])) {
+            $allTours = array_filter($allTours, function($tour) {
+                return $tour['loai_tour'] === $_GET['loai_tour'];
+            });
+        }
+        // Lọc theo tên tour nếu có
+        if (!empty($_GET['search'])) {
+            $search = mb_strtolower(trim($_GET['search']));
+            $allTours = array_filter($allTours, function($tour) use ($search) {
+                return mb_strpos(mb_strtolower($tour['ten_tour']), $search) !== false;
+            });
+        }
+        // Gán hình ảnh đại diện cho mỗi tour
+        foreach ($allTours as &$tour) {
+            $hinhAnhList = $tourModel->getHinhAnhByTourId($tour['tour_id']);
+            $tour['hinh_anh'] = !empty($hinhAnhList) ? $hinhAnhList[0]['url_anh'] : null;
+        }
+        unset($tour);
+        $tourTrongNuoc = array_filter($allTours, fn($t) => $t['loai_tour'] === 'TrongNuoc' && $t['trang_thai'] === 'HoatDong');
+        $tourQuocTe = array_filter($allTours, fn($t) => $t['loai_tour'] === 'QuocTe' && $t['trang_thai'] === 'HoatDong');
+
         require 'views/khach_hang/dashboard.php';
     }
     
