@@ -379,6 +379,14 @@ if (!empty($lichKhoiHanh['tour_id'])) {
 }
 // --- Kết thúc khối nhật ký ---
         
+        // Lấy thông tin tour nếu có tour_id
+        $tour = null;
+        if (!empty($lichKhoiHanh['tour_id'])) {
+            $tour = $this->tourModel->findById($lichKhoiHanh['tour_id']);
+        }
+        
+        // Set biến để view biết context (từ lich khoi hanh list)
+        $fromTourDetail = false;
         
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
@@ -1139,6 +1147,178 @@ public function themYeuCauDacBiet() {
 
         // Quay về chi tiết lịch khởi hành
         header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichId);
+        exit;
+    }
+
+    // Sửa yêu cầu đặc biệt
+    public function suaYeuCauDacBiet() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+
+        if ($id <= 0 || $lichKhoiHanhId <= 0) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        require_once 'models/YeuCauDacBiet.php';
+        $yeuCauModel = new YeuCauDacBiet();
+        
+        $data = [
+            'loai_yeu_cau' => $_POST['loai_yeu_cau'] ?? 'khac',
+            'mo_ta' => $_POST['noi_dung'] ?? '',
+            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? 'trung_binh',
+            'trang_thai' => $_POST['trang_thai'] ?? 'moi'
+        ];
+
+        $adminId = $_SESSION['user_id'] ?? null;
+        $result = $yeuCauModel->updateByAdmin($id, $data, $adminId, $adminId);
+
+        if ($result) {
+            $_SESSION['success'] = 'Cập nhật yêu cầu đặc biệt thành công.';
+        } else {
+            $_SESSION['error'] = 'Không thể cập nhật yêu cầu đặc biệt.';
+        }
+
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+        exit;
+    }
+
+    // Xóa yêu cầu đặc biệt
+    public function xoaYeuCauDacBiet() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+
+        if ($id <= 0 || $lichKhoiHanhId <= 0) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        require_once 'models/YeuCauDacBiet.php';
+        $yeuCauModel = new YeuCauDacBiet();
+        
+        // Kiểm tra yêu cầu có tồn tại không
+        $yeuCau = $yeuCauModel->findByIdWithRelations($id);
+        if (!$yeuCau) {
+            $_SESSION['error'] = 'Không tìm thấy yêu cầu đặc biệt.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        // Xóa (cần thêm method delete vào model)
+        $sql = "DELETE FROM yeu_cau_dac_biet WHERE id = ?";
+        $stmt = $yeuCauModel->conn->prepare($sql);
+        $result = $stmt->execute([$id]);
+
+        if ($result) {
+            $_SESSION['success'] = 'Xóa yêu cầu đặc biệt thành công.';
+        } else {
+            $_SESSION['error'] = 'Không thể xóa yêu cầu đặc biệt.';
+        }
+
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+        exit;
+    }
+
+    // Sửa nhật ký tour
+    public function suaNhatKy() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit;
+        }
+
+        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
+        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+
+        if ($id <= 0 || $lichKhoiHanhId <= 0) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        require_once 'models/NhatKyTour.php';
+        $nhatKyModel = new NhatKyTour();
+        
+        // Lấy thông tin lịch khởi hành
+        $lich = $this->lichKhoiHanhModel->findById($lichKhoiHanhId);
+        if (!$lich) {
+            $_SESSION['error'] = 'Không tìm thấy lịch khởi hành.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        $tourId = $lich['tour_id'] ?? 0;
+        $loaiSuKien = $_POST['loai_su_kien'] ?? '';
+        $thoiGian = $_POST['thoi_gian_su_kien'] ?? null;
+        $noiDung = trim($_POST['noi_dung'] ?? '');
+
+        // Lấy nhật ký hiện tại để có nhan_su_id
+        $nhatKyHienTai = $nhatKyModel->findByIdAdmin($id);
+        if (!$nhatKyHienTai) {
+            $_SESSION['error'] = 'Không tìm thấy nhật ký.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        // Chuẩn bị dữ liệu
+        $contentToSave = $noiDung;
+        if ($loaiSuKien) {
+            $contentToSave = ($loaiSuKien . ($contentToSave ? ' - ' . $contentToSave : ''));
+        }
+
+        $ngayGhi = date('Y-m-d H:i:s');
+        if (!empty($thoiGian)) {
+            $thoiGian = str_replace('T', ' ', $thoiGian);
+            $ngayGhi = date('Y-m-d H:i:s', strtotime($thoiGian));
+        }
+
+        $data = [
+            'tour_id' => $tourId,
+            'noi_dung' => $contentToSave,
+            'ngay_ghi' => $ngayGhi
+        ];
+
+        $result = $nhatKyModel->update($id, $nhatKyHienTai['nhan_su_id'] ?? 0, $data);
+
+        if ($result) {
+            $_SESSION['success'] = 'Cập nhật nhật ký thành công.';
+        } else {
+            $_SESSION['error'] = 'Không thể cập nhật nhật ký.';
+        }
+
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+        exit;
+    }
+
+    // Xóa nhật ký tour
+    public function xoaNhatKy() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+
+        if ($id <= 0 || $lichKhoiHanhId <= 0) {
+            $_SESSION['error'] = 'Thông tin không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+            exit;
+        }
+
+        require_once 'models/NhatKyTour.php';
+        $nhatKyModel = new NhatKyTour();
+        
+        $result = $nhatKyModel->delete($id);
+
+        if ($result) {
+            $_SESSION['success'] = 'Xóa nhật ký thành công.';
+        } else {
+            $_SESSION['error'] = 'Không thể xóa nhật ký.';
+        }
+
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
         exit;
     }
 }

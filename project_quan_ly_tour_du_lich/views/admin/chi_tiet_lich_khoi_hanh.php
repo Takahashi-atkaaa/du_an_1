@@ -214,9 +214,15 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                            class="btn btn-warning">
                             <i class="bi bi-pencil-square"></i> Sửa lịch
                         </a>
-                    <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
-                        <i class="bi bi-arrow-left"></i> Quay lại danh sách
-                    </a>
+                    <?php if (!empty($fromTourDetail) && !empty($tour)): ?>
+                        <a href="index.php?act=admin/chiTietTour&id=<?php echo $tour['tour_id']; ?>" class="btn btn-light">
+                            <i class="bi bi-arrow-left"></i> Quay lại chi tiết tour
+                        </a>
+                    <?php else: ?>
+                        <a href="index.php?act=lichKhoiHanh/index" class="btn btn-light">
+                            <i class="bi bi-arrow-left"></i> Quay lại danh sách
+                        </a>
+                    <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -852,10 +858,9 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                                     <th>Ưu tiên</th>
                                                     <th>Trạng thái</th>
                                                     <th>Ngày tạo</th>
-                                                   
+                                                    <th>Thao tác</th>
                                                 </tr>
                                             </thead>
-                                           <!-- Tìm và thay thế phần tbody trong bảng "Danh sách yêu cầu đặc biệt" (khoảng dòng 732-790) -->
 
 <tbody>
     <?php foreach ($yeuCauDacBietList as $yc): ?>
@@ -919,15 +924,14 @@ $catalogServicesMap = $catalogServicesMap ?? [];
             </td>
             <td><small><?php echo $yc['ngay_tao'] ? date('d/m/Y H:i', strtotime($yc['ngay_tao'])) : 'N/A'; ?></small></td>
             <td>
-                <!-- <a href="index.php?act=lichKhoiHanh/suaYeuCauDacBiet&id=<?php echo $yc['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
-                   class="btn btn-sm btn-info">
+                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editYeuCauModal<?php echo $yc['yeu_cau_id']; ?>">
                     <i class="bi bi-pencil"></i>
-                </a>
-                <a href="index.php?act=lichKhoiHanh/xoaYeuCauDacBiet&id=<?php echo $yc['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                </button>
+                <a href="index.php?act=lichKhoiHanh/xoaYeuCauDacBiet&id=<?php echo $yc['yeu_cau_id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
                    class="btn btn-sm btn-danger"
                    onclick="return confirm('Xóa yêu cầu này?');">
                     <i class="bi bi-trash"></i>
-                </a> -->
+                </a>
             </td>
         </tr>
     <?php endforeach; ?>
@@ -1041,6 +1045,9 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                                     </small>
                                                 </div>
                                                 <div>
+                                                    <button type="button" class="btn btn-sm btn-outline-info me-1" data-bs-toggle="modal" data-bs-target="#editNhatKyModal<?php echo $log['id']; ?>">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
                                                     <a href="index.php?act=lichKhoiHanh/xoaNhatKy&id=<?php echo $log['id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
                                                        class="btn btn-sm btn-outline-danger"
                                                        onclick="return confirm('Xóa ghi chép này?');">
@@ -1058,6 +1065,60 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                 <?php endif; ?>
                             </div>
                         </div>
+                        
+                        <!-- Modal sửa nhật ký tour -->
+                        <?php foreach ($nhatKyTourList as $log): ?>
+                        <div class="modal fade" id="editNhatKyModal<?php echo $log['id']; ?>" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Sửa nhật ký tour</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST" action="index.php?act=lichKhoiHanh/suaNhatKy">
+                                        <input type="hidden" name="id" value="<?php echo $log['id']; ?>">
+                                        <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                                        <div class="modal-body">
+                                            <?php
+                                            // Parse loai_su_kien và noi_dung từ nội dung lưu
+                                            $noiDung = $log['noi_dung'] ?? '';
+                                            $loaiSuKien = '';
+                                            if (preg_match('/^([^-]+)\s*-\s*(.+)$/', $noiDung, $matches)) {
+                                                $loaiSuKien = trim($matches[1]);
+                                                $noiDung = trim($matches[2]);
+                                            }
+                                            ?>
+                                            <div class="mb-3">
+                                                <label class="form-label">Loại sự kiện <span class="text-danger">*</span></label>
+                                                <select name="loai_su_kien" class="form-select" required>
+                                                    <option value="DuocLichTrinhDuaKhach" <?php echo $loaiSuKien == 'DuocLichTrinhDuaKhach' ? 'selected' : ''; ?>>Được lịch trình đưa khách</option>
+                                                    <option value="DuaKhachDenDiem" <?php echo $loaiSuKien == 'DuaKhachDenDiem' ? 'selected' : ''; ?>>Đưa khách đến điểm</option>
+                                                    <option value="CoDoanLuu" <?php echo $loaiSuKien == 'CoDoanLuu' ? 'selected' : ''; ?>>Có đoàn lưu</option>
+                                                    <option value="DoanVeTour" <?php echo $loaiSuKien == 'DoanVeTour' ? 'selected' : ''; ?>>Đoàn về tour</option>
+                                                    <option value="SuCo" <?php echo $loaiSuKien == 'SuCo' ? 'selected' : ''; ?>>Sự cố</option>
+                                                    <option value="YLenCap" <?php echo $loaiSuKien == 'YLenCap' ? 'selected' : ''; ?>>Yêu lên cấp</option>
+                                                    <option value="Khac" <?php echo empty($loaiSuKien) || $loaiSuKien == 'Khac' ? 'selected' : ''; ?>>Khác</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Thời gian <span class="text-danger">*</span></label>
+                                                <input type="datetime-local" name="thoi_gian_su_kien" class="form-control" 
+                                                       value="<?php echo $log['ngay_ghi'] ? date('Y-m-d\TH:i', strtotime($log['ngay_ghi'])) : ''; ?>" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Nội dung <span class="text-danger">*</span></label>
+                                                <textarea name="noi_dung" class="form-control" rows="3" required><?php echo htmlspecialchars($noiDung); ?></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                     <!-- Tab: Dịch vụ -->
                     <div class="tab-pane fade" id="service" role="tabpanel">
@@ -1282,6 +1343,67 @@ $catalogServicesMap = $catalogServicesMap ?? [];
 
                     <!-- Tab: Yêu cầu đặc biệt -->
                     <div class="tab-pane fade" id="special-request" role="tabpanel">
+                        <!-- Add Request Form -->
+                        <div class="add-form-card">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-plus-circle"></i> Thêm yêu cầu đặc biệt
+                            </h6>
+                            <form method="POST" action="index.php?act=lichKhoiHanh/themYeuCauDacBiet">
+                                <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Khách hàng <span class="text-danger">*</span></label>
+                                        <select name="booking_id" class="form-select" required>
+                                            <option value="">-- Chọn khách hàng --</option>
+                                            <?php foreach ($bookingList as $b): ?>
+                                                <option value="<?php echo $b['booking_id']; ?>">
+                                                    <?php echo htmlspecialchars($b['ho_ten'] ?? 'N/A'); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Loại yêu cầu <span class="text-danger">*</span></label>
+                                        <select name="loai_yeu_cau" class="form-select" required>
+                                            <option value="ThucPham">Thực phẩm / Dị ứng</option>
+                                            <option value="YTe">Y tế / Sức khỏe</option>
+                                            <option value="DichVu">Yêu cầu dịch vụ</option>
+                                            <option value="NguNgu">Ngủ ngơi / Chỗ ở</option>
+                                            <option value="AnToan">An toàn / Sự cố</option>
+                                            <option value="Khac">Khác</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Mức độ ưu tiên <span class="text-danger">*</span></label>
+                                        <select name="muc_do_uu_tien" class="form-select" required>
+                                            <option value="Thap">Thấp</option>
+                                            <option value="Trung" selected>Trung bình</option>
+                                            <option value="Cao">Cao</option>
+                                            <option value="RatCao">Rất cao</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Trạng thái</label>
+                                        <select name="trang_thai" class="form-select">
+                                            <option value="Moi">Mới</option>
+                                            <option value="DangXuLy">Đang xử lý</option>
+                                            <option value="HoanTat">Hoàn tất</option>
+                                            <option value="KhongTheXuLy">Không thể xử lý</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label small fw-semibold">Nội dung yêu cầu <span class="text-danger">*</span></label>
+                                        <textarea name="noi_dung" class="form-control" rows="3" required></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="bi bi-plus-circle"></i> Thêm yêu cầu
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        
                         <div class="section-card card">
                             <div class="section-header">
                                 <i class="bi bi-heart-pulse"></i> Yêu cầu đặc biệt của khách hàng
@@ -1298,6 +1420,7 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                                     <th>Mức độ ưu tiên</th>
                                                     <th>Trạng thái</th>
                                                     <th>Ghi chú HDV</th>
+                                                    <th>Thao tác</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1344,6 +1467,16 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                                         </td>
                                                         <td>
                                                             <small><?php echo htmlspecialchars($yc['ghi_chu_hdv'] ?? 'Chưa có'); ?></small>
+                                                        </td>
+                                                        <td>
+                                                            <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#editYeuCauModal<?php echo $yc['yeu_cau_id']; ?>">
+                                                                <i class="bi bi-pencil"></i>
+                                                            </button>
+                                                            <a href="index.php?act=lichKhoiHanh/xoaYeuCauDacBiet&id=<?php echo $yc['yeu_cau_id']; ?>&lich_khoi_hanh_id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                                               class="btn btn-sm btn-danger"
+                                                               onclick="return confirm('Xóa yêu cầu này?');">
+                                                                <i class="bi bi-trash"></i>
+                                                            </a>
                                                         </td>
                                                     </tr>
                                                 <?php endforeach; ?>
@@ -1663,5 +1796,64 @@ $catalogServicesMap = $catalogServicesMap ?? [];
         }
     })();
     </script>
+
+    <!-- Modal sửa yêu cầu đặc biệt -->
+    <?php if (!empty($yeuCauDacBietList)): ?>
+        <?php foreach ($yeuCauDacBietList as $yc): ?>
+        <div class="modal fade" id="editYeuCauModal<?php echo $yc['yeu_cau_id']; ?>" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Sửa yêu cầu đặc biệt</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form method="POST" action="index.php?act=lichKhoiHanh/suaYeuCauDacBiet">
+                        <input type="hidden" name="id" value="<?php echo $yc['yeu_cau_id']; ?>">
+                        <input type="hidden" name="lich_khoi_hanh_id" value="<?php echo $lichKhoiHanh['id']; ?>">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Loại yêu cầu <span class="text-danger">*</span></label>
+                                <select name="loai_yeu_cau" class="form-select" required>
+                                    <option value="ThucPham" <?php echo ($yc['loai_yeu_cau'] ?? '') == 'ThucPham' ? 'selected' : ''; ?>>Thực phẩm / Dị ứng</option>
+                                    <option value="YTe" <?php echo ($yc['loai_yeu_cau'] ?? '') == 'YTe' ? 'selected' : ''; ?>>Y tế / Sức khỏe</option>
+                                    <option value="DichVu" <?php echo ($yc['loai_yeu_cau'] ?? '') == 'DichVu' ? 'selected' : ''; ?>>Yêu cầu dịch vụ</option>
+                                    <option value="NguNgu" <?php echo ($yc['loai_yeu_cau'] ?? '') == 'NguNgu' ? 'selected' : ''; ?>>Ngủ ngơi / Chỗ ở</option>
+                                    <option value="AnToan" <?php echo ($yc['loai_yeu_cau'] ?? '') == 'AnToan' ? 'selected' : ''; ?>>An toàn / Sự cố</option>
+                                    <option value="Khac" <?php echo empty($yc['loai_yeu_cau']) || ($yc['loai_yeu_cau'] ?? '') == 'Khac' ? 'selected' : ''; ?>>Khác</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mức độ ưu tiên <span class="text-danger">*</span></label>
+                                <select name="muc_do_uu_tien" class="form-select" required>
+                                    <option value="Thap" <?php echo ($yc['muc_do_uu_tien'] ?? '') == 'Thap' ? 'selected' : ''; ?>>Thấp</option>
+                                    <option value="Trung" <?php echo empty($yc['muc_do_uu_tien']) || ($yc['muc_do_uu_tien'] ?? '') == 'Trung' ? 'selected' : ''; ?>>Trung bình</option>
+                                    <option value="Cao" <?php echo ($yc['muc_do_uu_tien'] ?? '') == 'Cao' ? 'selected' : ''; ?>>Cao</option>
+                                    <option value="RatCao" <?php echo ($yc['muc_do_uu_tien'] ?? '') == 'RatCao' ? 'selected' : ''; ?>>Rất cao</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Trạng thái</label>
+                                <select name="trang_thai" class="form-select">
+                                    <option value="Moi" <?php echo empty($yc['trang_thai']) || ($yc['trang_thai'] ?? '') == 'Moi' ? 'selected' : ''; ?>>Mới</option>
+                                    <option value="DangXuLy" <?php echo ($yc['trang_thai'] ?? '') == 'DangXuLy' ? 'selected' : ''; ?>>Đang xử lý</option>
+                                    <option value="HoanTat" <?php echo ($yc['trang_thai'] ?? '') == 'HoanTat' ? 'selected' : ''; ?>>Hoàn tất</option>
+                                    <option value="KhongTheXuLy" <?php echo ($yc['trang_thai'] ?? '') == 'KhongTheXuLy' ? 'selected' : ''; ?>>Không thể xử lý</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Nội dung <span class="text-danger">*</span></label>
+                                <textarea name="noi_dung" class="form-control" rows="3" required><?php echo htmlspecialchars($yc['mo_ta'] ?? ''); ?></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </body>
 </html>

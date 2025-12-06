@@ -64,5 +64,45 @@ class NhatKyTour
             (int)$nhanSuId
         ]);
     }
+
+    // Lấy nhật ký theo lịch khởi hành
+    public function getByLichKhoiHanh($lichKhoiHanhId)
+    {
+        $sql = "SELECT nkt.*, 
+                       t.ten_tour,
+                       nd.ho_ten as nhan_su_ten
+                FROM nhat_ky_tour nkt
+                INNER JOIN lich_khoi_hanh lk ON nkt.tour_id = lk.tour_id
+                LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE lk.id = ?
+                ORDER BY nkt.ngay_ghi DESC, nkt.id DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$lichKhoiHanhId]);
+        return $stmt->fetchAll();
+    }
+
+    // Lấy nhật ký theo ID (không cần nhanSuId cho admin)
+    public function findByIdAdmin($id)
+    {
+        $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as nhan_su_ten
+                FROM nhat_ky_tour nkt
+                LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE nkt.id = ?";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$id]);
+        return $stmt->fetch();
+    }
+
+    // Xóa nhật ký (admin)
+    public function delete($id)
+    {
+        $sql = "DELETE FROM nhat_ky_tour WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([(int)$id]);
+    }
 }
 

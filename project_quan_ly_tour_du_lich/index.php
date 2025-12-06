@@ -114,7 +114,11 @@ match ($act) {
     'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
     'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
     'lichKhoiHanh/themYeuCauDacBiet' => (new LichKhoiHanhController())->themYeuCauDacBiet(),
+    'lichKhoiHanh/suaYeuCauDacBiet' => (new LichKhoiHanhController())->suaYeuCauDacBiet(),
+    'lichKhoiHanh/xoaYeuCauDacBiet' => (new LichKhoiHanhController())->xoaYeuCauDacBiet(),
     'lichKhoiHanh/themNhatKy' => (new LichKhoiHanhController())->themNhatKy(),
+    'lichKhoiHanh/suaNhatKy' => (new LichKhoiHanhController())->suaNhatKy(),
+    'lichKhoiHanh/xoaNhatKy' => (new LichKhoiHanhController())->xoaNhatKy(),
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),

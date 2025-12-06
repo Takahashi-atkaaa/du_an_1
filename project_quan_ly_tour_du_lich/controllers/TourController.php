@@ -493,12 +493,42 @@ class TourController {
             exit();
         }
         
+        require_once 'models/Booking.php';
+        require_once 'models/NhatKyTour.php';
+        
+        $bookingModel = new Booking();
+        $nhatKyTourModel = new NhatKyTour();
+        
         $tour = $this->model->findById($tourId);
         $phanBoNhanSu = $phanBoNhanSuModel->getByLichKhoiHanh($id);
         $phanBoDichVu = $phanBoDichVuModel->getByLichKhoiHanh($id);
         $nhanSuList = $nhanSuModel->getAll();
         $nhaCungCapList = $nhaCungCapModel->getAll();
         $tongChiPhi = $phanBoDichVuModel->getTongChiPhi($id);
+        
+        // Lấy yêu cầu đặc biệt
+        $yeuCauDacBietList = [];
+        if (!empty($lichKhoiHanh['tour_id']) && !empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+            $yeuCauDacBietList = $bookingModel->getSpecialRequestsByLichKhoiHanh(
+                $lichKhoiHanh['tour_id'],
+                $lichKhoiHanh['ngay_khoi_hanh']
+            );
+        }
+        
+        // Lấy nhật ký tour
+        $nhatKyTourList = $nhatKyTourModel->getByLichKhoiHanh($id);
+        
+        // Lấy danh sách booking cho form thêm yêu cầu
+        $bookingList = [];
+        if (!empty($lichKhoiHanh['tour_id']) && !empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+            $bookingList = $bookingModel->getKhachByTourAndNgayKhoiHanh(
+                $lichKhoiHanh['tour_id'],
+                $lichKhoiHanh['ngay_khoi_hanh']
+            );
+        }
+        
+        // Set biến để view biết context (từ tour detail)
+        $fromTourDetail = true;
         
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
