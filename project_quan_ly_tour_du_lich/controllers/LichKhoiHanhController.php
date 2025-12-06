@@ -80,6 +80,46 @@ class LichKhoiHanhController {
         // Reset array keys sau khi filter
         $lichKhoiHanhList = array_values($lichKhoiHanhList);
         
+        // Kiểm tra trùng lịch HDV cho từng lịch khởi hành
+        foreach ($lichKhoiHanhList as &$lich) {
+            $lich['coTrungLichHDV'] = false;
+            $lich['soLichTrungHDV'] = 0;
+            
+            // Lấy danh sách HDV của lịch này
+            $hdvIds = [];
+            
+            // Lấy từ hdv_id trực tiếp
+            if (!empty($lich['hdv_id'])) {
+                $hdvIds[] = (int)$lich['hdv_id'];
+            }
+            
+            // Lấy từ phan_bo_nhan_su với vai_trò HDV
+            if (!empty($lich['hdv_ids'])) {
+                $idsFromPhanBo = explode(',', $lich['hdv_ids']);
+                foreach ($idsFromPhanBo as $id) {
+                    if (!empty($id)) {
+                        $hdvIds[] = (int)$id;
+                    }
+                }
+            }
+            
+            // Loại bỏ trùng lặp
+            $hdvIds = array_unique($hdvIds);
+            
+            // Kiểm tra conflict cho từng HDV
+            if (!empty($hdvIds) && !empty($lich['id'])) {
+                foreach ($hdvIds as $hdvId) {
+                    $conflicts = $this->phanBoNhanSuModel->getScheduleConflictsForStaff($lich['id'], $hdvId);
+                    if (!empty($conflicts)) {
+                        $lich['coTrungLichHDV'] = true;
+                        $lich['soLichTrungHDV'] = count($conflicts);
+                        break; // Chỉ cần một HDV có conflict là đủ để cảnh báo
+                    }
+                }
+            }
+        }
+        unset($lich); // Unset reference
+        
         require 'views/admin/quan_ly_lich_khoi_hanh.php';
     }
 
@@ -137,6 +177,11 @@ class LichKhoiHanhController {
         
         // Tính tổng chi phí
         $tongChiPhi = $this->phanBoDichVuModel->getTongChiPhi($id);
+        
+        // Kiểm tra các dịch vụ cơ bản đã được phân bổ chưa (để cảnh báo)
+        $dichVuCanThiet = ['Xe', 'KhachSan', 'VeMayBay']; // Các loại dịch vụ cơ bản
+        $dichVuDaPhanBo = array_column($phanBoDichVu, 'loai_dich_vu');
+        $dichVuThieu = array_diff($dichVuCanThiet, $dichVuDaPhanBo);
 
         // Lấy yêu cầu đặc biệt của khách cho lịch khởi hành này
         $yeuCauDacBietList = [];

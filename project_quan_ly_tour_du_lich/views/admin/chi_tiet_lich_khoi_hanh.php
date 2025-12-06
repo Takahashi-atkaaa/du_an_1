@@ -242,10 +242,59 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
-
-        <?php if (isset($_SESSION['warning'])): ?>
-            <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                <i class="bi bi-exclamation-circle"></i> <?php echo htmlspecialchars($_SESSION['warning']); unset($_SESSION['warning']); ?>
+        
+        <!-- Cảnh báo khi thiếu nhân sự hoặc dịch vụ -->
+        <?php
+        $coCanhBao = false;
+        $danhSachCanhBao = [];
+        
+        // Kiểm tra nhân sự
+        if (empty($phanBoNhanSu) || count($phanBoNhanSu) === 0) {
+            $coCanhBao = true;
+            $danhSachCanhBao[] = '<a href="#staff" class="alert-link">Chưa có nhân sự (HDV) được phân bổ</a>';
+        }
+        
+        // Kiểm tra dịch vụ
+        if (empty($phanBoDichVu)) {
+            $coCanhBao = true;
+            $danhSachCanhBao[] = '<a href="#service" class="alert-link">Chưa có dịch vụ nào được phân bổ</a>';
+        } elseif (!empty($dichVuThieu)) {
+            $coCanhBao = true;
+            $danhSachCanhBao[] = '<a href="#service" class="alert-link">Thiếu các dịch vụ cơ bản: ' . implode(', ', array_map(function($loai) use ($serviceTypeOptions) {
+                return $serviceTypeOptions[$loai] ?? $loai;
+            }, $dichVuThieu)) . '</a>';
+        }
+        
+        // Kiểm tra gần ngày khởi hành (trong 7 ngày)
+        if (!empty($lichKhoiHanh['ngay_khoi_hanh'])) {
+            $ngayKhoiHanh = new DateTime($lichKhoiHanh['ngay_khoi_hanh']);
+            $ngayHienTai = new DateTime();
+            $soNgayConLai = $ngayHienTai->diff($ngayKhoiHanh)->days;
+            
+            if ($soNgayConLai <= 7 && $soNgayConLai >= 0) {
+                $coCanhBao = true;
+                if ($soNgayConLai == 0) {
+                    $danhSachCanhBao[] = '<strong class="text-danger">Tour khởi hành HÔM NAY!</strong>';
+                } else {
+                    $danhSachCanhBao[] = '<strong class="text-warning">Tour khởi hành sau ' . $soNgayConLai . ' ngày nữa!</strong>';
+                }
+            }
+        }
+        ?>
+        <?php if ($coCanhBao): ?>
+            <div class="alert alert-warning alert-dismissible fade show border-warning border-2" role="alert">
+                <h5 class="alert-heading">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Cảnh báo chuẩn bị tour
+                </h5>
+                <ul class="mb-0">
+                    <?php foreach ($danhSachCanhBao as $canhBao): ?>
+                        <li><?php echo $canhBao; ?></li>
+                    <?php endforeach; ?>
+                </ul>
+                <hr>
+                <p class="mb-0">
+                    <small>Vui lòng kiểm tra và hoàn thiện phân bổ nhân sự và dịch vụ trước khi tour khởi hành.</small>
+                </p>
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
@@ -1012,6 +1061,32 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                     </div>
                     <!-- Tab: Dịch vụ -->
                     <div class="tab-pane fade" id="service" role="tabpanel">
+                        <?php
+                        // Kiểm tra dịch vụ đã phân bổ
+                        $dichVuDaPhanBo = !empty($phanBoDichVu) ? array_column($phanBoDichVu, 'loai_dich_vu') : [];
+                        $dichVuCanThiet = ['Xe', 'KhachSan', 'VeMayBay']; // Các dịch vụ cơ bản
+                        $dichVuThieu = array_diff($dichVuCanThiet, $dichVuDaPhanBo);
+                        ?>
+                        
+                        <!-- Cảnh báo khi chưa có dịch vụ -->
+                        <?php if (empty($phanBoDichVu)): ?>
+                            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                <strong>CẢNH BÁO:</strong> Chưa có dịch vụ nào được phân bổ cho lịch khởi hành này. 
+                                Vui lòng phân bổ các dịch vụ cần thiết như: <strong>Xe vận chuyển, Khách sạn, Vé máy bay</strong>.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php elseif (!empty($dichVuThieu)): ?>
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                <i class="bi bi-info-circle"></i>
+                                <strong>Gợi ý:</strong> Bạn chưa phân bổ các dịch vụ cơ bản: 
+                                <strong><?php echo implode(', ', array_map(function($loai) use ($serviceTypeOptions) {
+                                    return $serviceTypeOptions[$loai] ?? $loai;
+                                }, $dichVuThieu)); ?></strong>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        <?php endif; ?>
+                        
                         <!-- Add Service Form -->
                         <div class="add-form-card">
                             <h6 class="fw-bold mb-3">

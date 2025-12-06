@@ -305,31 +305,101 @@
                                                     <?php echo htmlspecialchars($lich['ten_tour'] ?? 'N/A'); ?>
                                                 </h5>
                                             </div>
-                                            <span class="status-badge <?php 
-                                                if (($lich['so_nhan_su'] ?? 0) == 0) {
-                                                    echo 'bg-warning text-dark'; // Đang chờ phân bổ
-                                                } else {
-                                                    echo match($lich['trang_thai']) {
-                                                        'SapKhoiHanh' => 'bg-info text-dark',
-                                                        'DangChay' => 'bg-success',
-                                                        'HoanThanh' => 'bg-secondary',
-                                                        default => 'bg-secondary'
-                                                    };
-                                                }
-                                            ?>">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="status-badge <?php 
+                                                    if (($lich['so_nhan_su'] ?? 0) == 0) {
+                                                        echo 'bg-warning text-dark'; // Đang chờ phân bổ
+                                                    } else {
+                                                        echo match($lich['trang_thai']) {
+                                                            'SapKhoiHanh' => 'bg-info text-dark',
+                                                            'DangChay' => 'bg-success',
+                                                            'HoanThanh' => 'bg-secondary',
+                                                            default => 'bg-secondary'
+                                                        };
+                                                    }
+                                                ?>">
+                                                    <?php
+                                                    if (($lich['so_nhan_su'] ?? 0) == 0) {
+                                                        echo 'Đang chờ phân bổ';
+                                                    } else {
+                                                        $statusLabels = [
+                                                            'SapKhoiHanh' => 'Sắp khởi hành',
+                                                            'DangChay' => 'Đang chạy',
+                                                            'HoanThanh' => 'Hoàn thành'
+                                                        ];
+                                                        echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
+                                                    }
+                                                    ?>
+                                                </span>
                                                 <?php
+                                                // Kiểm tra và hiển thị cảnh báo
+                                                $coCanhBao = false;
+                                                $loaiCanhBao = [];
+                                                
+                                                // Kiểm tra nhân sự
                                                 if (($lich['so_nhan_su'] ?? 0) == 0) {
-                                                    echo 'Đang chờ phân bổ';
-                                                } else {
-                                                    $statusLabels = [
-                                                        'SapKhoiHanh' => 'Sắp khởi hành',
-                                                        'DangChay' => 'Đang chạy',
-                                                        'HoanThanh' => 'Hoàn thành'
-                                                    ];
-                                                    echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
+                                                    $coCanhBao = true;
+                                                    $loaiCanhBao[] = 'NS'; // Nhân sự
                                                 }
+                                                
+                                                // Kiểm tra dịch vụ
+                                                if (($lich['so_dich_vu'] ?? 0) == 0) {
+                                                    $coCanhBao = true;
+                                                    $loaiCanhBao[] = 'DV'; // Dịch vụ
+                                                }
+                                                
+                                                // Kiểm tra trùng lịch HDV
+                                                $coTrungLichHDV = ($lich['coTrungLichHDV'] ?? false);
+                                                if ($coTrungLichHDV) {
+                                                    $coCanhBao = true;
+                                                    $loaiCanhBao[] = 'HDV'; // HDV trùng lịch
+                                                }
+                                                
+                                                // Kiểm tra gần ngày khởi hành (trong 7 ngày)
+                                                $canhBaoGanNgay = false;
+                                                if (!empty($lich['ngay_khoi_hanh']) && in_array($lich['trang_thai'], ['SapKhoiHanh', 'DangChay'])) {
+                                                    $ngayKhoiHanh = new DateTime($lich['ngay_khoi_hanh']);
+                                                    $ngayHienTai = new DateTime();
+                                                    $soNgayConLai = $ngayHienTai->diff($ngayKhoiHanh)->days;
+                                                    
+                                                    if ($soNgayConLai <= 7 && $soNgayConLai >= 0) {
+                                                        $canhBaoGanNgay = true;
+                                                    }
+                                                }
+                                                
+                                                // Hiển thị tag cảnh báo
+                                                if ($coCanhBao || $canhBaoGanNgay):
                                                 ?>
-                                            </span>
+                                                    <span class="badge bg-danger" title="<?php 
+                                                        $messages = [];
+                                                        if (in_array('NS', $loaiCanhBao)) {
+                                                            $messages[] = 'Thiếu nhân sự';
+                                                        }
+                                                        if (in_array('DV', $loaiCanhBao)) {
+                                                            $messages[] = 'Thiếu dịch vụ';
+                                                        }
+                                                        if (in_array('HDV', $loaiCanhBao)) {
+                                                            $soLichTrung = $lich['soLichTrungHDV'] ?? 0;
+                                                            $messages[] = 'HDV bị trùng lịch (' . $soLichTrung . ' lịch)';
+                                                        }
+                                                        if ($canhBaoGanNgay) {
+                                                            $messages[] = 'Gần ngày khởi hành';
+                                                        }
+                                                        echo implode(', ', $messages);
+                                                    ?>">
+                                                        <i class="bi bi-exclamation-triangle-fill"></i>
+                                                        <?php 
+                                                        if (count($loaiCanhBao) > 0) {
+                                                            echo implode(' + ', $loaiCanhBao);
+                                                        }
+                                                        if ($canhBaoGanNgay) {
+                                                            if (count($loaiCanhBao) > 0) echo ' + ';
+                                                            echo '!';
+                                                        }
+                                                        ?>
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
                                         </div>
 
                                         <div class="mb-3">
