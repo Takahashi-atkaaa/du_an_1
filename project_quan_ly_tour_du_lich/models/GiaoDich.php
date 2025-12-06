@@ -30,6 +30,14 @@ class GiaoDich
         return $stmt->fetchAll();
     }
 
+    // Lấy giao dịch theo booking
+    public function getByBookingId($bookingId) {
+        $sql = "SELECT * FROM giao_dich_tai_chinh WHERE booking_id = ? ORDER BY ngay_giao_dich DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$bookingId]);
+        return $stmt->fetchAll();
+    }
+
     // Thêm giao dịch
     public function insert($data) {
         $sql = "INSERT INTO giao_dich_tai_chinh (tour_id, loai, so_tien, mo_ta, ngay_giao_dich) 

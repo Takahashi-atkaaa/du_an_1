@@ -327,133 +327,179 @@
             <!-- Right Column - Forms -->
             <div class="col-lg-6">
                 <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
-                    <!-- Cập nhật trạng thái -->
-                    <div class="form-card card">
-                        <div class="card-header">
-                            <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" action="index.php?act=booking/updateTrangThai">
-                                <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
-                                
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-flag text-primary"></i> Trạng thái mới
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="trang_thai" class="form-select" required>
-                                        <option value="ChoXacNhan" <?php echo $currentStatus == 'ChoXacNhan' ? 'selected' : ''; ?>>
-                                            Chờ xác nhận
-                                        </option>
-                                        <option value="DaCoc" <?php echo $currentStatus == 'DaCoc' ? 'selected' : ''; ?>>
-                                            Đã cọc
-                                        </option>
-                                        <option value="HoanTat" <?php echo $currentStatus == 'HoanTat' ? 'selected' : ''; ?>>
-                                            Hoàn tất
-                                        </option>
-                                        <option value="Huy" <?php echo $currentStatus == 'Huy' ? 'selected' : ''; ?>>
-                                            Hủy
-                                        </option>
-                                    </select>
+                    <ul class="nav nav-tabs mb-3" id="bookingTab" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="tab-trangthai" data-bs-toggle="tab" data-bs-target="#tab-pane-trangthai" type="button" role="tab">Cập nhật trạng thái</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-thongtin" data-bs-toggle="tab" data-bs-target="#tab-pane-thongtin" type="button" role="tab">Cập nhật thông tin</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="tab-thanhtoan" data-bs-toggle="tab" data-bs-target="#tab-pane-thanhtoan" type="button" role="tab">Thanh toán thêm</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="bookingTabContent">
+                        <div class="tab-pane fade show active" id="tab-pane-trangthai" role="tabpanel">
+                            <!-- Cập nhật trạng thái -->
+                            <div class="form-card card mb-4">
+                                <div class="card-header">
+                                    <i class="bi bi-arrow-repeat"></i> Cập nhật trạng thái
                                 </div>
-
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        <i class="bi bi-pencil text-secondary"></i> Ghi chú
-                                    </label>
-                                    <textarea name="ghi_chu" class="form-control" rows="3" 
-                                              placeholder="Thêm ghi chú về việc thay đổi trạng thái..."></textarea>
-                                </div>
-
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-check-circle"></i> Cập nhật trạng thái
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- Cập nhật thông tin -->
-                    <div class="form-card card">
-                        <div class="card-header">
-                            <i class="bi bi-pencil-square"></i> Cập nhật thông tin
-                        </div>
-                        <div class="card-body">
-                            <form method="POST" action="index.php?act=booking/update">
-                                <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
-                                
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">
-                                            <i class="bi bi-people text-primary"></i> Số lượng người
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number" name="so_nguoi" class="form-control" 
-                                               value="<?php echo $booking['so_nguoi']; ?>" min="1" required>
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">
-                                            <i class="bi bi-calendar-event text-warning"></i> Ngày khởi hành
-                                        </label>
-                                        <input type="date" name="ngay_khoi_hanh" class="form-control" 
-                                               value="<?php echo $booking['ngay_khoi_hanh'] ?? ''; ?>">
-                                    </div>
-
-                                    <div class="col-md-6">
-                                        <label class="form-label fw-semibold">
-                                            <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
-                                        </label>
-                                       <input type="date" name="ngay_ket_thuc" class="form-control"
-                                              value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
-                                        <small class="text-muted">Để trống sẽ dùng ngày khởi hành</small>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold">
-                                            <i class="bi bi-cash-coin text-success"></i> Tổng tiền
-                                            <span class="text-danger">*</span>
-                                        </label>
-                                        <div class="input-group">
-                                            <input type="number" name="tong_tien" class="form-control" 
-                                                   value="<?php echo $booking['tong_tien']; ?>" step="1000" min="0" required>
-                                            <span class="input-group-text">₫</span>
+                                <div class="card-body">
+                                    <form method="POST" action="index.php?act=booking/updateTrangThai">
+                                        <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-flag text-primary"></i> Trạng thái mới
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <select name="trang_thai" class="form-select" required>
+                                                <option value="ChoXacNhan" <?php echo $currentStatus == 'ChoXacNhan' ? 'selected' : ''; ?>>Chờ xác nhận</option>
+                                                <option value="DaCoc" <?php echo $currentStatus == 'DaCoc' ? 'selected' : ''; ?>>Đã cọc</option>
+                                                <option value="HoanTat" <?php echo $currentStatus == 'HoanTat' ? 'selected' : ''; ?>>Hoàn tất</option>
+                                                <option value="Huy" <?php echo $currentStatus == 'Huy' ? 'selected' : ''; ?>>Hủy</option>
+                                            </select>
                                         </div>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold">
-                                            <i class="bi bi-flag text-danger"></i> Trạng thái
-                                        </label>
-                                        <select name="trang_thai" class="form-select">
-                                            <option value="ChoXacNhan" <?php echo $currentStatus == 'ChoXacNhan' ? 'selected' : ''; ?>>
-                                                Chờ xác nhận
-                                            </option>
-                                            <option value="DaCoc" <?php echo $currentStatus == 'DaCoc' ? 'selected' : ''; ?>>
-                                                Đã cọc
-                                            </option>
-                                            <option value="HoanTat" <?php echo $currentStatus == 'HoanTat' ? 'selected' : ''; ?>>
-                                                Hoàn tất
-                                            </option>
-                                            <option value="Huy" <?php echo $currentStatus == 'Huy' ? 'selected' : ''; ?>>
-                                                Hủy
-                                            </option>
-                                        </select>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <label class="form-label fw-semibold">
-                                            <i class="bi bi-pencil-square text-secondary"></i> Ghi chú
-                                        </label>
-                                        <textarea name="ghi_chu" class="form-control" rows="3"><?php echo htmlspecialchars($booking['ghi_chu'] ?? ''); ?></textarea>
-                                    </div>
-
-                                    <div class="col-12">
-                                        <button type="submit" class="btn btn-success w-100">
-                                            <i class="bi bi-save"></i> Lưu thay đổi
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-cash-coin text-success"></i> Số tiền cọc
+                                            </label>
+                                            <input type="number" name="so_tien_coc" class="form-control" min="0" step="1000" placeholder="Nhập số tiền cọc" value="<?php echo isset($booking['so_tien_coc']) ? $booking['so_tien_coc'] : ''; ?>">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-calendar-event text-info"></i> Ngày cọc
+                                            </label>
+                                            <input type="date" name="ngay_coc" class="form-control" value="<?php echo isset($booking['ngay_coc']) ? $booking['ngay_coc'] : ''; ?>">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-wallet2 text-warning"></i> Số tiền còn lại
+                                            </label>
+                                            <input type="number" class="form-control" value="<?php echo isset($booking['so_tien_con_lai']) ? $booking['so_tien_con_lai'] : ''; ?>" disabled>
+                                            <small class="text-muted">Số tiền còn lại sẽ tự động tính khi nhập số tiền cọc và lưu vào hệ thống.</small>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-pencil text-secondary"></i> Ghi chú
+                                            </label>
+                                            <textarea name="ghi_chu" class="form-control" rows="3" placeholder="Thêm ghi chú về việc thay đổi trạng thái..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-primary w-100">
+                                            <i class="bi bi-check-circle"></i> Cập nhật trạng thái
                                         </button>
-                                    </div>
+                                    </form>
                                 </div>
-                            </form>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-pane-thongtin" role="tabpanel">
+                            <!-- Cập nhật thông tin -->
+                            <div class="form-card card mb-4">
+                                <div class="card-header">
+                                    <i class="bi bi-pencil-square"></i> Cập nhật thông tin
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="index.php?act=booking/update">
+                                        <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-people text-primary"></i> Số lượng người
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                <input type="number" name="so_nguoi" class="form-control" value="<?php echo $booking['so_nguoi']; ?>" min="1" required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-calendar-event text-warning"></i> Ngày khởi hành
+                                                </label>
+                                                <input type="date" name="ngay_khoi_hanh" class="form-control" value="<?php echo $booking['ngay_khoi_hanh'] ?? ''; ?>">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
+                                                </label>
+                                                <input type="date" name="ngay_ket_thuc" class="form-control" value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
+                                                <small class="text-muted">Để trống sẽ dùng ngày khởi hành</small>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-cash-coin text-success"></i> Tổng tiền
+                                                    <span class="text-danger">*</span>
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="number" name="tong_tien" class="form-control" value="<?php echo $booking['tong_tien']; ?>" step="1000" min="0" required>
+                                                    <span class="input-group-text">₫</span>
+                                                </div>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-flag text-danger"></i> Trạng thái
+                                                </label>
+                                                <select name="trang_thai" class="form-select">
+                                                    <option value="ChoXacNhan" <?php echo $currentStatus == 'ChoXacNhan' ? 'selected' : ''; ?>>
+                                                        Chờ xác nhận
+                                                    </option>
+                                                    <option value="DaCoc" <?php echo $currentStatus == 'DaCoc' ? 'selected' : ''; ?>>
+                                                        Đã cọc
+                                                    </option>
+                                                    <option value="HoanTat" <?php echo $currentStatus == 'HoanTat' ? 'selected' : ''; ?>>
+                                                        Hoàn tất
+                                                    </option>
+                                                    <option value="Huy" <?php echo $currentStatus == 'Huy' ? 'selected' : ''; ?>>
+                                                        Hủy
+                                                    </option>
+                                                </select>
+                                            </div>
+                                            <div class="col-12">
+                                                <label class="form-label fw-semibold">
+                                                    <i class="bi bi-pencil-square text-secondary"></i> Ghi chú
+                                                </label>
+                                                <textarea name="ghi_chu" class="form-control" rows="3"><?php echo htmlspecialchars($booking['ghi_chu'] ?? ''); ?></textarea>
+                                            </div>
+                                            <div class="col-12">
+                                                <button type="submit" class="btn btn-success w-100">
+                                                    <i class="bi bi-save"></i> Lưu thay đổi
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="tab-pane-thanhtoan" role="tabpanel">
+                            <!-- Thanh toán thêm -->
+                            <div class="form-card card mb-4">
+                                <div class="card-header">
+                                    <i class="bi bi-cash-coin"></i> Thanh toán thêm
+                                </div>
+                                <div class="card-body">
+                                    <form method="POST" action="index.php?act=booking/thanhToanThem">
+                                        <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-cash-coin text-success"></i> Số tiền thanh toán thêm
+                                            </label>
+                                            <input type="number" name="so_tien_thanh_toan" class="form-control" min="1000" step="1000" placeholder="Nhập số tiền thanh toán thêm" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-calendar-event text-info"></i> Ngày thanh toán
+                                            </label>
+                                            <input type="date" name="ngay_thanh_toan" class="form-control" value="<?php echo date('Y-m-d'); ?>">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">
+                                                <i class="bi bi-pencil text-secondary"></i> Ghi chú
+                                            </label>
+                                            <textarea name="mo_ta" class="form-control" rows="2" placeholder="Ghi chú cho lần thanh toán này..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-success w-100">
+                                            <i class="bi bi-cash-stack"></i> Xác nhận thanh toán
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -461,7 +507,7 @@
         </div>
 
         <!-- Lịch sử thay đổi -->
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm mb-4">
             <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                 <h5 class="mb-0">
                     <i class="bi bi-clock-history"></i> Lịch sử thay đổi trạng thái
@@ -523,9 +569,73 @@
                 <?php else: ?>
                     <div class="empty-history">
                         <i class="bi bi-inbox"></i>
-                        <p class="mb-0">Chưa có lịch sử thay đổi nào</p>
+                        <span class="ms-2">Chưa có lịch sử thay đổi trạng thái.</span>
                     </div>
                 <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Lịch sử thanh toán/cọc -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-gradient" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: #197d2b;">
+                <h5 class="mb-0">
+                    <i class="bi bi-cash-coin"></i> Lịch sử thanh toán/cọc
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <?php 
+                    $giaoDichModel = new GiaoDich();
+                    $giaoDichList = $giaoDichModel->getByBookingId($booking['booking_id']);
+                    $tongThu = 0;
+                ?>
+                <?php if (!empty($giaoDichList)): ?>
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Ngày giao dịch</th>
+                                    <th>Loại</th>
+                                    <th>Số tiền</th>
+                                    <th>Mô tả</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($giaoDichList as $gd): ?>
+                                    <?php if ($gd['loai'] === 'Thu') $tongThu += (float)$gd['so_tien']; ?>
+                                    <tr>
+                                        <td><?php echo date('d/m/Y', strtotime($gd['ngay_giao_dich'])); ?></td>
+                                        <td><span class="badge bg-success"><?php echo $gd['loai']; ?></span></td>
+                                        <td class="text-end text-success">+<?php echo number_format($gd['so_tien']); ?> ₫</td>
+                                        <td><?php echo htmlspecialchars($gd['mo_ta']); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="2" class="text-end">Tổng đã thu:</th>
+                                    <th class="text-end text-success"><?php echo number_format($tongThu); ?> ₫</th>
+                                    <th></th>
+                                </tr>
+                                <tr>
+                                    <th colspan="2" class="text-end">Số tiền còn lại:</th>
+                                    <th class="text-end text-danger">
+                                        <?php echo number_format(max(0, $booking['tong_tien'] - $tongThu)); ?> ₫
+                                    </th>
+                                    <th></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                <?php else: ?>
+                    <div class="empty-history">
+                        <i class="bi bi-inbox"></i>
+                        <span class="ms-2">Chưa có giao dịch thanh toán nào.</span>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+                        <p class="mb-0">Chưa có lịch sử thay đổi nào</p>
+                    </div>
             </div>
         </div>
     </div>

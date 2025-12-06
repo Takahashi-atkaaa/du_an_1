@@ -169,11 +169,33 @@ class BookingController {
 
     // Cập nhật trạng thái booking
     public function updateTrangThai() {
+            require_once 'models/GiaoDich.php';
+                // Nếu có số tiền cọc/thanh toán thêm thì lưu vào bảng giao dịch
+                if ($soTienCoc && $soTienCoc > 0) {
+                    $giaoDichModel = new GiaoDich();
+                    $giaoDichModel->insert([
+                        'tour_id' => $bookingId, // Nếu có booking_id riêng cho giao dịch thì nên dùng booking_id, nếu không thì tour_id
+                        'loai' => 'Thu',
+                        'so_tien' => $soTienCoc,
+                        'mo_ta' => 'Cọc/Thanh toán thêm cho booking #' . $bookingId,
+                        'ngay_giao_dich' => $ngayCoc ?? date('Y-m-d')
+                    ]);
+                    // Tính lại số tiền còn lại
+                    // Lấy tổng tiền booking
+                    $bookingModel = $this->bookingModel;
+                    $booking = $bookingModel->findById($bookingId);
+                    $tongTien = $booking['tong_tien'] ?? 0;
+                    $tongThu = $giaoDichModel->getTongThuByTour($bookingId);
+                    $soTienConLai = max(0, $tongTien - $tongThu);
+                }
         // requireLogin();
         $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
         $trangThaiMoi = $_POST['trang_thai'] ?? '';
         $ghiChu = trim($_POST['ghi_chu'] ?? '');
         $nguoiThayDoiId = $_SESSION['user_id'] ?? null;
+        $soTienCoc = isset($_POST['so_tien_coc']) ? (float)$_POST['so_tien_coc'] : null;
+        $ngayCoc = !empty($_POST['ngay_coc']) ? $_POST['ngay_coc'] : null;
+            $soTienConLai = null; // Remove manual input for remaining amount
         
         // Kiểm tra quyền
         if (!$this->checkPermissionToUpdate($bookingId)) {
@@ -195,7 +217,7 @@ class BookingController {
             exit();
         }
         
-        $result = $this->bookingModel->updateTrangThai($bookingId, $trangThaiMoi, $nguoiThayDoiId, $ghiChu);
+        $result = $this->bookingModel->updateTrangThai($bookingId, $trangThaiMoi, $nguoiThayDoiId, $ghiChu, $soTienCoc, $ngayCoc, $soTienConLai);
         
         if ($result) {
             $_SESSION['success'] = 'Cập nhật trạng thái booking thành công.';
@@ -821,6 +843,53 @@ class BookingController {
         
         // Gửi email
         return mail($to, $subject, $message, $headers);
+    }
+
+    // Xử lý thanh toán thêm cho booking
+    public function thanhToanThem() {
+        require_once 'models/GiaoDich.php';
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+        $soTienThanhToan = isset($_POST['so_tien_thanh_toan']) ? (float)$_POST['so_tien_thanh_toan'] : 0;
+        $ngayThanhToan = !empty($_POST['ngay_thanh_toan']) ? $_POST['ngay_thanh_toan'] : date('Y-m-d');
+        $moTa = trim($_POST['mo_ta'] ?? '');
+        $userId = $_SESSION['user_id'] ?? null;
+
+        if ($bookingId <= 0 || $soTienThanhToan <= 0) {
+            $_SESSION['error'] = 'Thông tin thanh toán không hợp lệ.';
+            header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+            exit();
+        }
+
+        // Kiểm tra quyền
+        if (!$this->checkPermissionToUpdate($bookingId)) {
+            $_SESSION['error'] = 'Bạn không có quyền thanh toán cho booking này.';
+            header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+            exit();
+        }
+
+        // Lưu giao dịch vào bảng giao_dich_tai_chinh
+        $giaoDichModel = new GiaoDich();
+        $giaoDichModel->insert([
+            'tour_id' => $bookingId, // Nếu có booking_id riêng cho giao dịch thì nên dùng booking_id, nếu không thì tour_id
+            'loai' => 'Thu',
+            'so_tien' => $soTienThanhToan,
+            'mo_ta' => 'Thanh toán thêm cho booking #' . $bookingId . ($moTa ? ' - ' . $moTa : ''),
+            'ngay_giao_dich' => $ngayThanhToan
+        ]);
+
+        // Tính lại số tiền còn lại
+        $booking = $this->bookingModel->findById($bookingId);
+        $tongTien = $booking['tong_tien'] ?? 0;
+        $tongThu = $giaoDichModel->getTongThuByTour($bookingId);
+        $soTienConLai = max(0, $tongTien - $tongThu);
+
+        // Cập nhật số tiền còn lại cho booking
+        $this->bookingModel->update($bookingId, ['so_tien_con_lai' => $soTienConLai]);
+
+        $_SESSION['success'] = 'Thanh toán thêm thành công.';
+        // Quay lại trang chi tiết booking
+        header('Location: index.php?act=booking/chiTiet&id=' . $bookingId);
+        exit();
     }
 
 }

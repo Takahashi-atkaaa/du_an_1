@@ -93,7 +93,7 @@ class Booking
 }
 
     // Cập nhật trạng thái booking và lưu lịch sử
-    public function updateTrangThai($id, $trangThaiMoi, $nguoiThayDoiId, $ghiChu = null) {
+    public function updateTrangThai($id, $trangThaiMoi, $nguoiThayDoiId, $ghiChu = null, $soTienCoc = null, $ngayCoc = null, $soTienConLai = null) {
         // Lấy trạng thái cũ
         $booking = $this->findById($id);
         if (!$booking) {
@@ -107,10 +107,17 @@ class Booking
             return true;
         }
         
-        // Cập nhật trạng thái
-        $sql = "UPDATE booking SET trang_thai = ? WHERE booking_id = ?";
+        // Tính số tiền còn lại tự động
+        $soTienConLaiAuto = $booking['tong_tien'] - floatval($soTienCoc);
+        $sql = "UPDATE booking SET trang_thai = ?, so_tien_coc = ?, ngay_coc = ?, so_tien_con_lai = ? WHERE booking_id = ?";
         $stmt = $this->conn->prepare($sql);
-        $result = $stmt->execute([$trangThaiMoi, $id]);
+        $result = $stmt->execute([
+            $trangThaiMoi,
+            $soTienCoc,
+            $ngayCoc,
+            $soTienConLaiAuto,
+            $id
+        ]);
         
         if ($result) {
             // Lưu lịch sử thay đổi
