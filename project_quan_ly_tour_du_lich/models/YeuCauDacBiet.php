@@ -365,25 +365,49 @@ class YeuCauDacBiet
     /**
      * Thống kê yêu cầu cho HDV (chỉ các tour HDV phụ trách)
      */
-    public function getSummaryStatsForHDV($nhanSuId)
-    {
-        $sql = "SELECT 
-                    SUM(CASE WHEN yc.muc_do_uu_tien = 'khan_cap' THEN 1 ELSE 0 END) AS khan_cap,
-                    SUM(CASE WHEN yc.muc_do_uu_tien = 'cao' THEN 1 ELSE 0 END) AS cao,
-                    SUM(CASE WHEN yc.muc_do_uu_tien = 'trung_binh' THEN 1 ELSE 0 END) AS trung_binh,
-                    SUM(CASE WHEN yc.muc_do_uu_tien = 'thap' THEN 1 ELSE 0 END) AS thap,
-                    SUM(CASE WHEN yc.trang_thai = 'moi' THEN 1 ELSE 0 END) AS trang_thai_moi,
-                    SUM(CASE WHEN yc.trang_thai = 'dang_xu_ly' THEN 1 ELSE 0 END) AS trang_thai_dang_xu_ly,
-                    SUM(CASE WHEN yc.trang_thai = 'da_giai_quyet' THEN 1 ELSE 0 END) AS trang_thai_da_giai_quyet,
-                    SUM(CASE WHEN yc.trang_thai = 'khong_the_thuc_hien' THEN 1 ELSE 0 END) AS trang_thai_khong_the_thuc_hien
-                FROM yeu_cau_dac_biet yc
-                LEFT JOIN booking b ON yc.booking_id = b.booking_id
-                LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND DATE(b.ngay_khoi_hanh) = DATE(lkh.ngay_khoi_hanh)
-                LEFT JOIN phan_bo_nhan_su pbn ON lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?
-                WHERE (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([$nhanSuId, $nhanSuId, $nhanSuId]);
-        return $stmt->fetch() ?: [];
+
+public function getSummaryStatsForHDV($nhanSuId, $filters = [])
+{
+    $sql = "SELECT 
+                SUM(CASE WHEN yc.muc_do_uu_tien = 'khan_cap' THEN 1 ELSE 0 END) AS khan_cap,
+                SUM(CASE WHEN yc.muc_do_uu_tien = 'cao' THEN 1 ELSE 0 END) AS cao,
+                SUM(CASE WHEN yc.muc_do_uu_tien = 'trung_binh' THEN 1 ELSE 0 END) AS trung_binh,
+                SUM(CASE WHEN yc.muc_do_uu_tien = 'thap' THEN 1 ELSE 0 END) AS thap,
+                SUM(CASE WHEN yc.trang_thai = 'moi' THEN 1 ELSE 0 END) AS trang_thai_moi,
+                SUM(CASE WHEN yc.trang_thai = 'dang_xu_ly' THEN 1 ELSE 0 END) AS trang_thai_dang_xu_ly,
+                SUM(CASE WHEN yc.trang_thai = 'da_giai_quyet' THEN 1 ELSE 0 END) AS trang_thai_da_giai_quyet,
+                SUM(CASE WHEN yc.trang_thai = 'khong_the_thuc_hien' THEN 1 ELSE 0 END) AS trang_thai_khong_the_thuc_hien
+            FROM yeu_cau_dac_biet yc
+            LEFT JOIN booking b ON yc.booking_id = b.booking_id
+            LEFT JOIN lich_khoi_hanh lkh ON b.tour_id = lkh.tour_id AND DATE(b.ngay_khoi_hanh) = DATE(lkh.ngay_khoi_hanh)
+            LEFT JOIN phan_bo_nhan_su pbn ON lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?
+            WHERE (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
+
+    $params = [$nhanSuId, $nhanSuId, $nhanSuId];
+
+    // Nếu có filter tour_id (tour thực sự), thêm điều kiện
+    if (!empty($filters['tour_id'])) {
+        $sql .= " AND b.tour_id = ?";
+        $params[] = (int)$filters['tour_id'];
     }
+
+    // (Tuỳ chọn) hỗ trợ lọc theo khoảng ngày nếu cần
+    if (!empty($filters['date_from'])) {
+        $sql .= " AND DATE(yc.ngay_tao) >= ?";
+        $params[] = $filters['date_from'];
+    }
+    if (!empty($filters['date_to'])) {
+        $sql .= " AND DATE(yc.ngay_tao) <= ?";
+        $params[] = $filters['date_to'];
+    }
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute($params);
+    $row = $stmt->fetch();
+    return $row ?: [
+        'khan_cap' => 0, 'cao' => 0, 'trung_binh' => 0, 'thap' => 0,
+        'trang_thai_moi' => 0, 'trang_thai_dang_xu_ly' => 0, 'trang_thai_da_giai_quyet' => 0, 'trang_thai_khong_the_thuc_hien' => 0
+    ];
+}
 }
 
