@@ -102,6 +102,19 @@ class LichKhoiHanhController {
         
         // Lấy phân bổ nhân sự
         $phanBoNhanSu = $this->phanBoNhanSuModel->getByLichKhoiHanh($id);
+
+        // Nếu admin chưa phân bổ HDV, hệ thống sẽ tự đôngj chọn 1 HDV phù hợp
+        if (
+            (empty($lichKhoiHanh['hdv_id']) || (int)$lichKhoiHanh['hdv_id'] === 0)
+            && (empty($phanBoNhanSu) || count($phanBoNhanSu) === 0)
+        ) {
+            $autoNhanSuId = $this->phanBoNhanSuModel->autoAssignHDVIfMissing($id);
+            if ($autoNhanSuId) {
+                // Reload lại dữ liệu sau khi tự động phân bổ
+                $lichKhoiHanh   = $this->lichKhoiHanhModel->getWithDetails($id);
+                $phanBoNhanSu   = $this->phanBoNhanSuModel->getByLichKhoiHanh($id);
+            }
+        }
         
         // Lấy phân bổ dịch vụ
         $phanBoDichVu = $this->phanBoDichVuModel->getByLichKhoiHanh($id);
@@ -131,6 +144,25 @@ class LichKhoiHanhController {
                 $lichKhoiHanh['tour_id'],
                 $lichKhoiHanh['ngay_khoi_hanh']
             );
+        }
+        
+        // Lấy nhật ký tour cho tour này
+        $nhatKyTourList = [];
+        if (!empty($lichKhoiHanh['tour_id'])) {
+            require_once 'models/NhatKyTour.php';
+            $nhatKyTourModel = new NhatKyTour();
+            // Lấy tất cả nhật ký của tour này (không giới hạn theo HDV)
+            $conn = connectDB();
+            $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
+                    FROM nhat_ky_tour nkt
+                    LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                    LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                    LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                    WHERE nkt.tour_id = ?
+                    ORDER BY nkt.ngay_ghi DESC, nkt.id DESC";
+            $stmt = $conn->prepare($sql);
+            $stmt->execute([(int)$lichKhoiHanh['tour_id']]);
+            $nhatKyTourList = $stmt->fetchAll(PDO::FETCH_ASSOC);
         }
         
         // Lấy danh sách booking và khách chi tiết cho lịch khởi hành
@@ -466,6 +498,33 @@ if (!empty($lichKhoiHanh['tour_id'])) {
                     'ghi_chu' => $ghiChu
                 ];
                 
+                // Nếu phân bổ HDV, kiểm tra xem nhân sự này có trùng lịch với tour khác không
+                if ($vaiTro === 'HDV') {
+                    $conflicts = $this->phanBoNhanSuModel->getScheduleConflictsForStaff($lichKhoiHanhId, $nhanSuId);
+                    if (!empty($conflicts)) {
+                        $list = [];
+                        foreach ($conflicts as $c) {
+                            $from = $c['ngay_khoi_hanh'] ?? '';
+                            $to   = $c['ngay_ket_thuc'] ?? $from;
+                            $label = '#' . $c['id'];
+                            if (!empty($c['ten_tour'])) {
+                                $label .= ' - ' . $c['ten_tour'];
+                            }
+                            if ($from) {
+                                $label .= ' (' . $from;
+                                if ($to && $to !== $from) {
+                                    $label .= ' → ' . $to;
+                                }
+                                $label .= ')';
+                            }
+                            $list[] = $label;
+                        }
+                        $_SESSION['warning'] = 'Nhân sự này đang được phân công vào các lịch trùng ngày: ' 
+                            . implode(', ', $list) 
+                            . '. Vẫn cho phép phân bổ, nhưng HDV cần cân nhắc tránh quá tải.';
+                    }
+                }
+
                 $result = $this->phanBoNhanSuModel->insert($data);
                 if ($result) {
                     $_SESSION['success'] = 'Phân bổ nhân sự thành công.';
