@@ -124,6 +124,10 @@ match ($act) {
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
     'admin/themYeuCauDacBiet' => (new AdminController())->taoYeuCauDacBiet(),
+    'admin/quanLyYeuCauTour' => (new AdminController())->quanLyYeuCauTour(),
+    'admin/chiTietYeuCauTour' => (new AdminController())->chiTietYeuCauTour(),
+    'admin/phanHoiYeuCauTour' => (new AdminController())->phanHoiYeuCauTour(),
+    'admin/taoTourTuYeuCau' => (new AdminController())->taoTourTuYeuCau(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
     'admin/chiTietNhatKyTour' => (new AdminController())->chiTietNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
@@ -235,7 +239,10 @@ match ($act) {
     'khachHang/thongBao' => (new KhachHangController())->thongBao(),
     'khachHang/capNhatThongTin' => (new KhachHangController())->capNhatThongTin(),
     'khachHang/guiYeuCauHoTro' => (new KhachHangController())->guiYeuCauHoTro(),
+    'khachHang/guiYeuCauTour' => (new KhachHangController())->guiYeuCauTour(),
+    'khachHang/yeuCauTour' => (new KhachHangController())->guiYeuCauTour(),
     'khachHang/thanhToan' => (new KhachHangController())->thanhToan(),
+    'khachHang/thanhToanTour' => (new KhachHangController())->thanhToanTour(),
 
     // Nhân sự
     'admin/nhanSu' => (new AdminController())->nhanSu(),

@@ -360,6 +360,35 @@ class BookingController {
         // Lấy thông tin tour
         $tour = $this->tourModel->findById($booking['tour_id']);
         
+        // Lấy yêu cầu tour của khách hàng (nếu có)
+        $yeuCauTour = null;
+        if (!empty($booking['khach_hang_id'])) {
+            require_once 'models/KhachHang.php';
+            require_once 'models/ThongBao.php';
+            
+            $khachHangModel = new KhachHang();
+            $khachHang = $khachHangModel->findById($booking['khach_hang_id']);
+            
+            if ($khachHang && !empty($khachHang['nguoi_dung_id'])) {
+                $thongBaoModel = new ThongBao();
+                
+                // Lấy tất cả yêu cầu tour, sau đó filter theo khách hàng này
+                // Lấy yêu cầu mới nhất của khách hàng
+                $yeuCauList = $thongBaoModel->getYeuCauTour([
+                    'search' => '',
+                    'limit' => 50
+                ]);
+                
+                // Tìm yêu cầu của khách hàng này (ưu tiên yêu cầu mới nhất)
+                foreach ($yeuCauList as $yc) {
+                    if (isset($yc['nguoi_gui_id']) && $yc['nguoi_gui_id'] == $khachHang['nguoi_dung_id']) {
+                        $yeuCauTour = $yc;
+                        break; // Lấy yêu cầu đầu tiên (mới nhất do đã sort DESC)
+                    }
+                }
+            }
+        }
+        
         require 'views/admin/chi_tiet_booking.php';
     }
 

@@ -19,23 +19,59 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow rounded-4 mt-3 mb-4 px-2 py-2" style="background: linear-gradient(90deg, #f8fafc 60%, #e0f2fe 100%);">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="#">DuLichPro</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2 fs-3 text-primary" href="index.php?act=khachHang/dashboard">
+                <i class="bi bi-globe2"></i> DuLichPro
+            </a>
+            <button class="navbar-toggler border-0 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#">Trang chủ</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Tour nổi bật</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Ưu đãi</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Đánh giá</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#">Hỗ trợ</a></li>
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-2">
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill fw-semibold d-flex align-items-center gap-1" href="index.php?act=khachHang/dashboard">
+                            <i class="bi bi-house-door"></i> Trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill fw-semibold d-flex align-items-center gap-1" href="index.php?act=khachHang/danhSachTour">
+                            <i class="bi bi-stars"></i> Tour nổi bật
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill fw-semibold d-flex align-items-center gap-1" href="index.php?act=khachHang/danhGia">
+                            <i class="bi bi-chat-dots"></i> Đánh giá
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill fw-semibold d-flex align-items-center gap-1" href="index.php?act=khachHang/guiYeuCauHoTro">
+                            <i class="bi bi-headset"></i> Hỗ trợ
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3 rounded-pill fw-bold text-danger border border-danger d-flex align-items-center gap-1" href="index.php?act=khachHang/yeuCauTour">
+                            <i class="bi bi-plus-circle"></i> Đặt tour theo yêu cầu
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
     </nav>
+    <style>
+        .navbar-nav .nav-link {
+            transition: background 0.18s, color 0.18s, box-shadow 0.18s;
+        }
+        .navbar-nav .nav-link:hover, .navbar-nav .nav-link.active {
+            background: linear-gradient(90deg, #e0f2fe 60%, #bae6fd 100%);
+            color: #0d6efd !important;
+            box-shadow: 0 2px 8px rgba(13,110,253,0.08);
+        }
+        .navbar-brand {
+            text-decoration: none;
+        }
+    </style>
     <!-- Slideshow banner -->
     <div class="position-relative" style="height: 350px;">
         <div id="bannerCarousel" class="carousel slide h-100" data-bs-ride="carousel" data-bs-interval="3500">
@@ -55,7 +91,14 @@
             <div class="banner-content">
                 <h1 class="display-4 fw-bold">Khám phá thế giới cùng DuLichPro</h1>
                 <p class="lead">Đặt tour dễ dàng, nhận ưu đãi hấp dẫn, trải nghiệm tuyệt vời!</p>
-                <a href="#" class="btn btn-warning btn-lg">Xem tour hot</a>
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="index.php?act=khachHang/danhSachTour" class="btn btn-warning btn-lg">
+                        <i class="bi bi-stars"></i> Xem tour hot
+                    </a>
+                    <a href="index.php?act=khachHang/yeuCauTour" class="btn btn-danger btn-lg">
+                        <i class="bi bi-plus-circle"></i> Đặt tour theo yêu cầu
+                    </a>
+                </div>
             </div>
         </div>
     </div>

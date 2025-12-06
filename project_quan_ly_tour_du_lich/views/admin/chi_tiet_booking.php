@@ -383,6 +383,89 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Yêu cầu Tour (nếu có) -->
+                <?php if (!empty($yeuCauTour)): ?>
+                    <?php
+                        // Parse thông tin từ nội dung
+                        $thongTinYeuCau = [];
+                        foreach (explode("\n", $yeuCauTour['noi_dung'] ?? '') as $row) {
+                            $kv = explode(": ", $row, 2);
+                            if (count($kv) == 2) {
+                                $thongTinYeuCau[$kv[0]] = $kv[1];
+                            }
+                        }
+                    ?>
+                    <div class="info-card card mt-3">
+                        <div class="card-header" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="bi bi-star-fill"></i> Yêu cầu Tour từ Khách hàng
+                        </div>
+                        <div class="card-body">
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-geo-alt-fill text-primary"></i> Địa điểm
+                                </div>
+                                <div class="info-value fw-semibold">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Địa điểm'] ?? 'N/A'); ?>
+                                </div>
+                            </div>
+                            <?php if (!empty($thongTinYeuCau['Thời gian'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-calendar-range text-info"></i> Thời gian
+                                </div>
+                                <div class="info-value">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Thời gian']); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($thongTinYeuCau['Số người'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-people-fill text-success"></i> Số người
+                                </div>
+                                <div class="info-value">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Số người']); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($thongTinYeuCau['Ngân sách'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-wallet2 text-warning"></i> Ngân sách
+                                </div>
+                                <div class="info-value">
+                                    <?php echo htmlspecialchars($thongTinYeuCau['Ngân sách']); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <?php if (!empty($thongTinYeuCau['Yêu cầu đặc biệt'])): ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-list-check text-danger"></i> Yêu cầu đặc biệt
+                                </div>
+                                <div class="info-value">
+                                    <?php echo nl2br(htmlspecialchars($thongTinYeuCau['Yêu cầu đặc biệt'])); ?>
+                                </div>
+                            </div>
+                            <?php endif; ?>
+                            <div class="info-row">
+                                <div class="info-label">
+                                    <i class="bi bi-clock text-muted"></i> Thời gian gửi
+                                </div>
+                                <div class="info-value">
+                                    <small><?php echo date('d/m/Y H:i', strtotime($yeuCauTour['created_at'])); ?></small>
+                                </div>
+                            </div>
+                            <div class="mt-3 pt-3 border-top">
+                                <a href="index.php?act=admin/chiTietYeuCauTour&id=<?php echo $yeuCauTour['id']; ?>" 
+                                   class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="bi bi-eye me-2"></i>Xem chi tiết & Phản hồi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Right Column - Forms -->
