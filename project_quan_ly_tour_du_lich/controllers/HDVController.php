@@ -10,6 +10,7 @@ require_once 'models/NhatKyTour.php';
 require_once 'models/KhachHang.php';
 require_once 'models/CheckinKhach.php';
 require_once 'models/YeuCauDacBiet.php';
+require_once 'models/SalaryBonus.php';
 
 class HDVController {
     private $nhanSuModel;
@@ -22,6 +23,7 @@ class HDVController {
     private $khachHangModel;
     private $yeuCauDacBietModel;
     private $checkinKhachModel;
+    private $salaryBonusModel;
     
     public function __construct() {
         requireRole('HDV');
@@ -35,6 +37,7 @@ class HDVController {
         $this->khachHangModel = new KhachHang();
         $this->yeuCauDacBietModel = new YeuCauDacBiet();
         $this->checkinKhachModel = new CheckinKhach();
+        $this->salaryBonusModel = new SalaryBonus();
     }
     
     public function lichLamViec() {
@@ -2243,5 +2246,23 @@ $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
 
         return $result;
     }
-}
 
+    /**
+     * Hiển thị trang lương, thưởng và hoa hồng cho HDV
+     */
+    public function luongThuong() {
+        $nhanSu = $this->getCurrentHDV();
+        $nhanSuId = $nhanSu['nhan_su_id'];
+        
+        // Lấy thông tin thống kê
+        $summary = $this->salaryBonusModel->getSalarySummary($nhanSuId);
+        
+        // Lấy danh sách lương theo tour
+        $salary_by_tour = $this->salaryBonusModel->getSalaryByTour($nhanSuId);
+        
+        // Lấy danh sách thưởng
+        $bonuses = $this->salaryBonusModel->getBonuses($nhanSuId);
+        
+        require 'views/hdv/luong_thuong.php';
+    }
+}

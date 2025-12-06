@@ -331,7 +331,18 @@
         </div>
 
         <div class="row mb-4">
-         
+            <div class="col-md-4">
+                <a href="index.php?act=hdv/luongThuong" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1556821552-23dede6e6d0d?w=400');"></div>
+                    <div class="feature-icon bg-success bg-opacity-10 text-success mx-auto">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h5 class="text-center mb-2">Lương & Thưởng</h5>
+                    <p class="text-center text-muted mb-0 small">
+                        Xem lương, hoa hồng, thưởng của bạn
+                    </p>
+                </a>
+            </div>
             <div class="col-md-4">
                 <a href="index.php?act=hdv/yeu_cau_dac_biet" class="feature-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1505751172876-fa1923c5c528?w=400');"></div>

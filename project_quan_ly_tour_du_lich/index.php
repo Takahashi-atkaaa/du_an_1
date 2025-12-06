@@ -120,6 +120,9 @@ match ($act) {
     'admin/lichSuXoaBooking' => (new AdminController())->lichSuXoaBooking(),
     'admin/lichSuXoaNhaCungCap' => (new AdminController())->lichSuXoaNhaCungCap(),
     'admin/chiTietLichSuXoaNhaCungCap' => (new AdminController())->chiTietLichSuXoaNhaCungCap(),
+    'admin/quanLyLuongHDV' => (new AdminController())->quanLyLuongHDV(),
+    'admin/approveSalary' => (new AdminController())->approveSalary(),
+    'admin/approveBonus' => (new AdminController())->approveBonus(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
@@ -179,6 +182,7 @@ match ($act) {
     'hdv/quanLyYeuCauDacBiet' => (new HDVController())->quanLyYeuCauDacBiet(),
     'hdv/updateYeuCauDacBiet' => (new HDVController())->updateYeuCauDacBiet(),
     'hdv/phanHoi' => (new HDVController())->phanHoi(),
+    'hdv/luongThuong' => (new HDVController())->luongThuong(),
     // Admin - quản lý HDV
     'admin/quanLyHDV' => (new AdminController())->quanLyHDV(),
     'admin/quanLyHDV_create' => (new AdminController())->quanLyHDVCreate(),
