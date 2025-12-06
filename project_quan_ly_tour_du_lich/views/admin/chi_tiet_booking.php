@@ -396,7 +396,6 @@
                         <div class="card-body">
                             <form method="POST" action="index.php?act=booking/update">
                                 <input type="hidden" name="booking_id" value="<?php echo $booking['booking_id']; ?>">
-                                <input type="hidden" name="tong_tien" value="<?php echo $booking['tong_tien']; ?>">
                                 
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -406,6 +405,18 @@
                                         </label>
                                         <input type="number" name="so_nguoi" class="form-control" 
                                                value="<?php echo $booking['so_nguoi']; ?>" min="1" required>
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-semibold">
+                                            <i class="bi bi-cash-coin text-success"></i> Tổng tiền
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" name="tong_tien" id="tongTienInput" class="form-control" 
+                                                   value="<?php echo $booking['tong_tien']; ?>" step="1000" min="0" required>
+                                            <span class="input-group-text">₫</span>
+                                        </div>
                                     </div>
 
                                     <div class="col-md-6">
@@ -431,11 +442,10 @@
                                         </label>
                                         <div class="input-group">
                                             <input type="number" name="tien_coc" id="tienCocInput" class="form-control" 
-                                                   value="<?php echo $tienCoc; ?>" step="1000" min="0" 
-                                                   max="<?php echo $booking['tong_tien']; ?>">
+                                                   value="<?php echo $tienCoc; ?>" step="1000" min="0">
                                             <span class="input-group-text">₫</span>
                                         </div>
-                                        <small class="text-muted">Tối đa: <?php echo number_format($tongTien); ?> ₫</small>
+                                        <small class="text-muted">Để trống sẽ tự động tính 30% tổng tiền</small>
                                     </div>
 
                                     <div class="col-md-6">
@@ -577,13 +587,18 @@
         // Tự động đồng bộ trạng thái khi thay đổi tiền cọc hoặc trạng thái
         (function() {
             const tienCocInput = document.getElementById('tienCocInput');
+            const tongTienInput = document.getElementById('tongTienInput');
             const trangThaiSelect = document.getElementById('trangThaiSelect');
             const trangThaiCocSelect = document.getElementById('trangThaiCocSelect');
             const tienCocWarning = document.getElementById('tienCocWarning');
-            const tongTien = <?php echo $tongTien; ?>;
+            
+            function getTongTien() {
+                return parseFloat(tongTienInput?.value) || 0;
+            }
             
             function updateWarning() {
                 if (!tienCocWarning) return;
+                const tongTien = getTongTien();
                 const trangThai = trangThaiSelect?.value || '';
                 const tienCoc = parseFloat(tienCocInput?.value) || 0;
                 
@@ -597,6 +612,7 @@
             // Khi thay đổi tiền cọc
             if (tienCocInput) {
                 tienCocInput.addEventListener('input', function() {
+                    const tongTien = getTongTien();
                     const tienCoc = parseFloat(this.value) || 0;
                     
                     if (tongTien > 0 && Math.abs(tienCoc - tongTien) < 0.01) {
@@ -616,9 +632,24 @@
                 });
             }
             
+            // Khi thay đổi tổng tiền
+            if (tongTienInput) {
+                tongTienInput.addEventListener('input', function() {
+                    const tongTien = getTongTien();
+                    const tienCoc = parseFloat(tienCocInput?.value) || 0;
+                    
+                    // Nếu tiền cọc > tổng tiền mới, giảm tiền cọc xuống
+                    if (tienCoc > tongTien && tongTien > 0) {
+                        if (tienCocInput) tienCocInput.value = tongTien;
+                    }
+                    updateWarning();
+                });
+            }
+            
             // Khi thay đổi trạng thái booking
             if (trangThaiSelect) {
                 trangThaiSelect.addEventListener('change', function() {
+                    const tongTien = getTongTien();
                     if (this.value === 'HoanTat' && tongTien > 0) {
                         // Hoàn tất → set tiền cọc = tổng tiền
                         if (tienCocInput) tienCocInput.value = tongTien;
@@ -631,6 +662,7 @@
             // Khi thay đổi trạng thái cọc
             if (trangThaiCocSelect) {
                 trangThaiCocSelect.addEventListener('change', function() {
+                    const tongTien = getTongTien();
                     if (this.value === 'HoanTat' && tongTien > 0) {
                         if (tienCocInput) tienCocInput.value = tongTien;
                         if (trangThaiSelect) trangThaiSelect.value = 'HoanTat';

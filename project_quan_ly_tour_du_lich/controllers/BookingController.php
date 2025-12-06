@@ -440,16 +440,75 @@ class BookingController {
             'ghi_chu' => $_POST['ghi_chu'] ?? null
         ];
         
+        // Kiểm tra có thay đổi gì không
+        $coThayDoi = false;
+        $thayDoiChiTiet = [];
+        
+        if ($trangThaiMoi !== $trangThaiCu) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Trạng thái: {$trangThaiCu} → {$trangThaiMoi}";
+        }
+        
+        $tienCocCu = (float)($booking['tien_coc'] ?? ($booking['so_tien_coc'] ?? 0));
+        if (abs($tienCoc - $tienCocCu) > 0.01) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Tiền cọc: " . number_format($tienCocCu) . " ₫ → " . number_format($tienCoc) . " ₫";
+        }
+        
+        $tongTienCu = (float)($booking['tong_tien'] ?? 0);
+        if (abs($tongTien - $tongTienCu) > 0.01) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Tổng tiền: " . number_format($tongTienCu) . " ₫ → " . number_format($tongTien) . " ₫";
+        }
+        
+        $soNguoiCu = (int)($booking['so_nguoi'] ?? 1);
+        $soNguoiMoi = (int)($data['so_nguoi']);
+        if ($soNguoiMoi !== $soNguoiCu) {
+            $coThayDoi = true;
+            $thayDoiChiTiet[] = "Số người: {$soNguoiCu} → {$soNguoiMoi}";
+        }
+        
+        // Kiểm tra thay đổi ghi chú
+        $ghiChuCu = trim($booking['ghi_chu'] ?? '');
+        $ghiChuMoi = trim($_POST['ghi_chu'] ?? '');
+        if ($ghiChuMoi !== $ghiChuCu) {
+            $coThayDoi = true;
+            if (empty($ghiChuCu)) {
+                $thayDoiChiTiet[] = "Ghi chú: (trống) → " . (mb_strlen($ghiChuMoi) > 50 ? mb_substr($ghiChuMoi, 0, 50) . '...' : $ghiChuMoi);
+            } elseif (empty($ghiChuMoi)) {
+                $thayDoiChiTiet[] = "Ghi chú: " . (mb_strlen($ghiChuCu) > 50 ? mb_substr($ghiChuCu, 0, 50) . '...' : $ghiChuCu) . " → (trống)";
+            } else {
+                $thayDoiChiTiet[] = "Ghi chú đã được cập nhật";
+            }
+        }
+        
         $result = $this->bookingModel->update($id, $data);
         
         if ($result) {
-            // Nếu trạng thái thay đổi, lưu lịch sử
-            if ($trangThaiMoi !== $trangThaiCu) {
-                $ghiChu = 'Cập nhật thông tin booking';
-                if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
-                    $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+            // Nếu có thay đổi, lưu lịch sử
+            if ($coThayDoi) {
+                // Nếu trạng thái thay đổi, dùng updateTrangThai (đã có logic lưu lịch sử)
+                if ($trangThaiMoi !== $trangThaiCu) {
+                    $ghiChu = 'Cập nhật thông tin booking';
+                    if (!empty($thayDoiChiTiet)) {
+                        $ghiChu .= ': ' . implode(', ', $thayDoiChiTiet);
+                    }
+                    if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                        $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                    }
+                    $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
+                } else {
+                    // Trạng thái không đổi nhưng có thay đổi khác - lưu lịch sử với trạng thái giữ nguyên
+                    $historyModel = new BookingHistory();
+                    $ghiChu = 'Cập nhật thông tin booking: ' . implode(', ', $thayDoiChiTiet);
+                    $historyModel->insert([
+                        'booking_id' => $id,
+                        'trang_thai_cu' => $trangThaiCu,
+                        'trang_thai_moi' => $trangThaiMoi,
+                        'nguoi_thay_doi_id' => $_SESSION['user_id'] ?? null,
+                        'ghi_chu' => $ghiChu
+                    ]);
                 }
-                $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
             }
             
             $thongBao = 'Cập nhật booking thành công.';
