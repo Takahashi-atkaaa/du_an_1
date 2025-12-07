@@ -110,9 +110,9 @@
                     </p>
                     <?php endif; ?>
                 </div>
-                <a href="index.php?act=hdv/dashboard" class="btn btn-light">
-                    <i class="bi bi-arrow-left"></i> Trang chủ
-                </a>
+                <button onclick="window.history.back();" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
             </div>
         </div>
     </div>
@@ -330,7 +330,14 @@
                         <?php else: ?>
                         <div class="text-center py-5 text-muted">
                             <i class="bi bi-people" style="font-size: 3rem;"></i>
-                            <p>Chưa có khách hàng nào đăng ký tour này</p>
+                            <p class="mb-2">
+                                <?php if (isset($coBookingNhungChuaCoTourCheckin) && $coBookingNhungChuaCoTourCheckin): ?>
+                                    <strong>Chưa có khách nào trong danh sách check-in</strong><br>
+                                    <small class="text-muted">Vui lòng liên hệ Admin để thêm khách vào danh sách check-in từ trang quản lý lịch khởi hành.</small>
+                                <?php else: ?>
+                                    <strong>Chưa có khách hàng nào đăng ký tour này</strong>
+                                <?php endif; ?>
+                            </p>
                         </div>
                         <?php endif; ?>
                     </div>

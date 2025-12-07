@@ -258,9 +258,9 @@
                             $tienCoc = $tongTien;
                             $trangThaiCoc = 'HoanTat';
                         } else {
-                            // Nếu chưa có tiền cọc trong DB, tính 30% tổng tiền làm mặc định
-                            if ($tienCoc == 0 && $tongTien > 0) {
-                                $tienCoc = round($tongTien * 0.3);
+                        // Nếu chưa có tiền cọc trong DB, tính 30% tổng tiền làm mặc định
+                        if ($tienCoc == 0 && $tongTien > 0) {
+                            $tienCoc = round($tongTien * 0.3);
                             }
                             $trangThaiCoc = $booking['trang_thai_coc'] ?? ($booking['trang_thai'] == 'DaCoc' ? 'DaCoc' : 'ChuaCoc');
                         }
@@ -379,10 +379,10 @@
                             </div>
                             <div class="info-value">
                                 <?php echo htmlspecialchars($booking['dia_chi'] ?? 'N/A'); ?>
-                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
 
                 <!-- Yêu cầu Tour (nếu có) -->
                 <?php if (!empty($yeuCauTour)): ?>
@@ -437,13 +437,13 @@
                                 <div class="info-value">
                                     <?php echo htmlspecialchars($thongTinYeuCau['Ngân sách']); ?>
                                 </div>
-                            </div>
+                                    </div>
                             <?php endif; ?>
                             <?php if (!empty($thongTinYeuCau['Yêu cầu đặc biệt'])): ?>
                             <div class="info-row">
                                 <div class="info-label">
                                     <i class="bi bi-list-check text-danger"></i> Yêu cầu đặc biệt
-                                </div>
+                                    </div>
                                 <div class="info-value">
                                     <?php echo nl2br(htmlspecialchars($thongTinYeuCau['Yêu cầu đặc biệt'])); ?>
                                 </div>
@@ -514,8 +514,8 @@
                                         <label class="form-label fw-semibold">
                                             <i class="bi bi-calendar-check text-success"></i> Ngày kết thúc
                                         </label>
-                                        <input type="date" name="ngay_ket_thuc" class="form-control"
-                                               value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
+                                       <input type="date" name="ngay_ket_thuc" class="form-control"
+                                              value="<?php echo $booking['ngay_ket_thuc'] ?? $booking['ngay_khoi_hanh'] ?? ''; ?>">
                                         <small class="text-muted">Để trống sẽ dùng ngày khởi hành</small>
                                     </div>
 

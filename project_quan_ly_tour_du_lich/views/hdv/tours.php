@@ -100,9 +100,9 @@
                     </h3>
                     <p class="mb-0 opacity-75">Quản lý lịch trình và tour của bạn</p>
                 </div>
-                <a href="index.php?act=hdv/dashboard" class="btn btn-light">
-                    <i class="bi bi-arrow-left"></i> Trang chủ
-                </a>
+                <button onclick="window.history.back();" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
             </div>
         </div>
     </div>

@@ -76,9 +76,9 @@
                     </h3>
                     <p class="mb-0 opacity-75">Chi tiết lịch trình tour</p>
                 </div>
-                <a href="index.php?act=hdv/tours" class="btn btn-light">
+                <button onclick="window.history.back();" class="btn btn-light">
                     <i class="bi bi-arrow-left"></i> Quay lại
-                </a>
+                </button>
             </div>
         </div>
     </div>

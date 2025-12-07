@@ -935,160 +935,92 @@ $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
                     $diem_hien_tai = $stmt->fetch(PDO::FETCH_ASSOC);
                     
                     if ($diem_hien_tai) {
-                        // Lấy danh sách khách giống logic admin (Booking model)
-                        // Dùng tour_id và ngay_khoi_hanh từ lich_khoi_hanh (không phải từ bảng tour)
-                        // Đảm bảo ngay_khoi_hanh là DATE format (YYYY-MM-DD)
+                        // Lấy danh sách khách TRỰC TIẾP từ tour_checkin theo lich_khoi_hanh_id
+                        // Không lấy từ booking vì khách check-in khác khách đặt tour
+                        require_once 'models/CheckinKhach.php';
+                        $checkinModel = new CheckinKhach();
                         
-                        // Debug: Log giá trị để kiểm tra
-                        error_log("HDV Checkin Debug - tour_id from URL: " . $tour_id);
-                        error_log("HDV Checkin Debug - lich_khoi_hanh.id: " . ($tour['id'] ?? 'NULL'));
-                        error_log("HDV Checkin Debug - lich_khoi_hanh.tour_id: " . ($tour['tour_id'] ?? 'NULL'));
-                        error_log("HDV Checkin Debug - lich_khoi_hanh.ngay_khoi_hanh: " . ($tour['ngay_khoi_hanh'] ?? 'NULL'));
+                        // Lấy tất cả khách từ tour_checkin theo lich_khoi_hanh_id
+                        $khachChiTiet = $checkinModel->getByLichKhoiHanh($tour['id']);
                         
-                        // Debug: Kiểm tra tất cả booking có ngay_khoi_hanh này
-                        $sqlDebug = "SELECT booking_id, tour_id, ngay_khoi_hanh, trang_thai, khach_hang_id 
-                                     FROM booking 
-                                     WHERE DATE(ngay_khoi_hanh) = DATE(?) 
-                                     ORDER BY booking_id";
-                        $stmtDebug = $this->nhanSuModel->conn->prepare($sqlDebug);
-                        $stmtDebug->execute([$tour['ngay_khoi_hanh']]);
-                        $allBookings = $stmtDebug->fetchAll(PDO::FETCH_ASSOC);
-                        error_log("HDV Checkin Debug - All bookings with ngay_khoi_hanh " . $tour['ngay_khoi_hanh'] . ": " . json_encode($allBookings));
-                        
-                        // Debug: Kiểm tra booking với tour_id này
-                        $sqlDebug2 = "SELECT booking_id, tour_id, ngay_khoi_hanh, trang_thai, khach_hang_id 
-                                      FROM booking 
-                                      WHERE tour_id = ? 
-                                      ORDER BY booking_id";
-                        $stmtDebug2 = $this->nhanSuModel->conn->prepare($sqlDebug2);
-                        $stmtDebug2->execute([(int)$tour['tour_id']]);
-                        $bookingsByTourId = $stmtDebug2->fetchAll(PDO::FETCH_ASSOC);
-                        error_log("HDV Checkin Debug - All bookings with tour_id " . $tour['tour_id'] . ": " . json_encode($bookingsByTourId));
-                        
-                        // Thử lấy booking theo lich_khoi_hanh.id trước (chính xác hơn)
-                        // Nếu không có, fallback về tour_id + ngay_khoi_hanh
-                        $bookings = $this->bookingModel->getKhachByLichKhoiHanhId($tour['id']);
-                        
-                        // Nếu không tìm thấy, thử cách cũ
-                        if (empty($bookings)) {
-                            $bookings = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
-                                (int)$tour['tour_id'],
-                                $tour['ngay_khoi_hanh']
-                            );
-                        }
-                        
-                        error_log("HDV Checkin Debug - bookings count: " . count($bookings));
-
-                        $khach_list = [];
-
-                        // Đảm bảo danh sách khách hàng từ tour_checkin khớp với booking
-                        // Lấy booking trước để đảm bảo chỉ hiển thị khách từ booking hợp lệ
-                        if (!empty($bookings)) {
-                            $bookingIds = array_column($bookings, 'booking_id');
+                        // Lấy trạng thái check-in từ checkin_khach theo diem_checkin_id
+                        $checkinMap = [];
+                        if (!empty($khachChiTiet) && $diem_id > 0) {
+                            // Lấy booking_id và khach_hang_id từ danh sách khách
+                            $bookingIds = array_filter(array_column($khachChiTiet, 'booking_id'));
+                            $khachHangIds = array_filter(array_column($khachChiTiet, 'khach_hang_id'));
                             
-                            // Lấy khách chi tiết từ tour_checkin CHỈ từ các booking hợp lệ
-                            require_once 'models/CheckinKhach.php';
-                            $checkinModel = new CheckinKhach();
-                            
-                            // Lấy tất cả khách chi tiết theo lich_khoi_hanh_id và booking_id
-                            $placeholders = implode(',', array_fill(0, count($bookingIds), '?'));
-                            $sql = "SELECT * FROM tour_checkin 
-                                    WHERE lich_khoi_hanh_id = ? 
-                                      AND booking_id IN ($placeholders)
-                                    ORDER BY booking_id ASC, id ASC";
-                        $stmt = $this->nhanSuModel->conn->prepare($sql);
-                            $params = array_merge([$tour['id']], $bookingIds);
-                            $stmt->execute($params);
-                            $khachChiTiet = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                            
-                            // Lấy trạng thái check-in từ checkin_khach theo diem_checkin_id + booking_id
-                            $checkinMap = [];
-                            if (!empty($bookingIds) && $diem_id > 0) {
-                                $placeholders2 = implode(',', array_fill(0, count($bookingIds), '?'));
+                            if (!empty($bookingIds) && !empty($khachHangIds)) {
+                                $placeholders = implode(',', array_fill(0, count($bookingIds), '?'));
                                 $sql = "SELECT * FROM checkin_khach 
                                         WHERE diem_checkin_id = ? 
-                                          AND booking_id IN ($placeholders2)";
+                                          AND booking_id IN ($placeholders)";
                                 $stmt = $this->nhanSuModel->conn->prepare($sql);
-                                $params2 = array_merge([$diem_id], $bookingIds);
-                                $stmt->execute($params2);
+                                $params = array_merge([$diem_id], $bookingIds);
+                                $stmt->execute($params);
                                 $checkins = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
                                 // Map theo booking_id + khach_hang_id để gán cho từng khách cụ thể
                                 foreach ($checkins as $ck) {
-                                    $key = $ck['booking_id'] . '_' . ($ck['khach_hang_id'] ?? '0');
+                                    $key = ($ck['booking_id'] ?? 0) . '_' . ($ck['khach_hang_id'] ?? '0');
                                     $checkinMap[$key] = $ck;
                                 }
                             }
+                        }
 
-                            // Gán trạng thái check-in cho từng khách
-                            // Ưu tiên: checkin_khach (theo điểm check-in) > tour_checkin.trang_thai (tổng quát)
-                            foreach ($khachChiTiet as $khach) {
-                                $key = $khach['booking_id'] . '_' . ($khach['khach_hang_id'] ?? '0');
-                                $ck = $checkinMap[$key] ?? null;
-                                
-                                // Lấy trạng thái từ checkin_khach (theo điểm check-in) nếu có
-                                $checkinStatus = null;
-                                if ($ck) {
-                                    // Map từ checkin_khach.trang_thai sang format hiển thị
-                                    $statusMap = [
-                                        'chua_checkin' => 'chua_checkin',
-                                        'da_checkin' => 'da_checkin',
-                                        'vang_mat' => 'vang_mat',
-                                        're_gio' => 're_gio'
-                                    ];
-                                    $checkinStatus = $statusMap[$ck['trang_thai']] ?? null;
-                                }
-                                
-                                // Nếu không có checkin_khach, dùng tour_checkin.trang_thai (tổng quát)
-                                if (!$checkinStatus && !empty($khach['trang_thai'])) {
-                                    // Map từ tour_checkin.trang_thai sang format hiển thị
-                                    $tourCheckinStatusMap = [
-                                        'ChuaCheckIn' => 'chua_checkin',
-                                        'DaCheckIn' => 'da_checkin',
-                                        'DaCheckOut' => 'da_checkin' // Check-out vẫn hiển thị là đã check-in
-                                    ];
-                                    $checkinStatus = $tourCheckinStatusMap[$khach['trang_thai']] ?? 'chua_checkin';
-                                }
-                                
-                                // Nếu vẫn không có, mặc định là chưa check-in
-                                if (!$checkinStatus) {
-                                    $checkinStatus = 'chua_checkin';
-                                }
-                                
-                                $khach_list[] = array_merge($khach, [
-                                    'checkin_status' => $checkinStatus,
-                                    'thoi_gian_checkin' => $ck['thoi_gian_checkin'] ?? null,
-                                    'checkin_note' => $ck['ghi_chu'] ?? null,
-                                ]);
+                        // Gán trạng thái check-in cho từng khách
+                        // Ưu tiên: checkin_khach (theo điểm check-in) > tour_checkin.trang_thai (tổng quát)
+                        foreach ($khachChiTiet as $khach) {
+                            $key = ($khach['booking_id'] ?? 0) . '_' . ($khach['khach_hang_id'] ?? '0');
+                            $ck = $checkinMap[$key] ?? null;
+                            
+                            // Lấy trạng thái từ checkin_khach (theo điểm check-in) nếu có
+                            $checkinStatus = null;
+                            if ($ck) {
+                                // Map từ checkin_khach.trang_thai sang format hiển thị
+                                $statusMap = [
+                                    'chua_checkin' => 'chua_checkin',
+                                    'da_checkin' => 'da_checkin',
+                                    'vang_mat' => 'vang_mat',
+                                    're_gio' => 're_gio'
+                                ];
+                                $checkinStatus = $statusMap[$ck['trang_thai']] ?? null;
                             }
                             
-                            // Nếu không có tour_checkin nhưng có booking, fallback về booking (logic cũ)
-                            if (empty($khachChiTiet) && !empty($bookings)) {
-                                $checkinMap = [];
-                                if (!empty($bookingIds) && $diem_id > 0) {
-                                    $placeholders3 = implode(',', array_fill(0, count($bookingIds), '?'));
-                                    $sql = "SELECT * FROM checkin_khach 
-                                            WHERE diem_checkin_id = ? 
-                                              AND booking_id IN ($placeholders3)";
-                                    $stmt = $this->nhanSuModel->conn->prepare($sql);
-                                    $params3 = array_merge([$diem_id], $bookingIds);
-                                    $stmt->execute($params3);
-                                    $checkins = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-                                    foreach ($checkins as $ck) {
-                                        $checkinMap[$ck['booking_id']] = $ck;
-                                    }
-                                }
-
-                                foreach ($bookings as $bk) {
-                                    $ck = $checkinMap[$bk['booking_id']] ?? null;
-                                    $khach_list[] = array_merge($bk, [
-                                        'checkin_status' => $ck['trang_thai'] ?? null,
-                                        'thoi_gian_checkin' => $ck['thoi_gian_checkin'] ?? null,
-                                        'checkin_note' => $ck['ghi_chu'] ?? null,
-                                    ]);
-                                }
+                            // Nếu không có checkin_khach, dùng tour_checkin.trang_thai (tổng quát)
+                            if (!$checkinStatus && !empty($khach['trang_thai'])) {
+                                // Map từ tour_checkin.trang_thai sang format hiển thị
+                                $tourCheckinStatusMap = [
+                                    'ChuaCheckIn' => 'chua_checkin',
+                                    'DaCheckIn' => 'da_checkin',
+                                    'DaCheckOut' => 'da_checkin' // Check-out vẫn hiển thị là đã check-in
+                                ];
+                                $checkinStatus = $tourCheckinStatusMap[$khach['trang_thai']] ?? 'chua_checkin';
                             }
+                            
+                            // Nếu vẫn không có, mặc định là chưa check-in
+                            if (!$checkinStatus) {
+                                $checkinStatus = 'chua_checkin';
+                            }
+                            
+                            $khach_list[] = array_merge($khach, [
+                                'checkin_status' => $checkinStatus,
+                                'thoi_gian_checkin' => $ck['thoi_gian_checkin'] ?? null,
+                                'checkin_note' => $ck['ghi_chu'] ?? null,
+                            ]);
+                        }
+                        
+                        // Kiểm tra xem có booking nhưng chưa có trong tour_checkin không (để hiển thị thông báo)
+                        if (empty($khach_list)) {
+                            $bookings = $this->bookingModel->getKhachByLichKhoiHanhId($tour['id']);
+                            if (empty($bookings)) {
+                                $bookings = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
+                                    (int)$tour['tour_id'],
+                                    $tour['ngay_khoi_hanh']
+                                );
+                            }
+                            // Lưu thông tin để hiển thị trong view
+                            $coBookingNhungChuaCoTourCheckin = !empty($bookings);
                         }
                     }
                 }

@@ -306,31 +306,31 @@
                                                 </h5>
                                             </div>
                                             <div class="d-flex align-items-center gap-2">
-                                                <span class="status-badge <?php 
-                                                    if (($lich['so_nhan_su'] ?? 0) == 0) {
-                                                        echo 'bg-warning text-dark'; // Đang chờ phân bổ
-                                                    } else {
-                                                        echo match($lich['trang_thai']) {
-                                                            'SapKhoiHanh' => 'bg-info text-dark',
-                                                            'DangChay' => 'bg-success',
-                                                            'HoanThanh' => 'bg-secondary',
-                                                            default => 'bg-secondary'
-                                                        };
-                                                    }
-                                                ?>">
-                                                    <?php
-                                                    if (($lich['so_nhan_su'] ?? 0) == 0) {
-                                                        echo 'Đang chờ phân bổ';
-                                                    } else {
-                                                        $statusLabels = [
-                                                            'SapKhoiHanh' => 'Sắp khởi hành',
-                                                            'DangChay' => 'Đang chạy',
-                                                            'HoanThanh' => 'Hoàn thành'
-                                                        ];
-                                                        echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
-                                                    }
-                                                    ?>
-                                                </span>
+                                            <span class="status-badge <?php 
+                                                if (($lich['so_nhan_su'] ?? 0) == 0) {
+                                                    echo 'bg-warning text-dark'; // Đang chờ phân bổ
+                                                } else {
+                                                    echo match($lich['trang_thai']) {
+                                                        'SapKhoiHanh' => 'bg-info text-dark',
+                                                        'DangChay' => 'bg-success',
+                                                        'HoanThanh' => 'bg-secondary',
+                                                        default => 'bg-secondary'
+                                                    };
+                                                }
+                                            ?>">
+                                                <?php
+                                                if (($lich['so_nhan_su'] ?? 0) == 0) {
+                                                    echo 'Đang chờ phân bổ';
+                                                } else {
+                                                    $statusLabels = [
+                                                        'SapKhoiHanh' => 'Sắp khởi hành',
+                                                        'DangChay' => 'Đang chạy',
+                                                        'HoanThanh' => 'Hoàn thành'
+                                                    ];
+                                                    echo $statusLabels[$lich['trang_thai']] ?? $lich['trang_thai'];
+                                                }
+                                                ?>
+                                            </span>
                                                 <?php
                                                 // Kiểm tra và hiển thị cảnh báo
                                                 $coCanhBao = false;

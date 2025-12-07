@@ -277,14 +277,14 @@
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">&nbsp;</label>
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-search"></i> Lọc
-                            </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-search"></i> Lọc
+                        </button>
                             <?php if ((isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])) || (isset($_GET['co_yeu_cau_tour']) && $_GET['co_yeu_cau_tour'] !== '')): ?>
-                                <a href="index.php?act=admin/quanLyBooking" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle"></i> Xóa bộ lọc
-                                </a>
-                            <?php endif; ?>
+                            <a href="index.php?act=admin/quanLyBooking" class="btn btn-secondary">
+                                <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                            </a>
+                        <?php endif; ?>
                         </div>
                     </div>
                 </div>
@@ -420,8 +420,8 @@
                                 <i class="bi bi-star-fill"></i> Yêu cầu đặt tour
                             </a>
                             <a href="index.php?act=booking/datTourChoKhach" class="btn btn-warning btn-lg">
-                                <i class="bi bi-plus-circle"></i> Đặt tour cho khách ngay
-                            </a>
+                            <i class="bi bi-plus-circle"></i> Đặt tour cho khách ngay
+                        </a>
                         </div>
                     </div>
                 <?php endif; ?>

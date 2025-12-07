@@ -82,9 +82,9 @@
                     </p>
                     <?php endif; ?>
                 </div>
-                <a href="index.php?act=hdv/dashboard" class="btn btn-light">
-                    <i class="bi bi-arrow-left"></i> Trang chủ
-                </a>
+                <button onclick="window.history.back();" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
             </div>
         </div>
     </div>
