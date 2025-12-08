@@ -1758,6 +1758,17 @@ class AdminController {
                 JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
                 WHERE hb.approval_status = 'ChoPheDuyet'
                 ORDER BY hb.created_at DESC";
+
+        // Lấy danh sách tất cả thưởng (dùng để hiển thị trong tab Thưởng)
+        $sqlAllBonus = "SELECT hb.*, nd.ho_ten
+            FROM hdv_bonus hb
+            JOIN nhan_su ns ON hb.nhan_su_id = ns.nhan_su_id
+            JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+            ORDER BY hb.created_at DESC";
+
+        $stmtAll = $db->prepare($sqlAllBonus);
+        $stmtAll->execute();
+        $bonus_list_all = $stmtAll->fetchAll();
         
         $stmt = $db->prepare($sql);
         $stmt->execute();

@@ -63,10 +63,19 @@
     <div class="container-fluid py-4">
         <!-- Header -->
         <div class="header">
-            <h1 class="h2 mb-0">
-                <i class="bi bi-wallet2 me-2"></i>Quản Lý Lương & Thưởng HDV
-            </h1>
-            <small class="opacity-75">Duyệt lương, thưởng và thanh toán cho hướng dẫn viên</small>
+            <div class="d-flex align-items-start justify-content-between">
+                <div>
+                    <h1 class="h2 mb-0">
+                        <i class="bi bi-wallet2 me-2"></i>Quản Lý Lương & Thưởng HDV
+                    </h1>
+                    <small class="opacity-75">Duyệt lương, thưởng và thanh toán cho hướng dẫn viên</small>
+                </div>
+                <div>
+                    <a href="index.php?act=admin/dashboard" class="btn btn-light"> 
+                        <i class="bi bi-arrow-left-circle me-1"></i> Quay lại Quản trị
+                    </a>
+                </div>
+            </div>
         </div>
 
         <!-- Tabs -->
@@ -78,7 +87,7 @@
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="bonus-tab" data-bs-toggle="tab" data-bs-target="#bonus-content" type="button" role="tab">
-                    <i class="bi bi-gift me-2"></i>Thưởng (<?php echo count($bonus_list ?? []); ?>)
+                    <i class="bi bi-gift me-2"></i>Thưởng (<?php echo count($bonus_list_all ?? $bonus_list ?? []); ?>)
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -111,7 +120,7 @@
                                         <th class="text-end">Hoa Hồng</th>
                                         <th class="text-end">Tổng</th>
                                         <th>Trạng Thái</th>
-                                        <th>Hành Động</th>
+                                        
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -179,12 +188,13 @@
             <!-- Bonus Tab -->
             <div class="tab-pane fade" id="bonus-content" role="tabpanel">
                 <div class="table-container">
-                    <h5 class="mb-3">Danh Sách Thưởng Chờ Phê Duyệt</h5>
+                    <h5 class="mb-3">Danh Sách Thưởng</h5>
                     
-                    <?php if (empty($bonus_list)): ?>
+                    <?php $displayBonuses = $bonus_list_all ?? $bonus_list ?? []; ?>
+                    <?php if (empty($displayBonuses)): ?>
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            Chưa có thưởng chờ phê duyệt.
+                            Chưa có dữ liệu thưởng.
                         </div>
                     <?php else: ?>
                         <div class="table-responsive">
@@ -201,7 +211,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($bonus_list as $bonus): ?>
+                                    <?php foreach ($displayBonuses as $bonus): ?>
                                         <tr>
                                             <td>
                                                 <strong><?php echo htmlspecialchars($bonus['ho_ten'] ?? 'N/A'); ?></strong>
