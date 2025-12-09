@@ -557,28 +557,47 @@ class AdminController {
     }
 
     // Admin: quản lý HDV (danh sách + CRUD cơ bản)
-    public function quanLyHDV() {
-        $hdvModel = new HDV();
-        $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
-        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-        if ($q !== '') {
-            // sử dụng search trên nhan_su (tạm gọi chung)
-            $ns = new NhanSu();
-            $hdv_list = $ns->search($q);
-        } else {
-            $hdv_list = $hdvModel->getAll($groupId);
-        }
-        // load groups
-        $groups = [];
-        try {
-            $stmt = $hdvModel->conn->prepare('SELECT * FROM hdv_groups ORDER BY name ASC');
-            $stmt->execute();
-            $groups = $stmt->fetchAll();
-        } catch (Exception $e) {
-            // ignore if table not exists
-        }
-        require 'views/admin/quan_ly_hdv.php';
+public function quanLyHDV() {
+    $hdvModel = new HDV();
+
+    // Lấy dữ liệu filter
+    $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
+    $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+    // Nếu có keyword --> search
+    if ($q !== '') {
+        $ns = new NhanSu();
+        $hdv_list = $ns->search($q);
+    } else {
+        $hdv_list = $hdvModel->getAll($groupId);
     }
+
+    // Load nhóm HDV
+    $groups = [];
+    try {
+        $stmt = $hdvModel->conn->prepare("SELECT * FROM hdv_groups ORDER BY name ASC");
+        $stmt->execute();
+        $groups = $stmt->fetchAll();
+    } catch (Exception $e) {}
+
+
+    // ⭐⭐⭐ BƯỚC 3: Load bảng lương của HDV ⭐⭐⭐
+    $salaryModel = new HDVSalary();
+    $salary_list = [];
+
+    try {
+        foreach ($hdv_list as $hdv) {
+            $salary_list[$hdv['id']] = $salaryModel->getSalaryByHDV($hdv['id']);
+        }
+    } catch (Exception $e) {
+        $salary_list = [];
+    }
+
+    // Truyền dữ liệu sang view
+    // View sẽ dùng: $hdv_list, $groups, $salary_list, $groupId, $q
+    require 'views/admin/quan_ly_hdv.php';
+}
+
 
     public function quanLyHDVCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
