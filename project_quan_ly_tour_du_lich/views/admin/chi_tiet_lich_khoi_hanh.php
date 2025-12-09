@@ -229,6 +229,19 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         <?php endif; ?>
+        <?php if (isset($_SESSION['warning'])): ?>
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle"></i> 
+                <div><?php echo $_SESSION['warning']; unset($_SESSION['warning']); ?></div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
+        <?php if (isset($_SESSION['info'])): ?>
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                <i class="bi bi-info-circle"></i> <?php echo htmlspecialchars($_SESSION['info']); unset($_SESSION['info']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        <?php endif; ?>
 
         <?php if (isset($_SESSION['warning'])): ?>
             <div class="alert alert-warning alert-dismissible fade show" role="alert">
@@ -379,7 +392,7 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Nhân sự <span class="text-danger">*</span></label>
-                                        <select name="nhan_su_id" class="form-select" required>
+                                        <select name="nhan_su_id" id="nhanSuSelect" class="form-select" required>
                                 <option value="">-- Chọn nhân sự --</option>
                                 <?php foreach ($nhanSuList as $ns): ?>
                                     <option value="<?php echo $ns['nhan_su_id']; ?>">
@@ -390,7 +403,7 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Vai trò <span class="text-danger">*</span></label>
-                                        <select name="vai_tro" class="form-select" required>
+                                        <select name="vai_tro" id="vaiTroSelect" class="form-select" required>
                                             <option value="HDV">Hướng dẫn viên</option>
                                 <option value="TaiXe">Tài xế</option>
                                 <option value="HauCan">Hậu cần</option>
@@ -399,13 +412,27 @@ $catalogServicesMap = $catalogServicesMap ?? [];
                             </select>
                                     </div>
                                     <div class="col-12">
+                                        <div id="conflictWarning" class="alert alert-warning d-none" role="alert">
+                                            <i class="bi bi-exclamation-triangle"></i>
+                                            <strong>CẢNH BÁO:</strong>
+                                            <div id="conflictMessage"></div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
                                         <label class="form-label small fw-semibold">Ghi chú</label>
                                         <textarea name="ghi_chu" class="form-control" rows="2"></textarea>
                                     </div>
-                                    <div class="col-12">
+                                    <div class="col-12 d-flex gap-2">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="bi bi-plus-circle"></i> Thêm nhân sự
                                         </button>
+                                        <?php if (empty($phanBoNhanSu) || count($phanBoNhanSu) === 0): ?>
+                                            <a href="index.php?act=lichKhoiHanh/tuDongPhanBoNhanSu&id=<?php echo $lichKhoiHanh['id']; ?>" 
+                                               class="btn btn-success" 
+                                               onclick="return confirm('Bạn có muốn hệ thống tự động phân bổ HDV rảnh cho lịch khởi hành này?');">
+                                                <i class="bi bi-magic"></i> Tự động phân bổ HDV
+                                            </a>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
             </form>
@@ -1496,6 +1523,68 @@ $catalogServicesMap = $catalogServicesMap ?? [];
 
         if (supplierSelect.value) {
             populateCatalogOptions(supplierSelect.value);
+        }
+    })();
+
+    // Kiểm tra trùng lịch khi chọn nhân sự
+    (function() {
+        const nhanSuSelect = document.getElementById('nhanSuSelect');
+        const vaiTroSelect = document.getElementById('vaiTroSelect');
+        const conflictWarning = document.getElementById('conflictWarning');
+        const conflictMessage = document.getElementById('conflictMessage');
+        const lichKhoiHanhId = <?php echo $lichKhoiHanh['id']; ?>;
+
+        function checkConflict() {
+            const nhanSuId = nhanSuSelect?.value;
+            const vaiTro = vaiTroSelect?.value;
+
+            if (!nhanSuId || !vaiTro || vaiTro !== 'HDV') {
+                if (conflictWarning) {
+                    conflictWarning.classList.add('d-none');
+                }
+                return;
+            }
+
+            // Gọi API để kiểm tra conflict
+            const formData = new FormData();
+            formData.append('lich_khoi_hanh_id', lichKhoiHanhId);
+            formData.append('nhan_su_id', nhanSuId);
+            formData.append('vai_tro', vaiTro);
+
+            fetch('index.php?act=lichKhoiHanh/checkConflict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.hasConflict) {
+                    if (conflictWarning && conflictMessage) {
+                        conflictMessage.innerHTML = '';
+                        if (data.conflicts && data.conflicts.length > 0) {
+                            conflictMessage.innerHTML += '<strong>Nhân sự này đang được phân công vào các lịch trùng ngày:</strong><ul class="mb-2 mt-2">';
+                            data.conflicts.forEach(conflict => {
+                                conflictMessage.innerHTML += '<li>' + conflict + '</li>';
+                            });
+                            conflictMessage.innerHTML += '</ul><strong class="text-danger">Vẫn cho phép phân bổ, nhưng HDV cần cân nhắc tránh quá tải.</strong>';
+                        } else {
+                            conflictMessage.innerHTML = data.message || 'Nhân sự này có lịch trùng với lịch khác.';
+                        }
+                        conflictWarning.classList.remove('d-none');
+                    }
+                } else {
+                    if (conflictWarning) {
+                        conflictWarning.classList.add('d-none');
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Lỗi kiểm tra trùng lịch:', error);
+            });
+        }
+
+        if (nhanSuSelect && vaiTroSelect) {
+            nhanSuSelect.addEventListener('change', checkConflict);
+            vaiTroSelect.addEventListener('change', checkConflict);
         }
     })();
     </script>

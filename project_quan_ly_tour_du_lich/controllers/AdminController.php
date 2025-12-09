@@ -100,17 +100,79 @@ class AdminController {
     
     public function quanLyBooking() {
         $bookingModel = new Booking();
-        $conditions = [];
+        
+        // Luôn dùng getAllWithDetails để có đầy đủ thông tin khách hàng
+        $bookings = $bookingModel->getAllWithDetails();
         
         // Lọc theo trạng thái nếu có
         if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])) {
-            $conditions['trang_thai'] = $_GET['trang_thai'];
+            $bookings = array_filter($bookings, function($booking) {
+                return $booking['trang_thai'] == $_GET['trang_thai'];
+            });
+            $bookings = array_values($bookings);
         }
         
-        if (!empty($conditions)) {
-            $bookings = $bookingModel->find($conditions);
-        } else {
-            $bookings = $bookingModel->getAllWithDetails();
+        // Lấy yêu cầu tour cho mỗi booking
+        try {
+            require_once 'models/ThongBao.php';
+            require_once 'models/KhachHang.php';
+            
+            $thongBaoModel = new ThongBao();
+            $khachHangModel = new KhachHang();
+            
+            // Lấy tất cả yêu cầu tour
+            $yeuCauList = $thongBaoModel->getYeuCauTour(['limit' => 1000]);
+            
+            // Tạo map: nguoi_dung_id => yêu_cau_tour (lấy yêu cầu mới nhất)
+            $yeuCauMap = [];
+            if (!empty($yeuCauList)) {
+                foreach ($yeuCauList as $yc) {
+                    if (!empty($yc['nguoi_gui_id'])) {
+                        if (!isset($yeuCauMap[$yc['nguoi_gui_id']])) {
+                            $yeuCauMap[$yc['nguoi_gui_id']] = $yc;
+                        }
+                    }
+                }
+            }
+            
+            // Tạo map khach_hang_id => nguoi_dung_id để tối ưu
+            $khachHangMap = [];
+            $khachHangIds = array_filter(array_unique(array_column($bookings, 'khach_hang_id')));
+            if (!empty($khachHangIds)) {
+                foreach ($khachHangIds as $khId) {
+                    if (!empty($khId)) {
+                        $kh = $khachHangModel->findById($khId);
+                        if ($kh && !empty($kh['nguoi_dung_id'])) {
+                            $khachHangMap[$khId] = $kh['nguoi_dung_id'];
+                        }
+                    }
+                }
+            }
+            
+            // Gắn yêu cầu tour vào mỗi booking
+            foreach ($bookings as &$booking) {
+                $booking['yeu_cau_tour'] = null;
+                if (!empty($booking['khach_hang_id']) && isset($khachHangMap[$booking['khach_hang_id']])) {
+                    $nguoiDungId = $khachHangMap[$booking['khach_hang_id']];
+                    $booking['yeu_cau_tour'] = $yeuCauMap[$nguoiDungId] ?? null;
+                }
+            }
+            unset($booking); // Unset reference
+        } catch (Exception $e) {
+            // Nếu có lỗi, đặt yeu_cau_tour = null cho tất cả booking
+            foreach ($bookings as &$booking) {
+                $booking['yeu_cau_tour'] = null;
+            }
+            unset($booking);
+        }
+        
+        // Lọc theo yêu cầu tour nếu có
+        if (isset($_GET['co_yeu_cau_tour']) && $_GET['co_yeu_cau_tour'] !== '') {
+            $coYeuCau = $_GET['co_yeu_cau_tour'] == '1';
+            $bookings = array_filter($bookings, function($booking) use ($coYeuCau) {
+                return $coYeuCau ? !empty($booking['yeu_cau_tour']) : empty($booking['yeu_cau_tour']);
+            });
+            $bookings = array_values($bookings); // Re-index array
         }
         
         require 'views/admin/quan_ly_booking.php';

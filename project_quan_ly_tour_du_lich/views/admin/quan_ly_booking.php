@@ -136,6 +136,9 @@
                         </a>
                     </div>
                     <div class="d-flex gap-2">
+                        <a href="index.php?act=admin/quanLyYeuCauTour" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none;">
+                            <i class="bi bi-star-fill"></i> Yêu cầu đặt tour
+                        </a>
                         <a href="index.php?act=booking/datTourChoKhach" class="btn btn-warning btn-lg">
                             <i class="bi bi-plus-circle"></i> Đặt tour cho khách
                         </a>
@@ -237,7 +240,7 @@
             <form method="GET" action="index.php">
                 <input type="hidden" name="act" value="admin/quanLyBooking">
                 <div class="row g-3 align-items-end">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <label class="form-label fw-semibold">
                             <i class="bi bi-funnel text-primary"></i> Lọc theo trạng thái
                         </label>
@@ -257,15 +260,32 @@
                             </option>
                         </select>
                     </div>
-                    <div class="col-md-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-search"></i> Lọc
-                        </button>
-                        <?php if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])): ?>
-                            <a href="index.php?act=admin/quanLyBooking" class="btn btn-secondary">
-                                <i class="bi bi-x-circle"></i> Xóa bộ lọc
-                            </a>
-                        <?php endif; ?>
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">
+                            <i class="bi bi-star text-warning"></i> Lọc theo yêu cầu tour
+                        </label>
+                        <select name="co_yeu_cau_tour" class="form-select">
+                            <option value="">Tất cả booking</option>
+                            <option value="1" <?php echo (isset($_GET['co_yeu_cau_tour']) && $_GET['co_yeu_cau_tour'] == '1') ? 'selected' : ''; ?>>
+                                Có yêu cầu tour
+                            </option>
+                            <option value="0" <?php echo (isset($_GET['co_yeu_cau_tour']) && $_GET['co_yeu_cau_tour'] == '0') ? 'selected' : ''; ?>>
+                                Không có yêu cầu tour
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">&nbsp;</label>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Lọc
+                            </button>
+                            <?php if ((isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])) || (isset($_GET['co_yeu_cau_tour']) && $_GET['co_yeu_cau_tour'] !== '')): ?>
+                                <a href="index.php?act=admin/quanLyBooking" class="btn btn-secondary">
+                                    <i class="bi bi-x-circle"></i> Xóa bộ lọc
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -281,7 +301,7 @@
                                 <tr>
                                     <th style="width: 100px;">Mã booking</th>
                                     <th>Tour</th>
-                                    <th>Khách hàng</th>
+                                    <th style="min-width: 200px;">Khách hàng</th>
                                     <th style="width: 100px;">Số người</th>
                                     <th>Ngày khởi hành</th>
                                     <th>Tổng tiền</th>
@@ -300,7 +320,17 @@
                                         </td>
                                         <td>
                                             <div class="customer-info">
-                                                <div class="fw-semibold"><?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?></div>
+                                                <div class="fw-semibold">
+                                                    <?php echo htmlspecialchars($booking['ho_ten'] ?? 'N/A'); ?>
+                                                    <?php if (!empty($booking['yeu_cau_tour'])): ?>
+                                                        <a href="index.php?act=admin/chiTietYeuCauTour&id=<?php echo $booking['yeu_cau_tour']['id']; ?>" 
+                                                           class="badge bg-gradient ms-2" 
+                                                           style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; text-decoration: none;"
+                                                           title="Khách hàng có yêu cầu tour">
+                                                            <i class="bi bi-star-fill"></i> Yêu cầu tour
+                                                        </a>
+                                                    <?php endif; ?>
+                                                </div>
                                                 <small class="text-muted">
                                                     <i class="bi bi-envelope"></i> <?php echo htmlspecialchars($booking['email'] ?? 'N/A'); ?>
                                                 </small>
@@ -385,9 +415,14 @@
                                 Hãy tạo booking đầu tiên cho khách hàng
                             <?php endif; ?>
                         </p>
-                        <a href="index.php?act=booking/datTourChoKhach" class="btn btn-primary btn-lg">
-                            <i class="bi bi-plus-circle"></i> Đặt tour cho khách ngay
-                        </a>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <a href="index.php?act=admin/quanLyYeuCauTour" class="btn btn-primary btn-lg" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border: none;">
+                                <i class="bi bi-star-fill"></i> Yêu cầu đặt tour
+                            </a>
+                            <a href="index.php?act=booking/datTourChoKhach" class="btn btn-warning btn-lg">
+                                <i class="bi bi-plus-circle"></i> Đặt tour cho khách ngay
+                            </a>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>

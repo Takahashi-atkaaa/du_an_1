@@ -103,10 +103,11 @@ class LichKhoiHanhController {
         // Lấy phân bổ nhân sự
         $phanBoNhanSu = $this->phanBoNhanSuModel->getByLichKhoiHanh($id);
 
-        // Nếu admin chưa phân bổ HDV, hệ thống sẽ tự đôngj chọn 1 HDV phù hợp
+        // Tự động phân bổ nếu chưa có (sử dụng method từ PhanBoNhanSu)
         if (
             (empty($lichKhoiHanh['hdv_id']) || (int)$lichKhoiHanh['hdv_id'] === 0)
             && (empty($phanBoNhanSu) || count($phanBoNhanSu) === 0)
+            && !empty($lichKhoiHanh['ngay_khoi_hanh'])
         ) {
             $autoNhanSuId = $this->phanBoNhanSuModel->autoAssignHDVIfMissing($id);
             if ($autoNhanSuId) {
@@ -482,6 +483,44 @@ if (!empty($lichKhoiHanh['tour_id'])) {
         }
     }
 
+    // Tự động phân bổ nhân sự (method mới)
+    public function tuDongPhanBoNhanSu() {
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($id <= 0) {
+            $_SESSION['error'] = 'ID lịch khởi hành không hợp lệ.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit();
+        }
+        
+        $lichKhoiHanh = $this->lichKhoiHanhModel->findById($id);
+        if (!$lichKhoiHanh) {
+            $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+            header('Location: index.php?act=lichKhoiHanh/index');
+            exit();
+        }
+        
+        // Kiểm tra xem đã có phân bổ chưa
+        $phanBoNhanSu = $this->phanBoNhanSuModel->getByLichKhoiHanh($id);
+        if (!empty($phanBoNhanSu)) {
+            $_SESSION['info'] = 'Lịch khởi hành đã có nhân sự được phân bổ.';
+            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $id);
+            exit();
+        }
+        
+        // Gọi method tự động phân bổ từ model
+        $result = $this->phanBoNhanSuModel->autoAssignHDVIfMissing($id);
+        
+        if ($result) {
+            $_SESSION['success'] = 'Đã tự động phân bổ HDV thành công!';
+        } else {
+            $_SESSION['error'] = 'Không tìm thấy HDV phù hợp để phân bổ. Vui lòng kiểm tra lại lịch làm việc của HDV hoặc thêm HDV mới vào hệ thống.';
+        }
+        
+        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $id);
+        exit();
+    }
+
     // Phân bổ nhân sự
     public function phanBoNhanSu() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -519,9 +558,9 @@ if (!empty($lichKhoiHanh['tour_id'])) {
                             }
                             $list[] = $label;
                         }
-                        $_SESSION['warning'] = 'Nhân sự này đang được phân công vào các lịch trùng ngày: ' 
-                            . implode(', ', $list) 
-                            . '. Vẫn cho phép phân bổ, nhưng HDV cần cân nhắc tránh quá tải.';
+                        $_SESSION['warning'] = '<strong>CẢNH BÁO:</strong> Nhân sự này đang được phân công vào các lịch trùng ngày:<br>' 
+                            . '<ul><li>' . implode('</li><li>', $list) . '</li></ul>'
+                            . '<strong>Vẫn cho phép phân bổ, nhưng HDV cần cân nhắc tránh quá tải.</strong>';
                     }
                 }
 
@@ -538,6 +577,58 @@ if (!empty($lichKhoiHanh['tour_id'])) {
             header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
             exit();
         }
+    }
+
+    // API: Kiểm tra trùng lịch khi chọn nhân sự (AJAX)
+    public function checkConflict() {
+        header('Content-Type: application/json');
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+        
+        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
+        $nhanSuId = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
+        $vaiTro = $_POST['vai_tro'] ?? '';
+        
+        if ($lichKhoiHanhId <= 0 || $nhanSuId <= 0) {
+            echo json_encode(['hasConflict' => false]);
+            exit();
+        }
+        
+        // Chỉ kiểm tra conflict cho HDV
+        if ($vaiTro === 'HDV') {
+            $conflicts = $this->phanBoNhanSuModel->getScheduleConflictsForStaff($lichKhoiHanhId, $nhanSuId);
+            if (!empty($conflicts)) {
+                $conflictList = [];
+                foreach ($conflicts as $c) {
+                    $from = $c['ngay_khoi_hanh'] ?? '';
+                    $to   = $c['ngay_ket_thuc'] ?? $from;
+                    $label = 'Lịch #' . $c['id'];
+                    if (!empty($c['ten_tour'])) {
+                        $label .= ' - ' . $c['ten_tour'];
+                    }
+                    if ($from) {
+                        $label .= ' (' . date('d/m/Y', strtotime($from));
+                        if ($to && $to !== $from) {
+                            $label .= ' → ' . date('d/m/Y', strtotime($to));
+                        }
+                        $label .= ')';
+                    }
+                    $conflictList[] = $label;
+                }
+                echo json_encode([
+                    'hasConflict' => true,
+                    'conflicts' => $conflictList,
+                    'message' => 'CẢNH BÁO: Nhân sự này đang được phân công vào các lịch trùng ngày: ' . implode(', ', $conflictList)
+                ]);
+                exit();
+            }
+        }
+        
+        echo json_encode(['hasConflict' => false]);
+        exit();
     }
 
     // Cập nhật trạng thái phân bổ nhân sự (HDV)
