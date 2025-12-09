@@ -243,6 +243,10 @@
                             </div>
                             
                             <div class="d-grid gap-2">
+                                <a href="index.php?act=hdv/lich_trinh_chi_tiet&id=<?php echo $tour['id']; ?>" 
+                                   class="btn btn-primary btn-sm">
+                                    <i class="bi bi-calendar3"></i> Lịch trình chi tiết
+                                </a>
                                 <a href="index.php?act=hdv/tour_detail&id=<?php echo $tour['id']; ?>" 
                                    class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-eye"></i> Xem chi tiết

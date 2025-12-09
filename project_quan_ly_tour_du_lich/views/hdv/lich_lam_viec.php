@@ -216,7 +216,13 @@
                     ?>
                 </p>
                 <div>
-                    <strong>Lịch trình từng ngày:</strong>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Lịch trình từng ngày:</strong>
+                        <a href="index.php?act=hdv/lich_trinh_chi_tiet&id=<?php echo $lich['id']; ?>" 
+                           class="btn btn-sm btn-primary">
+                            <i class="bi bi-calendar3"></i> Xem chi tiết
+                        </a>
+                    </div>
                     <?php if (!empty($lichTrinh)): ?>
                         <ol>
                             <?php foreach ($lichTrinh as $ngay): ?>
@@ -225,7 +231,15 @@
                                     <?php if (!empty($ngay['dia_diem'])): ?>
                                         <em><?php echo htmlspecialchars($ngay['dia_diem']); ?></em><br>
                                     <?php endif; ?>
-                                    <?php echo nl2br(htmlspecialchars($ngay['hoat_dong'] ?? '')); ?>
+                                    <?php 
+                                    $hoatDong = htmlspecialchars($ngay['hoat_dong'] ?? '');
+                                    // Hiển thị tối đa 200 ký tự
+                                    if (strlen($hoatDong) > 200) {
+                                        echo nl2br(substr($hoatDong, 0, 200)) . '...';
+                                    } else {
+                                        echo nl2br($hoatDong);
+                                    }
+                                    ?>
                                 </li>
                             <?php endforeach; ?>
                         </ol>

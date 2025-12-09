@@ -162,6 +162,14 @@
                 <!-- Quick Actions -->
                 <h5 class="mb-3">Hành động nhanh</h5>
                 
+                <a href="index.php?act=hdv/lich_trinh_chi_tiet&id=<?php echo $tour['id']; ?>" class="action-card mb-3">
+                    <div class="action-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="bi bi-calendar3"></i>
+                    </div>
+                    <h6>Lịch trình chi tiết</h6>
+                    <small class="text-muted">Xem lịch trình từng ngày</small>
+                </a>
+
                 <a href="index.php?act=hdv/khach&tour_id=<?php echo $tour['id']; ?>" class="action-card mb-3">
                     <div class="action-icon bg-success bg-opacity-10 text-success">
                         <i class="bi bi-people"></i>

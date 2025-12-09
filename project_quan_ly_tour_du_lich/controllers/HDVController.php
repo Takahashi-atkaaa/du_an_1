@@ -621,6 +621,61 @@ $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
     }
     
     /**
+     * Lịch trình chi tiết tour
+     */
+    public function lichTrinhChiTiet() {
+        $userId = $_SESSION['user_id'] ?? null;
+        $lich_khoi_hanh_id = $_GET['id'] ?? 0;
+        
+        if (!$userId) {
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+        
+        $sql = "SELECT nhan_su_id FROM nhan_su WHERE nguoi_dung_id = ? AND vai_tro = 'HDV' LIMIT 1";
+        $stmt = $this->nhanSuModel->conn->prepare($sql);
+        $stmt->execute([$userId]);
+        $nhanSu = $stmt->fetch();
+        
+        if (!$nhanSu) {
+            $_SESSION['error'] = 'Không tìm thấy thông tin HDV.';
+            header('Location: index.php?act=hdv/tours');
+            exit();
+        }
+        
+        // Lấy chi tiết tour và kiểm tra quyền (HDV chính hoặc phân bổ đã xác nhận)
+        $nhanSuId = $nhanSu['nhan_su_id'];
+        $sql = "SELECT DISTINCT 
+                    lkh.*,
+                    t.tour_id,
+                    t.ten_tour, 
+                    t.loai_tour, 
+                    t.mo_ta
+                FROM lich_khoi_hanh lkh 
+                LEFT JOIN tour t ON lkh.tour_id = t.tour_id
+                LEFT JOIN phan_bo_nhan_su pbn ON (lkh.id = pbn.lich_khoi_hanh_id AND pbn.nhan_su_id = ?)
+                WHERE lkh.id = ? 
+                AND (lkh.hdv_id = ? OR (pbn.nhan_su_id = ? AND pbn.trang_thai = 'DaXacNhan'))";
+        $stmt = $this->nhanSuModel->conn->prepare($sql);
+        $stmt->execute([$nhanSuId, $lich_khoi_hanh_id, $nhanSuId, $nhanSuId]);
+        $tour = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$tour) {
+            $_SESSION['error'] = 'Không tìm thấy tour hoặc bạn không có quyền truy cập tour này.';
+            header('Location: index.php?act=hdv/tours');
+            exit();
+        }
+        
+        // Lấy lịch trình chi tiết từ bảng lich_trinh_tour
+        $lichTrinhList = [];
+        if (!empty($tour['tour_id'])) {
+            $lichTrinhList = $this->tourModel->getLichTrinhByTourId($tour['tour_id']);
+        }
+        
+        require 'views/hdv/lich_trinh_chi_tiet.php';
+    }
+    
+    /**
      * Chi tiết tour
      */
     public function tourDetail() {

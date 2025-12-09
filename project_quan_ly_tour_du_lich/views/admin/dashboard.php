@@ -560,17 +560,19 @@
                     <p>Quản lý danh sách tour, lịch trình và thông tin chi tiết các chuyến đi</p>
                 </a>
             </div>
-            
             <div class="col-md-6 col-lg-4">
-                <a href="index.php?act=admin/nhaCungCap" class="feature-card">
-                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400');"></div>
-                    <div class="feature-icon icon-purple">
-                        <i class="bi bi-building-gear"></i>
+                <a href="index.php?act=admin/quanLyBooking" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
+                    <div class="feature-icon icon-teal">
+                        <i class="bi bi-journal-check"></i>
+                        <span class="notification-badge">8</span>
                     </div>
-                    <h5>Quản lý Nhà cung cấp</h5>
-                    <p>Theo dõi báo giá, dịch vụ và duyệt yêu cầu từ nhà cung cấp</p>
+                    <h5>Quản lý Booking</h5>
+                    <p>Xem và quản lý đặt chỗ, xác nhận booking của khách hàng</p>
                 </a>
             </div>
+
+       
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=lichKhoiHanh/index" class="feature-card">
@@ -607,18 +609,17 @@
             </div>
             
             <div class="col-md-6 col-lg-4">
-                <a href="index.php?act=admin/quanLyBooking" class="feature-card">
-                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=400');"></div>
-                    <div class="feature-icon icon-teal">
-                        <i class="bi bi-journal-check"></i>
-                        <span class="notification-badge">8</span>
+                <a href="index.php?act=admin/nhaCungCap" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400');"></div>
+                    <div class="feature-icon icon-purple">
+                        <i class="bi bi-building-gear"></i>
                     </div>
-                    <h5>Quản lý Booking</h5>
-                    <p>Xem và quản lý đặt chỗ, xác nhận booking của khách hàng</p>
+                    <h5>Quản lý Nhà cung cấp</h5>
+                    <p>Theo dõi báo giá, dịch vụ và duyệt yêu cầu từ nhà cung cấp</p>
                 </a>
             </div>
             
-            <div class="col-md-6 col-lg-4">
+            <!-- <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=booking/datTourChoKhach" class="feature-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400');"></div>
                     <div class="feature-icon icon-pink">
@@ -627,7 +628,7 @@
                     <h5>Đặt tour cho khách</h5>
                     <p>Tạo booking mới và đặt tour trực tiếp cho khách hàng</p>
                 </a>
-            </div>
+            </div> -->
             
             <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/baoCaoTaiChinh" class="feature-card">
