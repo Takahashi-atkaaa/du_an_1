@@ -11,7 +11,7 @@
 // Kết nối database
 require_once __DIR__ . '/../commons/env.php';
 require_once __DIR__ . '/../commons/function.php';
-require_once __DIR__ . '/../models/SalaryBonus.php';
+require_once __DIR__ . '/../modules/luong_thuong_hoa_hong/models/SalaryBonus.php';
 
 echo "=== TEST TÍNH LƯƠNG & THƯỞNG CHO HDV ===\n\n";
 

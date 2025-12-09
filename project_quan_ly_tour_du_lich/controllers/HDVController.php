@@ -10,7 +10,7 @@ require_once 'models/NhatKyTour.php';
 require_once 'models/KhachHang.php';
 require_once 'models/CheckinKhach.php';
 require_once 'models/YeuCauDacBiet.php';
-require_once 'models/SalaryBonus.php';
+require_once __DIR__ . '/../modules/luong_thuong_hoa_hong/models/SalaryBonus.php';
 
 class HDVController {
     private $nhanSuModel;
@@ -2292,6 +2292,6 @@ $summary = [
 ];
 
         
-        require 'views/hdv/luong_thuong.php';
+        require __DIR__ . '/../modules/luong_thuong_hoa_hong/views/hdv/luong_thuong.php';
     }
 }
