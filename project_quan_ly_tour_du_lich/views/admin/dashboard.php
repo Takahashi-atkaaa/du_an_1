@@ -641,6 +641,17 @@
             </div>
             
             <div class="col-md-6 col-lg-4">
+                <a href="index.php?act=admin/quanLyLuongHDV" class="feature-card">
+                    <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=400');"></div>
+                    <div class="feature-icon icon-green">
+                        <i class="bi bi-wallet2"></i>
+                    </div>
+                    <h5>Quản lý Lương HDV</h5>
+                    <p>Duyệt lương, thưởng và thanh toán cho hướng dẫn viên</p>
+                </a>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
                 <a href="index.php?act=admin/danhGia" class="feature-card">
                     <div class="card-bg-image" style="background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400');"></div>
                     <div class="feature-icon icon-yellow">

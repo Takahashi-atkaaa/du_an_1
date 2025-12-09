@@ -619,28 +619,47 @@ class AdminController {
     }
 
     // Admin: quản lý HDV (danh sách + CRUD cơ bản)
-    public function quanLyHDV() {
-        $hdvModel = new HDV();
-        $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
-        $q = isset($_GET['q']) ? trim($_GET['q']) : '';
-        if ($q !== '') {
-            // sử dụng search trên nhan_su (tạm gọi chung)
-            $ns = new NhanSu();
-            $hdv_list = $ns->search($q);
-        } else {
-            $hdv_list = $hdvModel->getAll($groupId);
-        }
-        // load groups
-        $groups = [];
-        try {
-            $stmt = $hdvModel->conn->prepare('SELECT * FROM hdv_groups ORDER BY name ASC');
-            $stmt->execute();
-            $groups = $stmt->fetchAll();
-        } catch (Exception $e) {
-            // ignore if table not exists
-        }
-        require 'views/admin/quan_ly_hdv.php';
+public function quanLyHDV() {
+    $hdvModel = new HDV();
+
+    // Lấy dữ liệu filter
+    $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
+    $q = isset($_GET['q']) ? trim($_GET['q']) : '';
+
+    // Nếu có keyword --> search
+    if ($q !== '') {
+        $ns = new NhanSu();
+        $hdv_list = $ns->search($q);
+    } else {
+        $hdv_list = $hdvModel->getAll($groupId);
     }
+
+    // Load nhóm HDV
+    $groups = [];
+    try {
+        $stmt = $hdvModel->conn->prepare("SELECT * FROM hdv_groups ORDER BY name ASC");
+        $stmt->execute();
+        $groups = $stmt->fetchAll();
+    } catch (Exception $e) {}
+
+
+    // ⭐⭐⭐ BƯỚC 3: Load bảng lương của HDV ⭐⭐⭐
+    $salaryModel = new HDVSalary();
+    $salary_list = [];
+
+    try {
+        foreach ($hdv_list as $hdv) {
+            $salary_list[$hdv['id']] = $salaryModel->getSalaryByHDV($hdv['id']);
+        }
+    } catch (Exception $e) {
+        $salary_list = [];
+    }
+
+    // Truyền dữ liệu sang view
+    // View sẽ dùng: $hdv_list, $groups, $salary_list, $groupId, $q
+    require 'views/admin/quan_ly_hdv.php';
+}
+
 
     public function quanLyHDVCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -1793,186 +1812,33 @@ class AdminController {
         require 'views/admin/chi_tiet_lich_su_xoa_nha_cung_cap.php';
     }
 
-    // ========== QUẢN LÝ YÊU CẦU TOUR TỪ KHÁCH HÀNG ==========
-    
     /**
-     * Quản lý yêu cầu tour từ khách hàng
+     * Quản lý lương & thưởng HDV
+     * Đã chuyển sang module luong_thuong_hoa_hong
      */
-    public function quanLyYeuCauTour() {
-        require_once 'models/ThongBao.php';
-        
-        $thongBaoModel = new ThongBao();
-        
-        // Lọc yêu cầu
-        $filters = [
-            'trang_thai' => $_GET['trang_thai'] ?? '',
-            'search' => trim($_GET['search'] ?? ''),
-            'limit' => 100
-        ];
-        
-        $yeuCauList = $thongBaoModel->getYeuCauTour($filters);
-        $tongYeuCau = count($yeuCauList);
-        $chuaXuLy = $thongBaoModel->countYeuCauTourChuaXuLy();
-        
-        require 'views/admin/quan_ly_yeu_cau_tour.php';
+    public function quanLyLuongHDV() {
+        require_once __DIR__ . '/../modules/luong_thuong_hoa_hong/controllers/LuongThuongController.php';
+        $controller = new LuongThuongController();
+        return $controller->quanLyLuongHDV();
     }
     
     /**
-     * Xem chi tiết yêu cầu tour và phản hồi
+     * Duyệt/thanh toán lương HDV (AJAX)
+     * Đã chuyển sang module luong_thuong_hoa_hong
      */
-    public function chiTietYeuCauTour() {
-        require_once 'models/ThongBao.php';
-        require_once 'models/Tour.php';
-        
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        
-        if ($id <= 0) {
-            $_SESSION['error'] = 'ID yêu cầu không hợp lệ.';
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        $thongBaoModel = new ThongBao();
-        $yeuCau = $thongBaoModel->findById($id);
-        
-        if (!$yeuCau || $yeuCau['tieu_de'] !== 'Yêu cầu tour theo mong muốn') {
-            $_SESSION['error'] = 'Yêu cầu không tồn tại.';
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        // Parse thông tin từ nội dung
-        $thongTin = [];
-        foreach (explode("\n", $yeuCau['noi_dung'] ?? '') as $row) {
-            $kv = explode(": ", $row, 2);
-            if (count($kv) == 2) {
-                $thongTin[$kv[0]] = $kv[1];
-            }
-        }
-        
-        // Lấy danh sách tour để admin có thể gợi ý
-        $tourModel = new Tour();
-        $tourList = $tourModel->getAll();
-        
-        require 'views/admin/chi_tiet_yeu_cau_tour.php';
+    public function approveSalary() {
+        require_once __DIR__ . '/../modules/luong_thuong_hoa_hong/controllers/LuongThuongController.php';
+        $controller = new LuongThuongController();
+        return $controller->approveSalary();
     }
     
     /**
-     * Xử lý phản hồi yêu cầu tour
+     * Phê duyệt/từ chối thưởng HDV (AJAX)
+     * Đã chuyển sang module luong_thuong_hoa_hong
      */
-    public function phanHoiYeuCauTour() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        require_once 'models/ThongBao.php';
-        require_once 'models/Tour.php';
-        
-        $yeuCauId = isset($_POST['yeu_cau_id']) ? (int)$_POST['yeu_cau_id'] : 0;
-        $phanHoi = trim($_POST['phan_hoi'] ?? '');
-        $trangThai = $_POST['trang_thai'] ?? 'DaXuLy';
-        
-        if ($yeuCauId <= 0) {
-            $_SESSION['error'] = 'ID yêu cầu không hợp lệ.';
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        if (empty($phanHoi)) {
-            $_SESSION['error'] = 'Vui lòng nhập nội dung phản hồi.';
-            header('Location: index.php?act=admin/chiTietYeuCauTour&id=' . $yeuCauId);
-            exit();
-        }
-        
-        $thongBaoModel = new ThongBao();
-        $result = $thongBaoModel->updatePhanHoi(
-            $yeuCauId,
-            $phanHoi,
-            $_SESSION['user_id'] ?? null,
-            $trangThai
-        );
-        
-        if ($result) {
-            $_SESSION['success'] = 'Đã gửi phản hồi thành công!';
-        } else {
-            $_SESSION['error'] = 'Có lỗi xảy ra khi gửi phản hồi.';
-        }
-        
-        header('Location: index.php?act=admin/chiTietYeuCauTour&id=' . $yeuCauId);
-        exit();
-    }
-    
-    /**
-     * Tạo tour mới từ yêu cầu của khách hàng
-     */
-    public function taoTourTuYeuCau() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        require_once 'models/ThongBao.php';
-        require_once 'models/Tour.php';
-        
-        $yeuCauId = isset($_POST['yeu_cau_id']) ? (int)$_POST['yeu_cau_id'] : 0;
-        
-        if ($yeuCauId <= 0) {
-            $_SESSION['error'] = 'ID yêu cầu không hợp lệ.';
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        $thongBaoModel = new ThongBao();
-        $yeuCau = $thongBaoModel->findById($yeuCauId);
-        
-        if (!$yeuCau) {
-            $_SESSION['error'] = 'Yêu cầu không tồn tại.';
-            header('Location: index.php?act=admin/quanLyYeuCauTour');
-            exit();
-        }
-        
-        // Parse thông tin từ yêu cầu
-        $thongTin = [];
-        foreach (explode("\n", $yeuCau['noi_dung'] ?? '') as $row) {
-            $kv = explode(": ", $row, 2);
-            if (count($kv) == 2) {
-                $thongTin[$kv[0]] = $kv[1];
-            }
-        }
-        
-        // Tạo tour mới
-        $tourModel = new Tour();
-        $tourData = [
-            'ten_tour' => $_POST['ten_tour'] ?? ($thongTin['Địa điểm'] ?? 'Tour mới'),
-            'loai_tour' => $_POST['loai_tour'] ?? 'TrongNuoc',
-            'mo_ta' => $_POST['mo_ta'] ?? 'Tour được tạo từ yêu cầu của khách hàng',
-            'gia_co_ban' => isset($_POST['gia_co_ban']) ? (float)$_POST['gia_co_ban'] : 0,
-            'trang_thai' => 'HoatDong',
-            'tao_boi' => $_SESSION['user_id'] ?? null
-        ];
-        
-        $tourId = $tourModel->insert($tourData);
-        
-        if ($tourId) {
-            // Gửi thông báo cho khách hàng
-            $thongBao = new ThongBao();
-            $phanHoi = "Chúng tôi đã tạo tour mới dựa trên yêu cầu của bạn. Vui lòng xem chi tiết: " . 
-                       "index.php?act=khachHang/chiTietTour&id=" . $tourId;
-            $thongBao->updatePhanHoi(
-                $yeuCauId,
-                $phanHoi,
-                $_SESSION['user_id'] ?? null,
-                'DaXuLy'
-            );
-            
-            $_SESSION['success'] = 'Đã tạo tour mới và thông báo cho khách hàng!';
-            header('Location: index.php?act=admin/chiTietTour&id=' . $tourId);
-            exit();
-        } else {
-            $_SESSION['error'] = 'Không thể tạo tour mới.';
-            header('Location: index.php?act=admin/chiTietYeuCauTour&id=' . $yeuCauId);
-            exit();
-        }
+    public function approveBonus() {
+        require_once __DIR__ . '/../modules/luong_thuong_hoa_hong/controllers/LuongThuongController.php';
+        $controller = new LuongThuongController();
+        return $controller->approveBonus();
     }
 }
