@@ -350,21 +350,35 @@ $huy = count(array_filter($bookings ?? [], fn($b) => $b['trang_thai'] === 'Huy')
                     </td>
                     <td style="text-align: center;">
                         <div class="btn-group">
-                            <a href="index.php?act=admin/chiTietBooking&id=<?php echo $booking['booking_id']; ?>" 
-                               class="btn btn-secondary btn-sm" title="Xem chi tiết">
-                                👁️ Chi tiết
+                            <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
+                               class="btn btn-secondary btn-sm" 
+                               style="background: rgba(13, 202, 240, 0.2); color: #0dcaf0; border-color: rgba(13, 202, 240, 0.3);"
+                               title="Xem chi tiết">
+                                👁️
                             </a>
-                            <a href="index.php?act=admin/xuatTaiLieuBooking&id=<?php echo $booking['booking_id']; ?>" 
-                               class="btn btn-secondary btn-sm" title="Xuất tài liệu" target="_blank">
-                                📄 Xuất
+                            <?php if (!empty($booking['tour_id'])): ?>
+                            <a href="index.php?act=tour/phanBoNhanSuLichKhoiHanh&id=<?php echo $booking['tour_id']; ?>" 
+                               class="btn btn-secondary btn-sm" 
+                               style="background: rgba(255, 193, 7, 0.2); color: #ffc107; border-color: rgba(255, 193, 7, 0.3);"
+                               title="Phân bổ nhân sự & dịch vụ">
+                                👥
                             </a>
-                            <?php if ($_SESSION['role'] === 'Admin'): ?>
+                            <?php endif; ?>
+                            <?php if (isset($_SESSION['role']) && ($_SESSION['role'] === 'Admin' || $_SESSION['role'] === 'HDV')): ?>
+                            <a href="index.php?act=booking/chiTiet&id=<?php echo $booking['booking_id']; ?>" 
+                               class="btn btn-secondary btn-sm" 
+                               style="background: rgba(13, 110, 253, 0.2); color: #0d6efd; border-color: rgba(13, 110, 253, 0.3);"
+                               title="Sửa">
+                                ✏️
+                            </a>
+                            <?php endif; ?>
+                            <?php if (isset($_SESSION['role']) && $_SESSION['role'] === 'Admin'): ?>
                             <a href="index.php?act=booking/delete&id=<?php echo $booking['booking_id']; ?>" 
                                class="btn btn-secondary btn-sm" 
                                style="background: rgba(220, 53, 69, 0.2); color: #dc3545; border-color: rgba(220, 53, 69, 0.3);"
-                               title="Xóa booking"
-                               onclick="return confirm('Bạn có chắc muốn xóa booking #<?php echo $booking['booking_id']; ?>?');">
-                                🗑️ Xóa
+                               title="Xóa"
+                               onclick="return confirm('Bạn có chắc chắn muốn xóa booking này?');">
+                                🗑️
                             </a>
                             <?php endif; ?>
                         </div>

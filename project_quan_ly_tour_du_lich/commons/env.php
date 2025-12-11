@@ -15,28 +15,8 @@ if (file_exists(__DIR__ . '/../.env')) {
     }
 }
 
-// Base URL - Tự động detect từ request hoặc dùng từ .env
-if (isset($_ENV['BASE_URL'])) {
-    // Nếu có trong .env file, dùng giá trị đó
-    $baseUrl = $_ENV['BASE_URL'];
-} else {
-    // Tự động detect từ request hiện tại
-    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
-    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $scriptPath = dirname($_SERVER['SCRIPT_NAME'] ?? '');
-    
-    // Xác định đường dẫn đến project
-    $projectPath = '/tunganh/du_an_1/project_quan_ly_tour_du_lich';
-    
-    // Nếu script đang chạy từ thư mục project, dùng đường dẫn đó
-    if (strpos($scriptPath, $projectPath) !== false) {
-        $baseUrl = $protocol . $host . $projectPath . '/';
-    } else {
-        // Fallback về localhost
-        $baseUrl = 'http://localhost' . $projectPath . '/';
-    }
-}
-define('BASE_URL', $baseUrl);
+// Base URL
+define('BASE_URL'       , 'http://localhost/tunganh/du_an_1/project_quan_ly_tour_du_lich/');
 
 define('DB_HOST'    , 'localhost');
 define('DB_PORT'    , 3306);
@@ -69,4 +49,3 @@ function getPDOConnection() {
         die("Kết nối thất bại: " . $e->getMessage());
     }
 }
-

@@ -1,62 +1,46 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết Giao dịch</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 1000px; margin: 0 auto; }
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 25px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-        .card {
-            background: rgba(255, 255, 255, 0.95);
+<?php
+$pageTitle = 'Chi tiết Giao dịch';
+$currentPage = 'baoCaoTaiChinh';
+ob_start();
+?>
+<style>
+        .info-card {
+            background: rgba(45, 45, 45, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
             padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
         }
         .info-row {
             display: flex;
             padding: 15px 0;
-            border-bottom: 1px solid #f0f0f0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
         .info-row:last-child {
             border-bottom: none;
         }
         .info-label {
             font-weight: 600;
-            color: #6c757d;
+            color: var(--text-muted);
             width: 250px;
             flex-shrink: 0;
         }
         .info-value {
             flex: 1;
-            color: #212529;
+            color: var(--text-light);
         }
         .badge-thu {
-            background: #10b981;
-            color: white;
+            background: rgba(16, 185, 129, 0.3);
+            color: #10b981;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 14px;
             font-weight: 600;
         }
         .badge-chi {
-            background: #ef4444;
-            color: white;
+            background: rgba(239, 68, 68, 0.3);
+            color: #ef4444;
             padding: 8px 16px;
             border-radius: 20px;
             font-size: 14px;
@@ -77,37 +61,46 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: var(--accent-gold);
+            color: #000;
             cursor: pointer;
             transition: transform 0.2s;
+            font-weight: 500;
         }
         .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+            background: #ffd700;
         }
         .section-title {
             font-size: 20px;
             font-weight: 600;
-            color: #667eea;
+            color: var(--accent-gold);
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 2px solid #667eea;
+            border-bottom: 2px solid var(--accent-gold);
+        }
+        a {
+            color: var(--accent-gold);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-receipt"></i> Chi tiết Giao dịch</h1>
-            <a href="index.php?act=admin/lichSuGiaoDich" class="btn" style="margin-top: 15px;">
-                <i class="fas fa-arrow-left"></i> Quay lại
-            </a>
-        </div>
 
-        <?php if ($giao_dich): ?>
-            <div class="card">
-                <div class="section-title">Thông tin Giao dịch</div>
+<div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
+    <div class="page-header-section" style="margin-bottom: 30px;">
+        <h1 style="margin: 0 0 10px 0; font-size: 2rem; color: var(--text-light);">
+            <i class="fas fa-receipt" style="color: var(--accent-gold);"></i> Chi tiết Giao dịch
+        </h1>
+        <a href="index.php?act=admin/lichSuGiaoDich" style="background: var(--accent-gold); color: #000; padding: 12px 24px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; font-weight: 500;">
+            <i class="fas fa-arrow-left"></i> Quay lại
+        </a>
+    </div>
+
+    <?php if ($giao_dich): ?>
+        <div class="info-card">
+            <div class="section-title">Thông tin Giao dịch</div>
                 
                 <div class="amount amount-<?= strtolower($giao_dich['loai']) ?>">
                     <?= number_format($giao_dich['so_tien'] ?? 0) ?>đ
@@ -205,18 +198,22 @@
                         </div>
                     </div>
                 <?php endif; ?>
-            </div>
-        <?php else: ?>
-            <div class="card">
-                <p style="text-align: center; color: #999; padding: 40px;">
-                    <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px; display: block;"></i>
-                    Không tìm thấy giao dịch
-                </p>
-            </div>
-        <?php endif; ?>
-    </div>
-</body>
-</html>
+        </div>
+    <?php else: ?>
+        <div class="info-card">
+            <p style="text-align: center; color: var(--text-muted); padding: 40px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 48px; margin-bottom: 20px; display: block; color: var(--text-muted);"></i>
+                Không tìm thấy giao dịch
+            </p>
+        </div>
+    <?php endif; ?>
+</div>
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../../layouts/aventura.php';
+?>
+
+
 
 
 

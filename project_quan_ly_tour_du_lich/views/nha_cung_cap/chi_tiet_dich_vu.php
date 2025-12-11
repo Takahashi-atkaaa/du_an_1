@@ -1,212 +1,317 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chi tiết dịch vụ - Nhà cung cấp</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="<?php echo BASE_URL; ?>public/css/style.css">
-</head>
-<body>
 <?php
-    $statusMap = [
-        'ChoXacNhan' => ['text' => 'Chờ xác nhận', 'class' => 'warning'],
-        'DaXacNhan' => ['text' => 'Đã xác nhận', 'class' => 'success'],
-        'TuChoi' => ['text' => 'Từ chối', 'class' => 'danger'],
-        'HoanTat' => ['text' => 'Hoàn tất', 'class' => 'info'],
-        'Huy' => ['text' => 'Hủy', 'class' => 'secondary'],
-    ];
-    $loaiDichVuMap = [
-        'Xe' => 'Xe',
-        'KhachSan' => 'Khách sạn',
-        'Ve' => 'Vé',
-        'VeMayBay' => 'Vé máy bay',
-        'NhaHang' => 'Nhà hàng',
-        'DiemThamQuan' => 'Điểm tham quan',
-        'Visa' => 'Visa',
-        'BaoHiem' => 'Bảo hiểm',
-        'Khac' => 'Khác'
-    ];
+$pageTitle = 'Chi tiết dịch vụ - Nhà cung cấp';
+$currentPage = 'chiTietDichVu';
+ob_start();
+
+$statusMap = [
+    'ChoXacNhan' => ['text' => 'Chờ xác nhận', 'class' => 'warning'],
+    'DaXacNhan' => ['text' => 'Đã xác nhận', 'class' => 'success'],
+    'TuChoi' => ['text' => 'Từ chối', 'class' => 'danger'],
+    'HoanTat' => ['text' => 'Hoàn tất', 'class' => 'info'],
+    'Huy' => ['text' => 'Hủy', 'class' => 'secondary'],
+];
+
+$loaiDichVuMap = [
+    'Xe' => 'Xe',
+    'KhachSan' => 'Khách sạn',
+    'Ve' => 'Vé',
+    'VeMayBay' => 'Vé máy bay',
+    'NhaHang' => 'Nhà hàng',
+    'DiemThamQuan' => 'Điểm tham quan',
+    'Visa' => 'Visa',
+    'BaoHiem' => 'Bảo hiểm',
+    'Khac' => 'Khác'
+];
 ?>
-<div class="container-fluid py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0"><i class="bi bi-info-circle"></i> Chi tiết dịch vụ</h1>
-        <a href="index.php?act=nhaCungCap/baoGia" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left"></i> Quay lại
-        </a>
-    </div>
 
-    <?php if (isset($_SESSION['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="bi bi-check-circle"></i> <?php echo $_SESSION['success']; unset($_SESSION['success']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
-    <?php if (isset($_SESSION['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-triangle"></i> <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    <?php endif; ?>
+<style>
+    .page-header-section {
+        background: rgba(45, 45, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        padding: 40px;
+        margin-bottom: 40px;
+        backdrop-filter: blur(10px);
+    }
 
-    <?php 
-        $currentTab = 'baoGia';
-        include __DIR__ . '/partials/main_nav.php';
-    ?>
+    .info-card {
+        background: rgba(45, 45, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        padding: 25px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+    }
 
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0"><i class="bi bi-file-text"></i> Thông tin dịch vụ</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Tên dịch vụ:</strong></div>
-                        <div class="col-md-8"><?php echo htmlspecialchars($dichVu['ten_dich_vu']); ?></div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Loại dịch vụ:</strong></div>
-                        <div class="col-md-8">
-                            <span class="badge bg-info text-dark">
-                                <?php echo $loaiDichVuMap[$dichVu['loai_dich_vu']] ?? $dichVu['loai_dich_vu']; ?>
-                            </span>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Số lượng:</strong></div>
-                        <div class="col-md-8">
-                            <?php echo $dichVu['so_luong']; ?>
-                            <?php if ($dichVu['don_vi']): ?>
-                                <span class="text-muted"><?php echo htmlspecialchars($dichVu['don_vi']); ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php if ($dichVu['ngay_bat_dau'] || $dichVu['ngay_ket_thuc']): ?>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Thời gian:</strong></div>
-                        <div class="col-md-8">
-                            <?php if ($dichVu['ngay_bat_dau']): ?>
-                                <i class="bi bi-calendar-event"></i> Bắt đầu: <?php echo date('d/m/Y', strtotime($dichVu['ngay_bat_dau'])); ?>
-                                <?php if ($dichVu['gio_bat_dau']): ?>
-                                    <?php echo date('H:i', strtotime($dichVu['gio_bat_dau'])); ?>
-                                <?php endif; ?>
-                                <br>
-                            <?php endif; ?>
-                            <?php if ($dichVu['ngay_ket_thuc']): ?>
-                                <i class="bi bi-calendar-check"></i> Kết thúc: <?php echo date('d/m/Y', strtotime($dichVu['ngay_ket_thuc'])); ?>
-                                <?php if ($dichVu['gio_ket_thuc']): ?>
-                                    <?php echo date('H:i', strtotime($dichVu['gio_ket_thuc'])); ?>
-                                <?php endif; ?>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($dichVu['dia_diem']): ?>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Địa điểm:</strong></div>
-                        <div class="col-md-8">
-                            <i class="bi bi-geo-alt"></i> <?php echo htmlspecialchars($dichVu['dia_diem']); ?>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Giá tiền:</strong></div>
-                        <div class="col-md-8">
-                            <?php if ($dichVu['gia_tien']): ?>
-                                <strong class="text-success fs-5"><?php echo number_format($dichVu['gia_tien'], 0, ',', '.'); ?>đ</strong>
-                            <?php else: ?>
-                                <span class="text-muted">Chưa có giá</span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Trạng thái:</strong></div>
-                        <div class="col-md-8">
-                            <?php $status = $statusMap[$dichVu['trang_thai']] ?? ['text' => $dichVu['trang_thai'], 'class' => 'secondary']; ?>
-                            <span class="badge bg-<?php echo $status['class']; ?> fs-6">
-                                <?php echo $status['text']; ?>
-                            </span>
-                            <?php if (!empty($dichVu['thoi_gian_xac_nhan'])): ?>
-                                <br><small class="text-muted">
-                                    Xác nhận lúc: <?php echo date('d/m/Y H:i', strtotime($dichVu['thoi_gian_xac_nhan'])); ?>
-                                </small>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php if ($dichVu['ghi_chu']): ?>
-                    <div class="row mb-3">
-                        <div class="col-md-4"><strong>Ghi chú:</strong></div>
-                        <div class="col-md-8">
-                            <div class="border rounded p-3 bg-light">
-                                <?php echo nl2br(htmlspecialchars($dichVu['ghi_chu'])); ?>
-                            </div>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+    .info-row {
+        display: grid;
+        grid-template-columns: 150px 1fr;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .info-label {
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .info-value {
+        color: var(--text-light);
+        font-size: 14px;
+    }
+
+    .badge {
+        padding: 6px 12px;
+        border-radius: 2px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .badge-warning {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+
+    .badge-success {
+        background: rgba(25, 135, 84, 0.2);
+        color: #198754;
+        border: 1px solid rgba(25, 135, 84, 0.3);
+    }
+
+    .badge-danger {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .badge-secondary {
+        background: rgba(108, 117, 125, 0.2);
+        color: #6c757d;
+        border: 1px solid rgba(108, 117, 125, 0.3);
+    }
+
+    .badge-info {
+        background: rgba(13, 202, 240, 0.2);
+        color: #0dcaf0;
+        border: 1px solid rgba(13, 202, 240, 0.3);
+    }
+
+    .alert {
+        padding: 15px 20px;
+        border-radius: 2px;
+        margin-bottom: 20px;
+        border: 1px solid;
+    }
+
+    .alert-success {
+        background: rgba(25, 135, 84, 0.1);
+        border-color: rgba(25, 135, 84, 0.3);
+        color: #198754;
+    }
+
+    .alert-danger {
+        background: rgba(220, 53, 69, 0.1);
+        border-color: rgba(220, 53, 69, 0.3);
+        color: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+        .info-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header-section">
+    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 20px;">
+        <div>
+            <h1>ℹ️ Chi tiết dịch vụ</h1>
+            <p style="color: var(--text-muted); margin-top: 10px;">Thông tin chi tiết về dịch vụ</p>
         </div>
-        
-        <div class="col-lg-4">
-            <div class="card mb-4">
-                <div class="card-header bg-info text-white">
-                    <h5 class="mb-0"><i class="bi bi-calendar3"></i> Thông tin tour</h5>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <strong>Tên tour:</strong><br>
-                        <span class="fs-5"><?php echo htmlspecialchars($dichVu['ten_tour'] ?? 'N/A'); ?></span>
-                    </div>
-                    <?php if ($dichVu['ngay_khoi_hanh']): ?>
-                    <div class="mb-3">
-                        <strong>Ngày khởi hành:</strong><br>
-                        <i class="bi bi-calendar-event"></i> <?php echo date('d/m/Y', strtotime($dichVu['ngay_khoi_hanh'])); ?>
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($dichVu['ngay_ket_thuc']): ?>
-                    <div class="mb-3">
-                        <strong>Ngày kết thúc:</strong><br>
-                        <i class="bi bi-calendar-check"></i> <?php echo date('d/m/Y', strtotime($dichVu['ngay_ket_thuc'])); ?>
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($dichVu['tour_mo_ta']): ?>
-                    <div class="mb-3">
-                        <strong>Mô tả tour:</strong><br>
-                        <small class="text-muted"><?php echo nl2br(htmlspecialchars($dichVu['tour_mo_ta'])); ?></small>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-            
-            <div class="card">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="mb-0"><i class="bi bi-clock-history"></i> Lịch sử</h5>
-                </div>
-                <div class="card-body">
-                    <?php if ($dichVu['created_at']): ?>
-                    <div class="mb-2">
-                        <small class="text-muted">Tạo lúc:</small><br>
-                        <i class="bi bi-calendar-plus"></i> <?php echo date('d/m/Y H:i', strtotime($dichVu['created_at'])); ?>
-                    </div>
-                    <?php endif; ?>
-                    <?php if ($dichVu['updated_at']): ?>
-                    <div class="mb-2">
-                        <small class="text-muted">Cập nhật lúc:</small><br>
-                        <i class="bi bi-pencil"></i> <?php echo date('d/m/Y H:i', strtotime($dichVu['updated_at'])); ?>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
+        <div>
+            <a href="index.php?act=nhaCungCap/baoGia" class="btn btn-secondary">
+                ← Quay lại
+            </a>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<!-- Alerts -->
+<?php if (isset($_SESSION['success'])): ?>
+    <div class="alert alert-success">
+        ✓ <?php echo htmlspecialchars($_SESSION['success']); unset($_SESSION['success']); ?>
+    </div>
+<?php endif; ?>
 
+<?php if (isset($_SESSION['error'])): ?>
+    <div class="alert alert-danger">
+        ⚠ <?php echo htmlspecialchars($_SESSION['error']); unset($_SESSION['error']); ?>
+    </div>
+<?php endif; ?>
 
+<?php 
+    $currentTab = 'baoGia';
+    include __DIR__ . '/partials/main_nav.php';
+?>
 
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px;">
+    <!-- Service Info -->
+    <div class="info-card">
+        <h5 style="margin-bottom: 25px; color: var(--accent-gold); font-size: 18px; letter-spacing: 1px;">📋 Thông tin dịch vụ</h5>
+        
+        <div class="info-row">
+            <div class="info-label">Tên dịch vụ:</div>
+            <div class="info-value"><?php echo htmlspecialchars($dichVu['ten_dich_vu']); ?></div>
+        </div>
+        
+        <div class="info-row">
+            <div class="info-label">Loại dịch vụ:</div>
+            <div class="info-value">
+                <span class="badge badge-info">
+                    <?php echo $loaiDichVuMap[$dichVu['loai_dich_vu']] ?? $dichVu['loai_dich_vu']; ?>
+                </span>
+            </div>
+        </div>
+        
+        <div class="info-row">
+            <div class="info-label">Số lượng:</div>
+            <div class="info-value">
+                <?php echo $dichVu['so_luong']; ?>
+                <?php if ($dichVu['don_vi']): ?>
+                    <span style="color: var(--text-muted);"><?php echo htmlspecialchars($dichVu['don_vi']); ?></span>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <?php if ($dichVu['ngay_bat_dau'] || $dichVu['ngay_ket_thuc']): ?>
+        <div class="info-row">
+            <div class="info-label">Thời gian:</div>
+            <div class="info-value">
+                <?php if ($dichVu['ngay_bat_dau']): ?>
+                    <div>📅 Bắt đầu: <?php echo date('d/m/Y', strtotime($dichVu['ngay_bat_dau'])); ?>
+                        <?php if ($dichVu['gio_bat_dau']): ?>
+                            <?php echo date('H:i', strtotime($dichVu['gio_bat_dau'])); ?>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($dichVu['ngay_ket_thuc']): ?>
+                    <div>📅 Kết thúc: <?php echo date('d/m/Y', strtotime($dichVu['ngay_ket_thuc'])); ?>
+                        <?php if ($dichVu['gio_ket_thuc']): ?>
+                            <?php echo date('H:i', strtotime($dichVu['gio_ket_thuc'])); ?>
+                        <?php endif; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <?php if ($dichVu['dia_diem']): ?>
+        <div class="info-row">
+            <div class="info-label">Địa điểm:</div>
+            <div class="info-value">📍 <?php echo htmlspecialchars($dichVu['dia_diem']); ?></div>
+        </div>
+        <?php endif; ?>
+        
+        <div class="info-row">
+            <div class="info-label">Giá tiền:</div>
+            <div class="info-value">
+                <?php if ($dichVu['gia_tien']): ?>
+                    <strong style="color: #198754; font-size: 20px;"><?php echo number_format($dichVu['gia_tien'], 0, ',', '.'); ?>đ</strong>
+                <?php else: ?>
+                    <span style="color: var(--text-muted);">Chưa có giá</span>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <div class="info-row">
+            <div class="info-label">Trạng thái:</div>
+            <div class="info-value">
+                <?php $status = $statusMap[$dichVu['trang_thai']] ?? ['text' => $dichVu['trang_thai'], 'class' => 'secondary']; ?>
+                <span class="badge badge-<?php echo $status['class']; ?>" style="font-size: 13px;">
+                    <?php echo $status['text']; ?>
+                </span>
+                <?php if (!empty($dichVu['thoi_gian_xac_nhan'])): ?>
+                    <br><small style="color: var(--text-muted); font-size: 11px; margin-top: 5px; display: block;">
+                        Xác nhận lúc: <?php echo date('d/m/Y H:i', strtotime($dichVu['thoi_gian_xac_nhan'])); ?>
+                    </small>
+                <?php endif; ?>
+            </div>
+        </div>
+        
+        <?php if ($dichVu['ghi_chu']): ?>
+        <div class="info-row">
+            <div class="info-label">Ghi chú:</div>
+            <div class="info-value" style="padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 2px; line-height: 1.6;">
+                <?php echo nl2br(htmlspecialchars($dichVu['ghi_chu'])); ?>
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
+    
+    <!-- Tour Info & History -->
+    <div>
+        <div class="info-card">
+            <h5 style="margin-bottom: 20px; color: var(--accent-gold); font-size: 16px; letter-spacing: 1px;">📅 Thông tin tour</h5>
+            <div style="margin-bottom: 20px;">
+                <div class="info-label" style="margin-bottom: 5px;">Tên tour:</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--text-light);">
+                    <?php echo htmlspecialchars($dichVu['ten_tour'] ?? 'N/A'); ?>
+                </div>
+            </div>
+            <?php if ($dichVu['ngay_khoi_hanh']): ?>
+            <div style="margin-bottom: 20px;">
+                <div class="info-label" style="margin-bottom: 5px;">Ngày khởi hành:</div>
+                <div style="color: var(--text-light);">📅 <?php echo date('d/m/Y', strtotime($dichVu['ngay_khoi_hanh'])); ?></div>
+            </div>
+            <?php endif; ?>
+            <?php if ($dichVu['ngay_ket_thuc']): ?>
+            <div style="margin-bottom: 20px;">
+                <div class="info-label" style="margin-bottom: 5px;">Ngày kết thúc:</div>
+                <div style="color: var(--text-light);">📅 <?php echo date('d/m/Y', strtotime($dichVu['ngay_ket_thuc'])); ?></div>
+            </div>
+            <?php endif; ?>
+            <?php if ($dichVu['tour_mo_ta']): ?>
+            <div>
+                <div class="info-label" style="margin-bottom: 5px;">Mô tả tour:</div>
+                <div style="color: var(--text-muted); font-size: 12px; line-height: 1.6;">
+                    <?php echo nl2br(htmlspecialchars($dichVu['tour_mo_ta'])); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+        
+        <div class="info-card">
+            <h5 style="margin-bottom: 20px; color: var(--accent-gold); font-size: 16px; letter-spacing: 1px;">🕐 Lịch sử</h5>
+            <?php if ($dichVu['created_at']): ?>
+            <div style="margin-bottom: 15px;">
+                <div class="info-label" style="margin-bottom: 5px;">Tạo lúc:</div>
+                <div style="color: var(--text-light);">📅 <?php echo date('d/m/Y H:i', strtotime($dichVu['created_at'])); ?></div>
+            </div>
+            <?php endif; ?>
+            <?php if ($dichVu['updated_at']): ?>
+            <div>
+                <div class="info-label" style="margin-bottom: 5px;">Cập nhật lúc:</div>
+                <div style="color: var(--text-light);">✏️ <?php echo date('d/m/Y H:i', strtotime($dichVu['updated_at'])); ?></div>
+            </div>
+            <?php endif; ?>
+        </div>
+    </div>
+</div>
 
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../layouts/aventura.php';
+?>
