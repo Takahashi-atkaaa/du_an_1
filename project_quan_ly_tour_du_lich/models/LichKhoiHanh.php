@@ -38,10 +38,14 @@ class LichKhoiHanh
                     lk.*, 
                     t.ten_tour, 
                     t.loai_tour,
-                    COUNT(DISTINCT pbn.id) AS so_nhan_su
+                    COUNT(DISTINCT pbn.id) AS so_nhan_su,
+                    COUNT(DISTINCT pbd.id) AS so_dich_vu,
+                    lk.hdv_id,
+                    GROUP_CONCAT(DISTINCT CASE WHEN pbn.vai_tro = 'HDV' THEN pbn.nhan_su_id END) AS hdv_ids
                 FROM lich_khoi_hanh lk
                 LEFT JOIN tour t ON lk.tour_id = t.tour_id
                 LEFT JOIN phan_bo_nhan_su pbn ON pbn.lich_khoi_hanh_id = lk.id
+                LEFT JOIN phan_bo_dich_vu pbd ON pbd.lich_khoi_hanh_id = lk.id
                 GROUP BY lk.id
                 ORDER BY lk.ngay_khoi_hanh DESC, lk.gio_xuat_phat DESC";
         $stmt = $this->conn->prepare($sql);

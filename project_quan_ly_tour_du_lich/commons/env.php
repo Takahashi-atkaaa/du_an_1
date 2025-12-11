@@ -49,4 +49,3 @@ function getPDOConnection() {
         die("Kết nối thất bại: " . $e->getMessage());
     }
 }
-

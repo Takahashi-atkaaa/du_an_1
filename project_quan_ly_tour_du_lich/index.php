@@ -46,6 +46,7 @@ require_once __DIR__ . '/models/TourCheckin.php';
 require_once __DIR__ . '/models/HotelRoomAssignment.php';
 require_once __DIR__ . '/models/DichVuNhaCungCap.php';
 require_once __DIR__ . '/models/YeuCauDacBiet.php';
+require_once __DIR__ . '/models/ThongBao.php';
 
 
 // Route
@@ -114,7 +115,11 @@ match ($act) {
     'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
     'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
     'lichKhoiHanh/themYeuCauDacBiet' => (new LichKhoiHanhController())->themYeuCauDacBiet(),
+    'lichKhoiHanh/suaYeuCauDacBiet' => (new LichKhoiHanhController())->suaYeuCauDacBiet(),
+    'lichKhoiHanh/xoaYeuCauDacBiet' => (new LichKhoiHanhController())->xoaYeuCauDacBiet(),
     'lichKhoiHanh/themNhatKy' => (new LichKhoiHanhController())->themNhatKy(),
+    'lichKhoiHanh/suaNhatKy' => (new LichKhoiHanhController())->suaNhatKy(),
+    'lichKhoiHanh/xoaNhatKy' => (new LichKhoiHanhController())->xoaNhatKy(),
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
@@ -162,6 +167,7 @@ match ($act) {
     'hdv/tours' => (new HDVController())->tours(),
     'hdv/xacNhanPhanBo' => (new HDVController())->xacNhanPhanBo(),
     'hdv/tour_detail' => (new HDVController())->tourDetail(),
+    'hdv/lich_trinh_chi_tiet' => (new HDVController())->lichTrinhChiTiet(),
     'hdv/khach' => (new HDVController())->khach(),
     'hdv/nhat_ky' => (new HDVController())->nhatKy(),
     'hdv/save_nhat_ky' => (new HDVController())->saveNhatKy(),

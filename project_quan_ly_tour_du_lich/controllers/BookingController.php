@@ -525,12 +525,20 @@ class BookingController {
             if ($coThayDoi) {
                 // Nếu trạng thái thay đổi, dùng updateTrangThai (đã có logic lưu lịch sử)
                 if ($trangThaiMoi !== $trangThaiCu) {
-                    $ghiChu = 'Cập nhật thông tin booking';
-                    if (!empty($thayDoiChiTiet)) {
-                        $ghiChu .= ': ' . implode(', ', $thayDoiChiTiet);
-                    }
-                    if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
-                        $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                    // Lấy ghi chú từ form (nếu có), nếu không thì dùng ghi chú tự động
+                    $ghiChuTuForm = trim($_POST['ghi_chu'] ?? '');
+                    if (!empty($ghiChuTuForm)) {
+                        // Nếu có ghi chú từ form, dùng nó
+                        $ghiChu = $ghiChuTuForm;
+                    } else {
+                        // Nếu không có, dùng ghi chú tự động từ các thay đổi
+                        $ghiChu = 'Cập nhật thông tin booking';
+                        if (!empty($thayDoiChiTiet)) {
+                            $ghiChu .= ': ' . implode(', ', $thayDoiChiTiet);
+                        }
+                        if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                            $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
+                        }
                     }
                     $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
                     
@@ -544,7 +552,17 @@ class BookingController {
                 } else {
                     // Trạng thái không đổi nhưng có thay đổi khác - lưu lịch sử với trạng thái giữ nguyên
                     $historyModel = new BookingHistory();
-                    $ghiChu = 'Cập nhật thông tin booking: ' . implode(', ', $thayDoiChiTiet);
+                    
+                    // Lấy ghi chú từ form (nếu có), nếu không thì dùng ghi chú tự động
+                    $ghiChuTuForm = trim($_POST['ghi_chu'] ?? '');
+                    if (!empty($ghiChuTuForm)) {
+                        // Nếu có ghi chú từ form, dùng nó
+                        $ghiChu = $ghiChuTuForm;
+                    } else {
+                        // Nếu không có, dùng ghi chú tự động từ các thay đổi
+                        $ghiChu = 'Cập nhật thông tin booking: ' . implode(', ', $thayDoiChiTiet);
+                    }
+                    
                     $historyModel->insert([
                         'booking_id' => $id,
                         'trang_thai_cu' => $trangThaiCu,
