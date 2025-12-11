@@ -89,59 +89,53 @@ class SalaryBonus {
      * @return array - Mảng chứa các thống kê tổng hợp
      */
     public function getSalarySummary($nhanSuId) {
-        try {
-            // Lấy thông tin cơ bản của HDV
-            $sqlHDV = "SELECT luong_co_ban, commission_percentage FROM nhan_su WHERE nhan_su_id = ?";
-            $stmtHDV = $this->conn->prepare($sqlHDV);
-            $stmtHDV->execute([$nhanSuId]);
-            $hdvData = $stmtHDV->fetch();
-            
-            // Lấy tổng lương từ hdv_salary - CHỈ lọc những bản ghi Pending (chưa duyệt) và Approved (đã duyệt)
-            $sqlSalary = "
-                SELECT 
-                    COALESCE(SUM(base_salary), 0) as total_base_salary,
-                    COALESCE(SUM(commission_amount), 0) as total_commission,
-                    COALESCE(SUM(bonus_amount), 0) as total_bonus_in_salary,
-                    COALESCE(SUM(total_amount), 0) as total_salary
-                FROM hdv_salary
-                WHERE nhan_su_id = ? AND payment_status IN ('Pending', 'Approved')
-            ";
-            $stmtSalary = $this->conn->prepare($sqlSalary);
-            $stmtSalary->execute([$nhanSuId]);
-            $salaryData = $stmtSalary->fetch();
-            
-            // Lấy tổng thưởng từ hdv_bonus - Chỉ lấy những thưởng đã được phê duyệt (DuyetPhep)
-            $sqlBonus = "
-                SELECT 
-                    COALESCE(SUM(amount), 0) as total_bonus
-                FROM hdv_bonus
-                WHERE nhan_su_id = ? AND approval_status = 'DuyetPhep'
-            ";
-            $stmtBonus = $this->conn->prepare($sqlBonus);
-            $stmtBonus->execute([$nhanSuId]);
-            $bonusData = $stmtBonus->fetch();
-            
-            return [
-                'base_salary' => $salaryData['total_base_salary'] ?? 0,
-                'commission' => $salaryData['total_commission'] ?? 0,
-                'bonus_in_salary' => $salaryData['total_bonus_in_salary'] ?? 0,
-                'total_salary' => $salaryData['total_salary'] ?? 0,
-                'total_bonus' => $bonusData['total_bonus'] ?? 0,
-                'grand_total' => ($salaryData['total_salary'] ?? 0) + ($bonusData['total_bonus'] ?? 0),
-                'commission_percentage' => $hdvData['commission_percentage'] ?? 0
-            ];
-        } catch (PDOException $e) {
-            return [
-                'base_salary' => 0,
-                'commission' => 0,
-                'bonus_in_salary' => 0,
-                'total_salary' => 0,
-                'total_bonus' => 0,
-                'grand_total' => 0,
-                'commission_percentage' => 0
-            ];
-        }
+    try {
+        // Lấy tổng lương từ hdv_salary
+        $sqlSalary = "
+            SELECT 
+                COALESCE(SUM(base_salary), 0) as total_base_salary,
+                COALESCE(SUM(commission_amount), 0) as total_commission,
+                COALESCE(SUM(bonus_amount), 0) as total_bonus_in_salary,
+                COALESCE(SUM(total_amount), 0) as total_salary
+            FROM hdv_salary
+            WHERE nhan_su_id = ?
+        ";
+        $stmtSalary = $this->conn->prepare($sqlSalary);
+        $stmtSalary->execute([$nhanSuId]);
+        $salaryData = $stmtSalary->fetch();
+
+        // Lấy tổng thưởng ngoài từ bảng hdv_bonus
+        $sqlBonus = "
+            SELECT COALESCE(SUM(amount), 0) as total_bonus
+            FROM hdv_bonus
+            WHERE nhan_su_id = ? AND approval_status = 'DuyetPhep'
+        ";
+        $stmtBonus = $this->conn->prepare($sqlBonus);
+        $stmtBonus->execute([$nhanSuId]);
+        $bonusData = $stmtBonus->fetch();
+
+        // Tính tổng cộng
+        return [
+            'base_salary' => $salaryData['total_base_salary'],
+            'commission' => $salaryData['total_commission'],
+            'bonus_in_salary' => $salaryData['total_bonus_in_salary'],
+            'total_salary' => $salaryData['total_salary'],
+            'total_bonus' => $bonusData['total_bonus'],
+            'grand_total' => $salaryData['total_salary'] + $bonusData['total_bonus']
+        ];
+
+    } catch (PDOException $e) {
+        return [
+            'base_salary' => 0,
+            'commission' => 0,
+            'bonus_in_salary' => 0,
+            'total_salary' => 0,
+            'total_bonus' => 0,
+            'grand_total' => 0
+        ];
     }
+}
+
     
     /**
      * Tạo bản ghi lương mới cho một tour

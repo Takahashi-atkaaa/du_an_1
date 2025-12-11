@@ -2249,25 +2249,39 @@ $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
 
         return $result;
     }
+public function luongThuong() {
+    // Lấy thông tin HDV hiện tại
+    $nhanSu = $this->getCurrentHDV();
+    $nhanSuId = $nhanSu['nhan_su_id'];
+
+    // Lấy info HDV
+    $hdv_info = $this->nhanSuModel->findById($nhanSuId);
+
+    // Model
+    $salaryBonus = new SalaryBonus();
+
+    // Thống kê tổng (nếu không có thì trả về 0)
+    $summary = $salaryBonus->getSalarySummary($nhanSuId);
     
-    public function luongThuong() {
-        $nhanSu = $this->getCurrentHDV();
-        $nhanSuId = $nhanSu['nhan_su_id'];
-        
-        // Lấy thông tin HDV để hiển thị
-        $hdv_info = $this->nhanSuModel->findById($nhanSuId);
-        
-        $salaryBonus = new SalaryBonus();
-        
-        // Lấy thông tin thống kê
-        $summary = $salaryBonus->getSalarySummary($nhanSuId);
-        
-        // Lấy danh sách lương theo tour
-        $salary_by_tour = $salaryBonus->getSalaryByTour($nhanSuId);
-        
-        // Lấy danh sách thưởng
-        $bonuses = $salaryBonus->getBonuses($nhanSuId);
-        
-        require __DIR__ . '/../views/hdv/luong_thuong.php';
+    if (!$summary) {
+        $summary = [
+            'total_salary' => 0,
+            'total_bonus'  => 0,
+            'grand_total'  => 0
+        ];
     }
+
+    // Lương theo tour (danh sách)
+    $salary_by_tour = $salaryBonus->getSalaryByTour($nhanSuId);
+    if (!$salary_by_tour) $salary_by_tour = [];
+
+    // Danh sách thưởng
+    $bonuses = $salaryBonus->getBonuses($nhanSuId);
+    if (!$bonuses) $bonuses = [];
+
+    // Load view
+    require __DIR__ . '/../views/hdv/luong_thuong.php';
+}
+
+
 }
