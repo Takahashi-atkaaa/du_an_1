@@ -24,6 +24,7 @@ require_once __DIR__ . '/controllers/NhaCungCapController.php';
 require_once __DIR__ . '/controllers/LichKhoiHanhController.php';
 require_once __DIR__ . '/controllers/DanhGiaController.php';
 require_once __DIR__ . '/controllers/BaoCaoTaiChinhController.php';
+require_once __DIR__ . '/controllers/LuongThuongController.php';
 
 // Models
 require_once __DIR__ . '/models/NguoiDung.php';
@@ -46,6 +47,7 @@ require_once __DIR__ . '/models/TourCheckin.php';
 require_once __DIR__ . '/models/HotelRoomAssignment.php';
 require_once __DIR__ . '/models/DichVuNhaCungCap.php';
 require_once __DIR__ . '/models/YeuCauDacBiet.php';
+require_once __DIR__ . '/models/SalaryBonus.php';
 
 
 // Route
@@ -187,6 +189,7 @@ match ($act) {
     'hdv/quanLyYeuCauDacBiet' => (new HDVController())->quanLyYeuCauDacBiet(),
     'hdv/updateYeuCauDacBiet' => (new HDVController())->updateYeuCauDacBiet(),
     'hdv/phanHoi' => (new HDVController())->phanHoi(),
+    'hdv/luongThuong' => (new HDVController())->luongThuong(),
     // Admin - quản lý HDV
     'admin/quanLyHDV' => (new AdminController())->quanLyHDV(),
     'admin/quanLyHDV_create' => (new AdminController())->quanLyHDVCreate(),
@@ -271,6 +274,11 @@ match ($act) {
     'admin/danhGia/xoa' => (new DanhGiaController())->xoa(),
     'admin/danhGia/baoCao' => (new DanhGiaController())->baoCao(),
     'admin/danhGia/export' => (new DanhGiaController())->export(),
+    
+    // Quản lý lương thưởng HDV
+    'admin/quanLyLuongHDV' => (new AdminController())->quanLyLuongHDV(),
+    'admin/approveSalary' => (new AdminController())->approveSalary(),
+    'admin/approveBonus' => (new AdminController())->approveBonus(),
     
     // Default
     default => die("Route không tồn tại: $act")

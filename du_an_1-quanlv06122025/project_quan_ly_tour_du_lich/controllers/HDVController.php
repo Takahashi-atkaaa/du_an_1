@@ -10,6 +10,7 @@ require_once 'models/NhatKyTour.php';
 require_once 'models/KhachHang.php';
 require_once 'models/CheckinKhach.php';
 require_once 'models/YeuCauDacBiet.php';
+require_once __DIR__ . '/../models/SalaryBonus.php';
 
 class HDVController {
     private $nhanSuModel;
@@ -2247,5 +2248,26 @@ $stats = $this->yeuCauDacBietModel->getSummaryStatsForHDV($nhanSuId, $filters);
         }
 
         return $result;
+    }
+    
+    public function luongThuong() {
+        $nhanSu = $this->getCurrentHDV();
+        $nhanSuId = $nhanSu['nhan_su_id'];
+        
+        // Lấy thông tin HDV để hiển thị
+        $hdv_info = $this->nhanSuModel->findById($nhanSuId);
+        
+        $salaryBonus = new SalaryBonus();
+        
+        // Lấy thông tin thống kê
+        $summary = $salaryBonus->getSalarySummary($nhanSuId);
+        
+        // Lấy danh sách lương theo tour
+        $salary_by_tour = $salaryBonus->getSalaryByTour($nhanSuId);
+        
+        // Lấy danh sách thưởng
+        $bonuses = $salaryBonus->getBonuses($nhanSuId);
+        
+        require __DIR__ . '/../views/hdv/luong_thuong.php';
     }
 }
