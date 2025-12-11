@@ -1,176 +1,43 @@
 <?php
 
 class AdminController {
-    // Hiển thị so sánh chi tiết chi phí thực tế và dự toán
-    public function soSanhChiTietChiPhi() {
-        require_once __DIR__ . '/../models/DuToanTour.php';
-        require_once __DIR__ . '/../models/ChiPhiThucTe.php';
-        $tour_id = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 1;
-        $duToanModel = new DuToanTour();
-        $chiPhiModel = new ChiPhiThucTe();
-        $duToan = $duToanModel->findByTourId($tour_id);
-        $chiPhis = $chiPhiModel->findByTourId($tour_id);
-        $tongDuToan = $duToan ? $duToan['tong_du_toan'] : 0;
-        $tongChiPhiThucTe = 0;
-        $chiPhiSoSanh = [];
-        if ($duToan && $chiPhis) {
-            // Gom nhóm theo loại chi phí
-            $loaiChiPhiArr = [];
-            foreach ($chiPhis as $cp) {
-                $loai = $cp['loai_chi_phi'];
-                if (!isset($loaiChiPhiArr[$loai])) $loaiChiPhiArr[$loai] = 0;
-                $loaiChiPhiArr[$loai] += $cp['so_tien'];
-                $tongChiPhiThucTe += $cp['so_tien'];
-            }
-            foreach ($loaiChiPhiArr as $loai => $thucTe) {
-                $duToanLoai = $duToanModel->getDuToanLoai($tour_id, $loai);
-                $chiPhiSoSanh[] = [
-                    'loai_chi_phi' => $loai,
-                    'du_toan' => $duToanLoai,
-                    'thuc_te' => $thucTe,
-                    'chenh_lech' => $thucTe - $duToanLoai,
-                    'ghi_chu' => ''
-                ];
-            }
-        }
-        $tour = ['ten_tour' => $duToan ? $duToan['ten_tour'] : ''];
-        require 'views/admin/bao_cao_tai_chinh/so_sanh_chi_tiet.php';
-    }
-    // ...existing code...
-    public function xemChiTietNguoiDung() {
-        require_once 'models/NguoiDung.php';
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        $nguoiDungModel = new NguoiDung();
-        $nguoiDung = $nguoiDungModel->findById($id);
-        require 'views/admin/chi_tiet_nguoi_dung.php';
-    }
-    // ...existing code...
-                    // Xóa khách khỏi booking
-                    public function xoaKhachBooking() {
-                        require_once 'models/Booking.php';
-                        require_once 'models/KhachHang.php';
-                        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-                        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
-                        if ($bookingId > 0 && $khachHangId > 0) {
-                            $bookingModel = new Booking();
-                            $sql = "DELETE FROM booking_khach_hang WHERE booking_id = ? AND khach_hang_id = ?";
-                            $stmt = $bookingModel->conn->prepare($sql);
-                            $stmt->execute([$bookingId, $khachHangId]);
-                        }
-                        // Nếu là AJAX thì trả về JSON, nếu không thì reload lại trang hiện tại
-                        if (!empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest') {
-                            echo json_encode(['success' => true]);
-                            exit;
-                        } else {
-                            // Reload lại trang hiện tại
-                            echo '<script>window.location.reload();</script>';
-                            exit;
-                        }
-                    }
-
-                    // Sửa thông tin khách hàng của booking
-                    public function suaKhachBooking() {
-                        require_once 'models/Booking.php';
-                        require_once 'models/KhachHang.php';
-                        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-                        $khachHangId = isset($_GET['khach_id']) ? (int)$_GET['khach_id'] : 0;
-                        $khachHangModel = new KhachHang();
-                        $bookingModel = new Booking();
-                        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $khachHangId > 0) {
-                            $tenKhachHang = $_POST['ho_ten'] ?? '';
-                            $gmail = $_POST['email'] ?? '';
-                            $soDienThoai = $_POST['so_dien_thoai'] ?? '';
-                            $diaChi = $_POST['dia_chi'] ?? '';
-                            $ngaySinh = $_POST['ngay_sinh'] ?? null;
-                            $gioiTinh = $_POST['gioi_tinh'] ?? null;
-                            if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
-                                $gioiTinh = null;
-                            }
-                            $sql = "UPDATE khach_hang SET ten_khach_hang = ?, gmail = ?, so_dien_thoai = ?, dia_chi = ?, gioi_tinh = ?, ngay_sinh = ? WHERE khach_hang_id = ?";
-                            $stmt = $khachHangModel->conn->prepare($sql);
-                            $stmt->execute([$tenKhachHang, $gmail, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh, $khachHangId]);
-                            echo '<script>window.location.href = "index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId . '";</script>';
-                            exit;
-                        }
-                        // Lấy thông tin khách để hiển thị form sửa
-                        $khach = $khachHangModel->findById($khachHangId);
-                        require 'views/admin/sua_khach_booking.php';
-                    }
-                // Xử lý thêm khách hàng vào booking
-                public function themKhachBooking() {
-                    require_once 'models/Booking.php';
-                    require_once 'models/KhachHang.php';
-                    $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-                    $hoTen = $_POST['ho_ten'] ?? '';
-                    $email = $_POST['email'] ?? '';
-                    $soDienThoai = $_POST['so_dien_thoai'] ?? '';
-                    $diaChi = $_POST['dia_chi'] ?? '';
-                    $ngaySinh = $_POST['ngay_sinh'] ?? null;
-                    $gioiTinh = $_POST['gioi_tinh'] ?? null;
-                    if ($gioiTinh !== 'Nam' && $gioiTinh !== 'Nữ' && $gioiTinh !== 'Khác') {
-                        $gioiTinh = null;
-                    }
-                    $diemDanh = $_POST['diem_danh'] ?? 'co_mat';
-                    if ($bookingId > 0 && $hoTen && $email && $soDienThoai) {
-                        $khachHangModel = new KhachHang();
-                        // Chèn trực tiếp vào bảng khach_hang
-                        $sqlInsertKH = "INSERT INTO khach_hang (ten_khach_hang, gmail, so_dien_thoai, dia_chi, gioi_tinh, ngay_sinh) VALUES (?, ?, ?, ?, ?, ?)";
-                        $stmtInsertKH = $khachHangModel->conn->prepare($sqlInsertKH);
-                        $stmtInsertKH->execute([$hoTen, $email, $soDienThoai, $diaChi, $gioiTinh, $ngaySinh]);
-                        $khachHangId = $khachHangModel->conn->lastInsertId();
-                        // Thêm khách vào bảng booking_khach_hang
-                        $sqlInsertBK = "INSERT INTO booking_khach_hang (booking_id, khach_hang_id, diem_danh) VALUES (?, ?, ?)";
-                        $stmtInsertBK = $khachHangModel->conn->prepare($sqlInsertBK);
-                        $stmtInsertBK->execute([$bookingId, $khachHangId, $diemDanh]);
-                    }
-                    // Quay lại trang danh sách khách booking
-                    header('Location: index.php?act=admin/danhSachKhachBooking&booking_id=' . $bookingId);
-                    exit;
-                }
-            // Hiển thị danh sách booking của tour
-    // Hiển thị danh sách khách hàng của booking
-    public function danhSachKhachBooking() {
-        require_once 'models/Booking.php';
-        require_once 'models/KhachHang.php';
-        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
-        $bookingModel = new Booking();
-        $khachHangModel = new KhachHang();
-        $booking = null;
-        $khachList = [];
-        if ($bookingId > 0) {
-            $booking = $bookingModel->findById($bookingId);
-            // Lấy danh sách khách của booking từ bảng booking_khach_hang và khach_hang
-            $sql = "SELECT kh.*, bk.diem_danh, bk.id as booking_khach_id FROM booking_khach_hang bk JOIN khach_hang kh ON bk.khach_hang_id = kh.khach_hang_id WHERE bk.booking_id = ?";
-            $stmt = $bookingModel->conn->prepare($sql);
-            $stmt->execute([$bookingId]);
-            $khachList = $stmt->fetchAll();
-        }
-        require 'views/admin/danh_sach_khach_booking.php';
-    }
-        // Route: admin/danhSachKhachTour
-        public function danhSachKhachTour() {
-            $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
-            $tourModel = new Tour();
-            $lichKhoiHanhModel = new LichKhoiHanh();
-            $bookingModel = new Booking();
-            $checkinModel = new TourCheckin();
-            $roomModel = new HotelRoomAssignment();
-            $tour = null;
-            $bookingList = [];
-            if ($tourId > 0) {
-                $tour = $tourModel->findById($tourId);
-                // Lấy tất cả booking của tour này
-                $sql = "SELECT b.*, nd.ho_ten as khach_ho_ten, nd.email, nd.so_dien_thoai, tc.id as checkin_id, tc.trang_thai as checkin_status FROM booking b LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id LEFT JOIN tour_checkin tc ON b.booking_id = tc.booking_id WHERE b.tour_id = ? ORDER BY b.ngay_dat DESC";
-                $stmt = $bookingModel->conn->prepare($sql);
-                $stmt->execute([$tourId]);
-                $bookingList = $stmt->fetchAll();
-            }
-            require 'views/admin/danh_sach_khach.php';
-        }
+    // Khai báo các models để tái sử dụng (đơn giản hóa code)
+    private $tourModel;
+    private $bookingModel;
+    private $nhanSuModel;
+    private $hdvModel;
+    private $lichKhoiHanhModel;
+    private $yeuCauDacBietModel;
+    private $nhaCungCapModel;
+    private $nguoiDungModel;
+    private $thongBaoModel;
+    private $khachHangModel;
+    private $tourCheckinModel;
+    private $roomModel;
+    private $hdvMgmtModel;
+    private $bookingDeletionHistoryModel;
+    private $supplierDeletionHistoryModel;
     
     public function __construct() {
         requireRole('Admin');
         // khi vào gốc dự án sẽ gọi new AdminController(). Trong AdminController::__construct() có requireRole('Admin') → requireLogin() → nếu chưa đăng nhập thì chuyển hướng sang auth/login. Nên luôn thấy trang đăng nhập trước khi có session.
+        
+        // Khởi tạo các models thường dùng (đơn giản hóa - không cần tạo lại trong từng method)
+        $this->tourModel = new Tour();
+        $this->bookingModel = new Booking();
+        $this->nhanSuModel = new NhanSu();
+        $this->hdvModel = new HDV();
+        $this->lichKhoiHanhModel = new LichKhoiHanh();
+        $this->yeuCauDacBietModel = new YeuCauDacBiet();
+        $this->nhaCungCapModel = new NhaCungCap();
+        $this->nguoiDungModel = new NguoiDung();
+        $this->thongBaoModel = new ThongBao();
+        $this->khachHangModel = new KhachHang();
+        $this->tourCheckinModel = new TourCheckin();
+        $this->roomModel = new HotelRoomAssignment();
+        $this->hdvMgmtModel = new HDVManagement();
+        $this->bookingDeletionHistoryModel = new BookingDeletionHistory();
+        $this->supplierDeletionHistoryModel = new SupplierDeletionHistory();
     }
     
     public function dashboard() {
@@ -178,7 +45,7 @@ class AdminController {
     }
     
     public function quanLyTour() {
-        $tourModel = new Tour();
+        // Dùng model đã tạo trong constructor (đơn giản hơn)
         
         // Lọc theo loại tour
         $loaiTour = $_GET['loai_tour'] ?? '';
@@ -193,7 +60,7 @@ class AdminController {
             if (!empty($trangThai)) {
                 $conditions['trang_thai'] = $trangThai;
             }
-            $tours = $tourModel->find($conditions);
+            $tours = $this->tourModel->find($conditions);
             
             // Lọc theo tìm kiếm nếu có
             if (!empty($search)) {
@@ -202,7 +69,7 @@ class AdminController {
                 });
             }
         } else {
-        $tours = $tourModel->getAll();
+        $tours = $this->tourModel->getAll();
         }
         
         require 'views/admin/quan_ly_tour.php';
@@ -219,128 +86,228 @@ class AdminController {
         if ($id <= 0) {
             $error = 'Thiếu mã tour cần xem chi tiết.';
         } else {
-            $tourModel = new Tour();
-            $lichKhoiHanhModel = new LichKhoiHanh();
-            $tour = $tourModel->findById($id);
+            // Dùng models đã tạo trong constructor
+            $tour = $this->tourModel->findById($id);
             if (!$tour) {
                 $error = 'Tour không tồn tại hoặc đã bị xóa.';
             } else {
-                $lichTrinhList = $tourModel->getLichTrinhByTourId($id);
-                $lichKhoiHanhList = $lichKhoiHanhModel->getByTourId($id);
-                $hinhAnhList = $tourModel->getHinhAnhByTourId($id);
+                $lichTrinhList = $this->tourModel->getLichTrinhByTourId($id);
+                $lichKhoiHanhList = $this->lichKhoiHanhModel->getByTourId($id);
+                $hinhAnhList = $this->tourModel->getHinhAnhByTourId($id);
             }
         }
 
         require 'views/admin/chi_tiet_tour_admin.php';
     }
+    
+    // File: controllers/AdminController.php
+
+// ... các code khác ...
+
     public function quanLyNguoiDung() {
-        require_once 'models/NguoiDung.php';
-        $nguoiDungModel = new NguoiDung();
-        $search = $_GET['search'] ?? '';
-        $searchMonth = $_GET['search_month'] ?? '';
-        $searchDate = $_GET['search_date'] ?? '';
-        $searchRole = $_GET['search_role'] ?? '';
-        $nguoiDungList = $nguoiDungModel->getAll();
-        $highlightedUser = null;
-        // Tìm kiếm theo tên/email/sđt
-        if ($search !== '') {
-            foreach ($nguoiDungList as $key => $nd) {
-                if (
-                    stripos($nd['ho_ten'], $search) !== false ||
-                    stripos($nd['email'], $search) !== false ||
-                    stripos($nd['so_dien_thoai'], $search) !== false
-                ) {
-                    $highlightedUser = $nd;
-                    unset($nguoiDungList[$key]);
-                    $nguoiDungList = array_merge([$highlightedUser], $nguoiDungList);
-                    break;
-                }
-            }
-        }
-        // Lọc chính xác theo tháng tạo: chỉ hiển thị đúng tháng được chọn
-        if ($searchMonth !== '') {
-            $filteredList = [];
-            foreach ($nguoiDungList as $nd) {
-                if (strpos($nd['ngay_tao'], $searchMonth) === 0) {
-                    $filteredList[] = $nd;
-                }
-            }
-            $nguoiDungList = $filteredList;
-        }
-        // Lọc chính xác theo ngày tạo
-        if ($searchDate !== '') {
-            $filteredList = [];
-            foreach ($nguoiDungList as $nd) {
-                if (strpos($nd['ngay_tao'], $searchDate) === 0) {
-                    $filteredList[] = $nd;
-                }
-            }
-            $nguoiDungList = $filteredList;
-        }
-        // Lọc theo vai trò
-        if ($searchRole !== '') {
-            $filteredList = [];
-            foreach ($nguoiDungList as $nd) {
-                if ($nd['vai_tro'] === $searchRole) {
-                    $filteredList[] = $nd;
-                }
-            }
-            $nguoiDungList = $filteredList;
-        }
-        require 'views/admin/quan_ly_nguoi_dung.php';
+        // 1. Lấy tham số tìm kiếm và lọc từ URL (GET)
+        // Các tên biến PHẢI khớp với tên trong form của View: name="search" và name="role"
+        $search = $_GET['search'] ?? ''; // Mặc định là chuỗi rỗng nếu không có
+        $role = $_GET['role'] ?? '';     // Mặc định là chuỗi rỗng nếu không có
+        
+        // 2. Dùng model đã tạo trong constructor (đơn giản hơn)
+        $users = $this->nguoiDungModel->getFilteredUsers($search, $role);
+        
+        // 3. Load View
+        require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
     }
+// ... các code khác ...
     
     public function quanLyBooking() {
-        $bookingModel = new Booking();
-        $conditions = [];
+        // Dùng model đã tạo trong constructor (đơn giản hơn)
+        
+        // Luôn dùng getAllWithDetails để có đầy đủ thông tin khách hàng
+        $bookings = $this->bookingModel->getAllWithDetails();
         
         // Lọc theo trạng thái nếu có
         if (isset($_GET['trang_thai']) && !empty($_GET['trang_thai'])) {
-            $conditions['trang_thai'] = $_GET['trang_thai'];
+            $bookings = array_filter($bookings, function($booking) {
+                return $booking['trang_thai'] == $_GET['trang_thai'];
+            });
+            $bookings = array_values($bookings);
         }
         
-        if (!empty($conditions)) {
-            $bookings = $bookingModel->find($conditions);
-        } else {
-            $bookings = $bookingModel->getAllWithDetails();
+        // Lấy yêu cầu tour cho mỗi booking
+        try {
+            // Dùng models đã tạo trong constructor
+            
+            // Lấy tất cả yêu cầu tour
+            $yeuCauList = $this->thongBaoModel->getYeuCauTour(['limit' => 1000]);
+            
+            // Tạo map: nguoi_dung_id => yêu_cau_tour (lấy yêu cầu mới nhất)
+            $yeuCauMap = [];
+            if (!empty($yeuCauList)) {
+                foreach ($yeuCauList as $yc) {
+                    if (!empty($yc['nguoi_gui_id'])) {
+                        if (!isset($yeuCauMap[$yc['nguoi_gui_id']])) {
+                            $yeuCauMap[$yc['nguoi_gui_id']] = $yc;
+                        }
+                    }
+                }
+            }
+            
+            // Tạo map khach_hang_id => nguoi_dung_id để tối ưu
+            $khachHangMap = [];
+            $khachHangIds = array_filter(array_unique(array_column($bookings, 'khach_hang_id')));
+            if (!empty($khachHangIds)) {
+                foreach ($khachHangIds as $khId) {
+                    if (!empty($khId)) {
+                        $kh = $this->khachHangModel->findById($khId);
+                        if ($kh && !empty($kh['nguoi_dung_id'])) {
+                            $khachHangMap[$khId] = $kh['nguoi_dung_id'];
+                        }
+                    }
+                }
+            }
+            
+            // Gắn yêu cầu tour vào mỗi booking
+            foreach ($bookings as &$booking) {
+                $booking['yeu_cau_tour'] = null;
+                if (!empty($booking['khach_hang_id']) && isset($khachHangMap[$booking['khach_hang_id']])) {
+                    $nguoiDungId = $khachHangMap[$booking['khach_hang_id']];
+                    $booking['yeu_cau_tour'] = $yeuCauMap[$nguoiDungId] ?? null;
+                }
+            }
+            unset($booking); // Unset reference
+        } catch (Exception $e) {
+            // Nếu có lỗi, đặt yeu_cau_tour = null cho tất cả booking
+            foreach ($bookings as &$booking) {
+                $booking['yeu_cau_tour'] = null;
+            }
+            unset($booking);
+        }
+        
+        // Lọc theo yêu cầu tour nếu có
+        if (isset($_GET['co_yeu_cau_tour']) && $_GET['co_yeu_cau_tour'] !== '') {
+            $coYeuCau = $_GET['co_yeu_cau_tour'] == '1';
+            $bookings = array_filter($bookings, function($booking) use ($coYeuCau) {
+                return $coYeuCau ? !empty($booking['yeu_cau_tour']) : empty($booking['yeu_cau_tour']);
+            });
+            $bookings = array_values($bookings); // Re-index array
         }
         
         require 'views/admin/quan_ly_booking.php';
     }
-    
-    public function baoCaoTaiChinh() {
-        $giaoDichModel = new GiaoDich();
-        $tourModel = new Tour();
-        
-        // Lọc theo thời gian
-        $startDate = $_GET['start_date'] ?? null;
-        $endDate = $_GET['end_date'] ?? null;
-        $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
-        
-        // Thống kê tổng hợp
-        $thongKeTongHop = $giaoDichModel->getThongKeTongHop($startDate, $endDate);
-        
-        // Thống kê theo từng tour
-        $thongKeTheoTour = $giaoDichModel->getThongKeTheoTour($startDate, $endDate);
-        
-        // Chi tiết giao dịch
-        $giaoDichList = [];
-        if ($tourId > 0) {
-            $giaoDichList = $giaoDichModel->getByTourId($tourId);
-            $thongKeTour = $giaoDichModel->getThongKeByTour($tourId);
-        } else {
-            $giaoDichList = $giaoDichModel->getAll();
-        }
-        
-        // Danh sách tour để filter
-        $tours = $tourModel->getAll();
-        
-        require 'views/admin/bao_cao_tai_chinh.php';
+
+    public function yeuCauDacBiet() {
+        // Dùng models đã tạo trong constructor (đơn giản hơn)
+
+        $filters = [
+            'keyword' => trim($_GET['keyword'] ?? ''),
+            'tour_id' => isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0,
+            'muc_do_uu_tien' => $_GET['muc_do_uu_tien'] ?? '',
+            'trang_thai' => $_GET['trang_thai'] ?? '',
+            'loai_yeu_cau' => $_GET['loai_yeu_cau'] ?? '',
+            'date_from' => $_GET['date_from'] ?? '',
+            'date_to' => $_GET['date_to'] ?? '',
+        ];
+
+        // Dùng model đã tạo trong constructor
+        $requests = $this->yeuCauDacBietModel->getAllForAdmin($filters);
+        $stats = $this->yeuCauDacBietModel->getSummaryStats();
+        $histories = $this->yeuCauDacBietModel->getHistoriesByRequestIds(array_column($requests, 'id'));
+
+        // Dùng models đã tạo trong constructor
+        $tourList = $this->tourModel->getAll();
+
+        // Danh sách booking để admin có thể chọn khi tạo yêu cầu mới
+        $bookingList = $this->bookingModel->getAllWithDetails();
+
+        require 'views/admin/quan_ly_yeu_cau_dac_biet.php';
     }
+
+    public function capNhatYeuCauDacBiet() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        $yeuCauId = isset($_POST['yeu_cau_id']) ? (int)$_POST['yeu_cau_id'] : 0;
+        if ($yeuCauId <= 0) {
+            $_SESSION['error'] = 'Thiếu mã yêu cầu cần cập nhật.';
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        // Dùng model đã tạo trong constructor
+        $data = [
+            'trang_thai' => $_POST['trang_thai'] ?? null,
+            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? null,
+            'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null
+        ];
+
+        $nguoiDungId = $_SESSION['user_id'] ?? null;
+        // Admin không phải nhân sự nên không gán vào nguoi_xu_ly_id (FK sang nhan_su),
+        // chỉ dùng user_id để lưu lịch sử thao tác.
+        $result = $this->yeuCauDacBietModel->updateByAdmin($yeuCauId, $data, null, $nguoiDungId);
+
+        $_SESSION[$result ? 'success' : 'error'] = $result ? 'Cập nhật yêu cầu thành công.' : 'Không thể cập nhật yêu cầu.';
+
+        header('Location: index.php?act=admin/yeuCauDacBiet');
+        exit();
+    }
+
+    /**
+     * Admin tạo mới yêu cầu đặc biệt cho một booking cụ thể
+     */
+    public function taoYeuCauDacBiet() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
+        if ($bookingId <= 0) {
+            $_SESSION['error'] = 'Vui lòng chọn booking/khách hàng cần tạo yêu cầu.';
+            header('Location: index.php?act=admin/yeuCauDacBiet');
+            exit();
+        }
+
+        // Dùng model đã tạo trong constructor
+        $data = [
+            'loai_yeu_cau' => $_POST['loai_yeu_cau'] ?? 'khac',
+            'tieu_de' => trim($_POST['tieu_de'] ?? ''),
+            'mo_ta' => $_POST['mo_ta'] ?? null,
+            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? 'trung_binh',
+            'trang_thai' => $_POST['trang_thai'] ?? 'moi',
+            'ghi_chu_hdv' => $_POST['ghi_chu_hdv'] ?? null,
+        ];
+
+        if ($data['tieu_de'] === '') {
+            $data['tieu_de'] = 'Yêu cầu đặc biệt';
+        }
+
+        $nguoiTaoId = $_SESSION['user_id'] ?? null;
+        if (!$nguoiTaoId) {
+            $_SESSION['error'] = 'Phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.';
+            header('Location: index.php?act=auth/login');
+            exit();
+        }
+
+        $newId = $this->yeuCauDacBietModel->createFromAdmin($bookingId, $data, $nguoiTaoId);
+
+        if ($newId) {
+            $_SESSION['success'] = 'Đã tạo yêu cầu đặc biệt mới cho khách.';
+        } else {
+            $_SESSION['error'] = 'Không thể tạo yêu cầu đặc biệt. Vui lòng thử lại.';
+        }
+
+        header('Location: index.php?act=admin/yeuCauDacBiet');
+        exit();
+    }
+    
     public function addNhacungcap() {
-        $nhaCungCapModel = new NhaCungCap();
+        // Dùng models đã tạo trong constructor
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $nguoiDungId = isset($_POST['nguoi_dung_id']) && $_POST['nguoi_dung_id'] !== '' 
+                ? (int)$_POST['nguoi_dung_id'] 
+                : null;
             $tenDonVi = trim($_POST['ten_don_vi'] ?? '');
             $loaiDichVu = $_POST['loai_dich_vu'] ?? null;
             $diaChi = $_POST['dia_chi'] ?? null;
@@ -352,13 +319,20 @@ class AdminController {
             } else {
                 try {
                     $data = [
-                        'ten_don_vi' => $tenDonVi,
+                        'ten_don_vi'   => $tenDonVi,
                         'loai_dich_vu' => $loaiDichVu,
-                        'dia_chi' => $diaChi,
-                        'lien_he' => $lienHe,
-                        'mo_ta' => $moTa
+                        'nguoi_dung_id'=> $nguoiDungId,
+                        'dia_chi'      => $diaChi,
+                        'lien_he'      => $lienHe,
+                        'mo_ta'        => $moTa
                     ];
-                    $nhaCungCapModel->create($data);
+                    $this->nhaCungCapModel->create($data);
+
+                    // Nếu có gắn với tài khoản người dùng, cập nhật vai trò thành NhaCungCap
+                    if ($nguoiDungId) {
+                        $this->nguoiDungModel->update($nguoiDungId, ['vai_tro' => 'NhaCungCap']);
+                    }
+
                     $_SESSION['success'] = 'Thêm nhà cung cấp thành công';
                 } catch (Exception $e) {
                     $_SESSION['error'] = 'Không thể thêm nhà cung cấp: ' . $e->getMessage();
@@ -371,8 +345,24 @@ class AdminController {
     }
     
     public function nhaCungCap() {
-        $nhaCungCapModel = new NhaCungCap();
-        $nhaCungCapList = $nhaCungCapModel->getAll();
+        // Dùng models đã tạo trong constructor
+        $nhaCungCapList = $this->nhaCungCapModel->getAll();
+        
+        // Danh sách tài khoản để admin gán nhanh thành nhà cung cấp
+        $supplierUsers = [];
+        try {
+            // Lấy TẤT CẢ tài khoản CHƯA gắn với bất kỳ nhà cung cấp nào (không giới hạn vai trò)
+            $sql = "SELECT nd.id, nd.ho_ten, nd.email, nd.so_dien_thoai
+                    FROM nguoi_dung nd
+                    LEFT JOIN nha_cung_cap ncc ON nd.id = ncc.nguoi_dung_id
+                    WHERE ncc.id_nha_cung_cap IS NULL
+                    ORDER BY nd.ngay_tao DESC";
+            $stmt = $this->nguoiDungModel->conn->prepare($sql);
+            $stmt->execute();
+            $supplierUsers = $stmt->fetchAll();
+        } catch (Exception $e) {
+            $supplierUsers = [];
+        }
         
         $selectedId = $_GET['id'] ?? $_GET['ncc_id'] ?? ($nhaCungCapList[0]['id_nha_cung_cap'] ?? null);
         $selectedLoai = $_GET['loai'] ?? null;
@@ -383,12 +373,12 @@ class AdminController {
         $serviceTypes = [];
         
         if ($selectedId) {
-            $selectedSupplier = $nhaCungCapModel->findById($selectedId);
+            $selectedSupplier = $this->nhaCungCapModel->findById($selectedId);
             if ($selectedSupplier) {
-                $serviceTypeSummary = $nhaCungCapModel->getServiceTypeSummary($selectedId);
-                $supplierStats = $nhaCungCapModel->getSupplierStats($selectedId);
-                $serviceTypes = $nhaCungCapModel->getDistinctServiceTypes($selectedId);
-                $supplierServices = $nhaCungCapModel->getSupplierServices($selectedId, $selectedLoai ?: null, 100);
+                $serviceTypeSummary = $this->nhaCungCapModel->getServiceTypeSummary($selectedId);
+                $supplierStats = $this->nhaCungCapModel->getSupplierStats($selectedId);
+                $serviceTypes = $this->nhaCungCapModel->getDistinctServiceTypes($selectedId);
+                $supplierServices = $this->nhaCungCapModel->getSupplierServices($selectedId, $selectedLoai ?: null, 100);
             }
         }
         
@@ -396,7 +386,7 @@ class AdminController {
     }
     
     public function updateNhaCungCap() {
-        $nhaCungCapModel = new NhaCungCap();
+        // Dùng model đã tạo trong constructor
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $id = $_POST['id_nha_cung_cap'] ?? 0;
@@ -419,7 +409,7 @@ class AdminController {
                         'lien_he' => $lienHe,
                         'mo_ta' => $moTa
                     ];
-                    $nhaCungCapModel->update($id, $data);
+                    $this->nhaCungCapModel->update($id, $data);
                     $_SESSION['success'] = 'Cập nhật nhà cung cấp thành công';
                 } catch (Exception $e) {
                     $_SESSION['error'] = 'Lỗi: ' . $e->getMessage();
@@ -431,9 +421,93 @@ class AdminController {
         exit();
     }
     
+    public function deleteNhaCungCap() {
+        // Dùng models đã tạo trong constructor
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $id = $_POST['id_nha_cung_cap'] ?? 0;
+            $matKhau = $_POST['mat_khau'] ?? '';
+            $lyDoXoa = $_POST['ly_do_xoa'] ?? '';
+            
+            if ($id <= 0) {
+                $_SESSION['error'] = 'ID nhà cung cấp không hợp lệ';
+                header('Location: index.php?act=admin/nhaCungCap');
+                exit();
+            }
+            
+            // Kiểm tra mật khẩu admin
+            $adminId = $_SESSION['user_id'] ?? 0;
+            $admin = $this->nguoiDungModel->findById($adminId);
+            
+            if (!$admin || !password_verify($matKhau, $admin['mat_khau'])) {
+                $_SESSION['error'] = 'Mật khẩu không đúng.';
+                header('Location: index.php?act=admin/nhaCungCap&id=' . $id);
+                exit();
+            }
+            
+            try {
+                // Lấy thông tin nhà cung cấp trước khi xóa
+                $nhaCungCap = $this->nhaCungCapModel->findById($id);
+                if (!$nhaCungCap) {
+                    $_SESSION['error'] = 'Không tìm thấy nhà cung cấp';
+                } else {
+                    // Lưu thông tin nhà cung cấp vào JSON trước khi xóa
+                    $thongTinNCC = json_encode([
+                        'id_nha_cung_cap' => $nhaCungCap['id_nha_cung_cap'],
+                        'ten_don_vi' => $nhaCungCap['ten_don_vi'] ?? 'N/A',
+                        'loai_dich_vu' => $nhaCungCap['loai_dich_vu'] ?? null,
+                        'dia_chi' => $nhaCungCap['dia_chi'] ?? null,
+                        'lien_he' => $nhaCungCap['lien_he'] ?? null,
+                        'mo_ta' => $nhaCungCap['mo_ta'] ?? null,
+                        'nguoi_dung_id' => $nhaCungCap['nguoi_dung_id'] ?? null
+                    ], JSON_UNESCAPED_UNICODE);
+                    
+                    // Xóa các bản ghi liên quan trước (cascade delete)
+                    // 1. Xóa phân bổ dịch vụ
+                    $sql1 = "DELETE FROM phan_bo_dich_vu WHERE nha_cung_cap_id = ?";
+                    $stmt1 = $this->nhaCungCapModel->conn->prepare($sql1);
+                    $stmt1->execute([$id]);
+                    
+                    // 2. Xóa danh mục dịch vụ của nhà cung cấp
+                    $sql2 = "DELETE FROM dich_vu_nha_cung_cap WHERE nha_cung_cap_id = ?";
+                    $stmt2 = $this->nhaCungCapModel->conn->prepare($sql2);
+                    $stmt2->execute([$id]);
+                    
+                    // 3. Xóa nhà cung cấp
+                    $result = $this->nhaCungCapModel->delete($id);
+                    
+                    if ($result) {
+                        // Lưu vào lịch sử xóa
+                        $this->supplierDeletionHistoryModel->insert([
+                            'nha_cung_cap_id' => $id,
+                            'nguoi_dung_id' => $nhaCungCap['nguoi_dung_id'] ?? null,
+                            'nguoi_xoa_id' => $adminId,
+                            'ly_do_xoa' => $lyDoXoa,
+                            'thong_tin_nha_cung_cap' => $thongTinNCC
+                        ]);
+                        
+                        // Nếu có gắn với user, đổi lại vai trò về KhachHang
+                        if (!empty($nhaCungCap['nguoi_dung_id'])) {
+                            $this->nguoiDungModel->update($nhaCungCap['nguoi_dung_id'], ['vai_tro' => 'KhachHang']);
+                        }
+                        
+                        $_SESSION['success'] = 'Xóa nhà cung cấp thành công';
+                    } else {
+                        $_SESSION['error'] = 'Không thể xóa nhà cung cấp';
+                    }
+                }
+            } catch (Exception $e) {
+                $_SESSION['error'] = 'Lỗi khi xóa: ' . $e->getMessage();
+            }
+        }
+        
+        header('Location: index.php?act=admin/nhaCungCap');
+        exit();
+    }
+    
     // Xem chi tiết dịch vụ
     public function chiTietDichVu() {
-        $nhaCungCapModel = new NhaCungCap();
+        // Dùng model đã tạo trong constructor
         $dichVuId = $_GET['id'] ?? 0;
         $nccId = $_GET['ncc_id'] ?? null;
         
@@ -444,7 +518,7 @@ class AdminController {
         }
         
         // Admin có thể xem tất cả dịch vụ, không cần kiểm tra nhaCungCapId
-        $dichVu = $nhaCungCapModel->getDichVuById($dichVuId);
+        $dichVu = $this->nhaCungCapModel->getDichVuById($dichVuId);
         
         if (!$dichVu) {
             $_SESSION['error'] = 'Không tìm thấy dịch vụ';
@@ -480,7 +554,7 @@ class AdminController {
             exit();
         }
 
-        $nhaCungCapModel = new NhaCungCap();
+        // Dùng model đã tạo trong constructor
 
         try {
             switch ($action) {
@@ -489,12 +563,12 @@ class AdminController {
                     if ($giaTien <= 0) {
                         throw new Exception('Giá tiền phải lớn hơn 0');
                     }
-                    $nhaCungCapModel->xacNhanDichVu($serviceId, $giaTien);
+                    $this->nhaCungCapModel->xacNhanDichVu($serviceId, $giaTien);
                     $_SESSION['success'] = 'Đã xác nhận dịch vụ';
                     break;
                 case 'reject':
                     $ghiChu = trim($_POST['ghi_chu'] ?? '');
-                    $nhaCungCapModel->tuChoiDichVu($serviceId, $ghiChu ?: null);
+                    $this->nhaCungCapModel->tuChoiDichVu($serviceId, $ghiChu ?: null);
                     $_SESSION['success'] = 'Đã từ chối dịch vụ';
                     break;
                 case 'update_price':
@@ -502,7 +576,7 @@ class AdminController {
                     if ($giaTien <= 0) {
                         throw new Exception('Giá tiền phải lớn hơn 0');
                     }
-                    $nhaCungCapModel->capNhatGiaDichVu($serviceId, $giaTien);
+                    $this->nhaCungCapModel->capNhatGiaDichVu($serviceId, $giaTien);
                     $_SESSION['success'] = 'Đã cập nhật giá dịch vụ';
                     break;
                 default:
@@ -519,29 +593,29 @@ class AdminController {
         require 'views/admin/danh_gia.php';
     }
     public function nhanSu() {
-        $nhanSuModel = new NhanSu();
+        // Dùng model đã tạo trong constructor
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         $role = isset($_GET['role']) ? trim($_GET['role']) : '';
         // load available roles for tabs
-        $roles = $nhanSuModel->getRoles();
+        $roles = $this->nhanSuModel->getRoles();
         
         // build data grouped by role (for tabs)
         $data_by_role = [];
         if (!empty($roles)) {
             foreach ($roles as $r) {
-                $data_by_role[$r] = $nhanSuModel->getByRole($r);
+                $data_by_role[$r] = $this->nhanSuModel->getByRole($r);
             }
         }
         
         // apply filters: if search query, search across all; if role filter, use that role's data
         if ($q !== '') {
-            $nhan_su_list = $nhanSuModel->search($q);
+            $nhan_su_list = $this->nhanSuModel->search($q);
             $active_role = null;
         } elseif ($role !== '' && isset($data_by_role[$role])) {
             $nhan_su_list = $data_by_role[$role];
             $active_role = $role;
         } else {
-            $nhan_su_list = $nhanSuModel->getAll();
+            $nhan_su_list = $this->nhanSuModel->getAll();
             $active_role = null;
         }
         
@@ -550,20 +624,19 @@ class AdminController {
 
     // Admin: quản lý HDV (danh sách + CRUD cơ bản)
     public function quanLyHDV() {
-        $hdvModel = new HDV();
+        // Dùng model đã tạo trong constructor
         $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
         $q = isset($_GET['q']) ? trim($_GET['q']) : '';
         if ($q !== '') {
             // sử dụng search trên nhan_su (tạm gọi chung)
-            $ns = new NhanSu();
-            $hdv_list = $ns->search($q);
+            $hdv_list = $this->nhanSuModel->search($q);
         } else {
-            $hdv_list = $hdvModel->getAll($groupId);
+            $hdv_list = $this->hdvModel->getAll($groupId);
         }
         // load groups
         $groups = [];
         try {
-            $stmt = $hdvModel->conn->prepare('SELECT * FROM hdv_groups ORDER BY name ASC');
+            $stmt = $this->hdvModel->conn->prepare('SELECT * FROM hdv_groups ORDER BY name ASC');
             $stmt->execute();
             $groups = $stmt->fetchAll();
         } catch (Exception $e) {
@@ -574,7 +647,7 @@ class AdminController {
 
     public function quanLyHDVCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $model = new HDV();
+            // Dùng model đã tạo trong constructor
             $data = [
                 'ho_ten' => $_POST['ho_ten'] ?? '',
                 'ngay_sinh' => $_POST['ngay_sinh'] ?? null,
@@ -589,7 +662,7 @@ class AdminController {
                 'group_id' => $_POST['group_id'] ?? null,
                 'note' => $_POST['note'] ?? null,
             ];
-            $ok = $model->insert($data);
+                    $ok = $this->hdvModel->insert($data);
             $_SESSION['flash'] = $ok ? ['type'=>'success','message'=>'Thêm HDV thành công'] : ['type'=>'danger','message'=>'Thêm HDV thất bại'];
         }
         header('Location: index.php?act=admin/quanLyHDV'); exit;
@@ -597,7 +670,7 @@ class AdminController {
 
     public function quanLyHDVUpdate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $model = new HDV();
+            // Dùng model đã tạo trong constructor
             $id = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
             if ($id > 0) {
                 $data = [
@@ -615,7 +688,7 @@ class AdminController {
                     'is_available' => isset($_POST['is_available']) ? 1 : 0,
                     'note' => $_POST['note'] ?? null,
                 ];
-                $ok = $model->update($id, $data);
+                $ok = $this->hdvModel->update($id, $data);
                 $_SESSION['flash'] = $ok ? ['type'=>'success','message'=>'Cập nhật HDV thành công'] : ['type'=>'danger','message'=>'Cập nhật HDV thất bại'];
             }
         }
@@ -625,8 +698,8 @@ class AdminController {
     public function quanLyHDVDelete() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         if ($id > 0) {
-            $model = new HDV();
-            $ok = $model->delete($id);
+            // Dùng model đã tạo trong constructor
+            $ok = $this->hdvModel->delete($id);
             $_SESSION['flash'] = $ok ? ['type'=>'success','message'=>'Xóa HDV thành công'] : ['type'=>'danger','message'=>'Xóa HDV thất bại'];
         }
         header('Location: index.php?act=admin/quanLyHDV'); exit;
@@ -634,20 +707,20 @@ class AdminController {
 
     // Hiển thị lịch phân công HDV (calendar)
     public function hdvSchedule() {
-        $hdvModel = new HDV();
+        // Dùng model đã tạo trong constructor
         // load hdv list
-        $hdv_list = $hdvModel->getAll();
+        $hdv_list = $this->hdvModel->getAll();
         require 'views/admin/hdv_schedule.php';
     }
 
     // Trang hồ sơ HDV
     public function hdvProfile() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        $hdvModel = new HDV();
-        $hdv = $hdvModel->findById($id);
+        // Dùng model đã tạo trong constructor
+        $hdv = $this->hdvModel->findById($id);
         $history = [];
         if ($hdv) {
-            $history = $hdvModel->getTourHistory($id, 100);
+            $history = $this->hdvModel->getTourHistory($id, 100);
         }
         require 'views/admin/hdv_profile.php';
     }
@@ -656,12 +729,12 @@ class AdminController {
     public function hdvApiGetSchedule() {
         header('Content-Type: application/json');
         $hdvId = isset($_GET['hdv_id']) ? (int)$_GET['hdv_id'] : 0;
-        $hdvModel = new HDV();
+        // Dùng model đã tạo trong constructor
         $from = $_GET['from'] ?? null;
         $to = $_GET['to'] ?? null;
         $events = [];
         if ($hdvId > 0) {
-            $rows = $hdvModel->getSchedule($hdvId, $from, $to);
+            $rows = $this->hdvModel->getSchedule($hdvId, $from, $to);
             foreach ($rows as $r) {
                 $events[] = [
                     'id' => $r['id'],
@@ -682,10 +755,10 @@ class AdminController {
         $hdvId = isset($_GET['hdv_id']) ? (int)$_GET['hdv_id'] : 0;
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
-        $hdvModel = new HDV();
+        // Dùng model đã tạo trong constructor
         $ok = false;
         if ($hdvId && $start && $end) {
-            $ok = $hdvModel->isAvailable($hdvId, $start, $end);
+            $ok = $this->hdvModel->isAvailable($hdvId, $start, $end);
         }
         echo json_encode(['available' => $ok]);
         exit;
@@ -701,12 +774,12 @@ class AdminController {
         $start = $payload['start'] ?? null;
         $end = $payload['end'] ?? null;
         $note = $payload['note'] ?? null;
-        $hdvModel = new HDV();
+        // Dùng model đã tạo trong constructor
         if (!$hdvId || !$start || !$end) { echo json_encode(['ok'=>false,'msg'=>'Thiếu dữ liệu']); exit; }
-        if (!$hdvModel->isAvailable($hdvId, $start, $end)) {
+        if (!$this->hdvModel->isAvailable($hdvId, $start, $end)) {
             echo json_encode(['ok'=>false,'msg'=>'HDV không rảnh trong khung thời gian này']); exit;
         }
-        $ok = $hdvModel->addSchedule($hdvId, $tourId, $start, $end, $note);
+        $ok = $this->hdvModel->addSchedule($hdvId, $tourId, $start, $end, $note);
         echo json_encode(['ok'=>$ok]); exit;
     }
 
@@ -716,11 +789,11 @@ class AdminController {
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
         $groupId = isset($_GET['group_id']) ? (int)$_GET['group_id'] : null;
-        $hdvModel = new HDV();
-        $candidates = $hdvModel->getAll($groupId, true);
+        // Dùng model đã tạo trong constructor
+        $candidates = $this->hdvModel->getAll($groupId, true);
         $available = [];
         foreach ($candidates as $c) {
-            if ($hdvModel->isAvailable($c['nhan_su_id'], $start, $end)) {
+            if ($this->hdvModel->isAvailable($c['nhan_su_id'], $start, $end)) {
                 $available[] = ['id'=>$c['nhan_su_id'],'ho_ten'=>$c['ho_ten']];
             }
         }
@@ -729,7 +802,7 @@ class AdminController {
 
     public function nhanSuCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $model = new NhanSu();
+            // Dùng model đã tạo trong constructor
             $data = [
                     'nguoi_dung_id' => $_POST['nguoi_dung_id'] ?? null,
                     'vai_tro' => $_POST['vai_tro'] ?? 'Khac',
@@ -743,7 +816,7 @@ class AdminController {
                 if (empty($data['nguoi_dung_id'])) {
                     $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Vui lòng chọn người dùng.'];
                 } else {
-                    $ok = $model->insert($data);
+                    $ok = $this->nhanSuModel->insert($data);
                     if ($ok) {
                         $_SESSION['flash'] = ['type' => 'success', 'message' => 'Thêm nhân sự thành công. Vai trò người dùng đã được cập nhật.'];
                     } else {
@@ -757,8 +830,8 @@ class AdminController {
 
     // API: trả về danh sách người dùng chưa có nhân sự (JSON)
     public function nhanSu_get_users() {
-        $model = new NhanSu();
-        $users = $model->getAvailableUsers();
+        // Dùng model đã tạo trong constructor
+        $users = $this->nhanSuModel->getAvailableUsers();
         header('Content-Type: application/json');
         echo json_encode(['users' => $users]);
         exit;
@@ -766,7 +839,7 @@ class AdminController {
 
     public function nhanSuUpdate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $model = new NhanSu();
+            // Dùng model đã tạo trong constructor
             $id = isset($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : 0;
             if ($id <= 0) {
                 $_SESSION['flash'] = ['type' => 'danger', 'message' => 'ID nhân sự không hợp lệ.'];
@@ -780,7 +853,7 @@ class AdminController {
                 'kinh_nghiem' => $_POST['kinh_nghiem'] ?? '',
                 'suc_khoe' => $_POST['suc_khoe'] ?? '',
             ];
-            $ok = $model->update($id, $data);
+            $ok = $this->nhanSuModel->update($id, $data);
             if ($ok) {
                 $_SESSION['flash'] = ['type' => 'success', 'message' => 'Cập nhật nhân sự thành công.'];
             } else {
@@ -796,22 +869,22 @@ class AdminController {
         $delete_user = isset($_GET['delete_user']) && $_GET['delete_user'] === '1' ? true : false;
         
         if ($id > 0) {
-            $model = new NhanSu();
+            // Dùng model đã tạo trong constructor
             if ($delete_user) {
                 // kiểm tra blocker quan trọng trước khi xóa (chỉ tour.tao_boi)
-                $nhanSu = $model->findById($id);
+                $nhanSu = $this->nhanSuModel->findById($id);
                 if ($nhanSu && !empty($nhanSu['nguoi_dung_id'])) {
-                    $blockers = $model->getCriticalDeleteBlockers($nhanSu['nguoi_dung_id']);
+                    $blockers = $this->nhanSuModel->getCriticalDeleteBlockers($nhanSu['nguoi_dung_id']);
                     if (!empty($blockers)) {
                         $_SESSION['flash'] = ['type' => 'danger', 'message' => 'Không thể xóa tài khoản do: ' . implode(' ', $blockers)];
                         header('Location: index.php?act=admin/nhanSu');
                         exit;
                     }
                 }
-                $ok = $model->deleteWithUser($id);
+                $ok = $this->nhanSuModel->deleteWithUser($id);
                 $msg = $ok ? 'Xóa nhân sự, tài khoản và dữ liệu liên quan thành công.' : 'Xóa nhân sú và tài khoản thất bại.';
             } else {
-                $ok = $model->delete($id);
+                $ok = $this->nhanSuModel->delete($id);
                 $msg = $ok ? 'Xóa nhân sự thành công. Tài khoản vẫn được giữ.' : 'Xóa nhân sự thất bại.';
             }
             
@@ -834,16 +907,15 @@ class AdminController {
         if ($id <= 0) {
             $error = 'Thiếu mã nhân sự cần xem.';
         } else {
-            $model = new NhanSu();
-            $nhanSu = $model->findById($id);
+            // Dùng model đã tạo trong constructor
+            $nhanSu = $this->nhanSuModel->findById($id);
             
             if (!$nhanSu) {
                 $error = 'Nhân sự không tồn tại hoặc đã bị xóa.';
             } else {
                 // Lấy thêm thông tin vai trò người dùng
                 if (!empty($nhanSu['nguoi_dung_id'])) {
-                    $nguoiDungModel = new NguoiDung();
-                    $nguoiDung = $nguoiDungModel->findById($nhanSu['nguoi_dung_id']);
+                    $nguoiDung = $this->nguoiDungModel->findById($nhanSu['nguoi_dung_id']);
                     if ($nguoiDung) {
                         $nhanSu['vai_tro_nguoi_dung'] = $nguoiDung['vai_tro'];
                         $nhanSu['quyen_cap_cao'] = $nguoiDung['quyen_cap_cao'];
@@ -861,20 +933,20 @@ class AdminController {
     // ==================== QUẢN LÝ HDV NÂNG CAO (SỬ DỤNG DATABASE HIỆN CÓ) ====================
     
     public function hdvAdvanced() {
-        $hdvMgmt = new HDVManagement();
+        // Dùng model đã tạo trong constructor
         
-        $hdv_list = $hdvMgmt->getAllHDV();
-        $stats = $hdvMgmt->getThongKeTongQuan();
-        $hieu_suat_list = $hdvMgmt->getBaoCaoHieuSuat();
-        $thong_bao_list = $hdvMgmt->getThongBao(null, 20);
-        $lich_lam_viec = $hdvMgmt->getAllLichLamViec(); // Lấy tất cả lịch làm việc
+        $hdv_list = $this->hdvMgmtModel->getAllHDV();
+        $stats = $this->hdvMgmtModel->getThongKeTongQuan();
+        $hieu_suat_list = $this->hdvMgmtModel->getBaoCaoHieuSuat();
+        $thong_bao_list = $this->hdvMgmtModel->getThongBao(null, 20);
+        $lich_lam_viec = $this->hdvMgmtModel->getAllLichLamViec(); // Lấy tất cả lịch làm việc
         
         require 'views/admin/hdv_quan_ly_nang_cao.php';
     }
 
     public function hdvAddSchedule() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $hdvMgmt = new HDVManagement();
+            // Dùng model đã tạo trong constructor
             
             $data = [
                 'tour_id' => $_POST['tour_id'],
@@ -885,7 +957,7 @@ class AdminController {
                 'trang_thai' => $_POST['trang_thai'] ?? 'DaXacNhan'
             ];
             
-            $result = $hdvMgmt->phanCongHDV($data);
+            $result = $this->hdvMgmtModel->phanCongHDV($data);
             $_SESSION['flash'] = [
                 'type' => $result['success'] ? 'success' : 'danger',
                 'message' => $result['message']
@@ -897,13 +969,13 @@ class AdminController {
     }
 
     public function hdvGetSchedule() {
-        $hdvMgmt = new HDVManagement();
+        // Dùng model đã tạo trong constructor
         
         $hdv_id = $_GET['hdv_id'] ?? null;
         $start = $_GET['start'] ?? null;
         $end = $_GET['end'] ?? null;
         
-        $events = $hdvMgmt->getLichLamViec($hdv_id, $start, $end);
+        $events = $this->hdvMgmtModel->getLichLamViec($hdv_id, $start, $end);
         
         header('Content-Type: application/json');
         echo json_encode($events);
@@ -912,7 +984,7 @@ class AdminController {
 
     public function hdvSendNotification() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $hdvMgmt = new HDVManagement();
+            // Dùng model đã tạo trong constructor
             
             $data = [
                 'nhan_su_id' => !empty($_POST['nhan_su_id']) ? (int)$_POST['nhan_su_id'] : null,
@@ -922,7 +994,7 @@ class AdminController {
                 'uu_tien' => $_POST['uu_tien'] ?? 'TrungBinh'
             ];
             
-            $result = $hdvMgmt->guiThongBao($data);
+            $result = $this->hdvMgmtModel->guiThongBao($data);
             
             $_SESSION['flash'] = [
                 'type' => $result ? 'success' : 'danger',
@@ -935,10 +1007,10 @@ class AdminController {
     }
 
     public function hdvLichTable() {
-        $hdvMgmt = new HDVManagement();
+        // Dùng model đã tạo trong constructor
         
-        $hdv_list = $hdvMgmt->getAllHDV();
-        $lich_lam_viec = $hdvMgmt->getLichLamViec(); // Lấy tất cả lịch
+        $hdv_list = $this->hdvMgmtModel->getAllHDV();
+        $lich_lam_viec = $this->hdvMgmtModel->getLichLamViec(); // Lấy tất cả lịch
         
         require 'views/admin/hdv_lich_lam_viec_table.php';
     }
@@ -946,14 +1018,13 @@ class AdminController {
     public function hdvDetail() {
         $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
         
-        $hdvMgmt = new HDVManagement();
-        $nhanSuModel = new NhanSu();
+        // Dùng models đã tạo trong constructor
         
-        $hdv = $nhanSuModel->findById($id);
-        $hieu_suat = $hdvMgmt->getHieuSuatTheoThang($id);
-        $danh_gia_list = $hdvMgmt->getDanhGiaByHDV($id);
-        $lich_lam_viec = $hdvMgmt->getLichLamViec($id);
-        $nhat_ky_list = $hdvMgmt->getNhatKyByHDV($id);
+        $hdv = $this->nhanSuModel->findById($id);
+        $hieu_suat = $this->hdvMgmtModel->getHieuSuatTheoThang($id);
+        $danh_gia_list = $this->hdvMgmtModel->getDanhGiaByHDV($id);
+        $lich_lam_viec = $this->hdvMgmtModel->getLichLamViec($id);
+        $nhat_ky_list = $this->hdvMgmtModel->getNhatKyByHDV($id);
         
         require 'views/admin/hdv_chi_tiet.php';
     }
@@ -974,11 +1045,7 @@ class AdminController {
         $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
         $tourId = isset($_GET['tour_id']) ? (int)$_GET['tour_id'] : 0;
         
-        $tourModel = new Tour();
-        $lichKhoiHanhModel = new LichKhoiHanh();
-        $bookingModel = new Booking();
-        $checkinModel = new TourCheckin();
-        $roomModel = new HotelRoomAssignment();
+        // Dùng models đã tạo trong constructor
         
         $tour = null;
         $lichKhoiHanh = null;
@@ -988,10 +1055,10 @@ class AdminController {
         $roomStats = null;
         
         if ($lichKhoiHanhId > 0) {
-            $lichKhoiHanh = $lichKhoiHanhModel->findById($lichKhoiHanhId);
+            $lichKhoiHanh = $this->lichKhoiHanhModel->findById($lichKhoiHanhId);
             if ($lichKhoiHanh) {
                 $tourId = $lichKhoiHanh['tour_id'];
-                $tour = $tourModel->findById($tourId);
+                $tour = $this->tourModel->findById($tourId);
                 
                 // Lấy danh sách booking theo lịch khởi hành
                 $sql = "SELECT b.*, 
@@ -1007,17 +1074,17 @@ class AdminController {
                         WHERE b.tour_id = ? 
                         AND b.ngay_khoi_hanh = (SELECT ngay_khoi_hanh FROM lich_khoi_hanh WHERE id = ?)
                         ORDER BY b.ngay_dat DESC";
-                $stmt = $bookingModel->conn->prepare($sql);
+                $stmt = $this->bookingModel->conn->prepare($sql);
                 $stmt->execute([$tourId, $lichKhoiHanhId]);
                 $bookingList = $stmt->fetchAll();
                 
                 // Lấy thống kê
-                $checkinStats = $checkinModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
-                $roomStats = $roomModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
+                $checkinStats = $this->tourCheckinModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
+                $roomStats = $this->roomModel->getStatsByLichKhoiHanh($lichKhoiHanhId);
             }
         } else if ($tourId > 0) {
-            $tour = $tourModel->findById($tourId);
-            $lichKhoiHanhList = $lichKhoiHanhModel->getByTourId($tourId);
+            $tour = $this->tourModel->findById($tourId);
+            $lichKhoiHanhList = $this->lichKhoiHanhModel->getByTourId($tourId);
         }
         
         require 'views/admin/danh_sach_khach.php';
@@ -1026,7 +1093,7 @@ class AdminController {
     // Check-in khách
     public function checkInKhach() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $checkinModel = new TourCheckin();
+            // Dùng model đã tạo trong constructor
             
             $data = [
                 'lich_khoi_hanh_id' => $_POST['lich_khoi_hanh_id'] ?? 0,
@@ -1039,7 +1106,7 @@ class AdminController {
                 'ghi_chu' => $_POST['ghi_chu'] ?? null
             ];
             
-            if ($checkinModel->insert($data)) {
+            if ($this->tourCheckinModel->insert($data)) {
                 $_SESSION['success'] = 'Check-in khách thành công!';
             } else {
                 $_SESSION['error'] = 'Có lỗi xảy ra khi check-in!';
@@ -1053,11 +1120,11 @@ class AdminController {
         $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
         $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
         
-        $bookingModel = new Booking();
-        $checkinModel = new TourCheckin();
+        // Dùng model đã tạo trong constructor
+        // Dùng model đã tạo trong constructor
         
-        $booking = $bookingModel->findById($bookingId);
-        $checkin = $checkinModel->getByBookingId($bookingId);
+        $booking = $this->bookingModel->findById($bookingId);
+        $checkin = $this->tourCheckinModel->getByBookingId($bookingId);
         
         require 'views/admin/check_in.php';
     }
@@ -1065,7 +1132,7 @@ class AdminController {
     // Cập nhật check-in
     public function updateCheckIn() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $checkinModel = new TourCheckin();
+            // Dùng model đã tạo trong constructor
             
             $id = $_POST['id'] ?? 0;
             $data = [
@@ -1078,7 +1145,7 @@ class AdminController {
                 'ghi_chu' => $_POST['ghi_chu'] ?? null
             ];
             
-            if ($checkinModel->update($id, $data)) {
+            if ($this->tourCheckinModel->update($id, $data)) {
                 $_SESSION['success'] = 'Cập nhật check-in thành công!';
             } else {
                 $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật!';
@@ -1093,7 +1160,7 @@ class AdminController {
     // Phân phòng khách sạn
     public function phanPhongKhachSan() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $roomModel = new HotelRoomAssignment();
+            // Dùng model đã tạo trong constructor
             
             $action = $_POST['action'] ?? 'add';
             $lichKhoiHanhId = $_POST['lich_khoi_hanh_id'] ?? 0;
@@ -1114,7 +1181,7 @@ class AdminController {
                     'ghi_chu' => $_POST['ghi_chu'] ?? null
                 ];
                 
-                if ($roomModel->insert($data)) {
+                if ($this->roomModel->insert($data)) {
                     $_SESSION['success'] = 'Phân phòng thành công!';
                 } else {
                     $_SESSION['error'] = 'Có lỗi xảy ra khi phân phòng!';
@@ -1133,14 +1200,14 @@ class AdminController {
                     'ghi_chu' => $_POST['ghi_chu'] ?? null
                 ];
                 
-                if ($roomModel->update($id, $data)) {
+                if ($this->roomModel->update($id, $data)) {
                     $_SESSION['success'] = 'Cập nhật phòng thành công!';
                 } else {
                     $_SESSION['error'] = 'Có lỗi xảy ra khi cập nhật!';
                 }
             } else if ($action === 'delete') {
                 $id = $_POST['id'] ?? 0;
-                if ($roomModel->delete($id)) {
+                if ($this->roomModel->delete($id)) {
                     $_SESSION['success'] = 'Xóa phân phòng thành công!';
                 } else {
                     $_SESSION['error'] = 'Có lỗi xảy ra khi xóa!';
@@ -1155,9 +1222,9 @@ class AdminController {
         $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
         $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
         
-        $bookingModel = new Booking();
-        $roomModel = new HotelRoomAssignment();
-        $checkinModel = new TourCheckin();
+        // Dùng model đã tạo trong constructor
+        // Dùng model đã tạo trong constructor
+        // Dùng model đã tạo trong constructor
         
         $booking = null;
         $roomList = [];
@@ -1174,16 +1241,16 @@ class AdminController {
                     LEFT JOIN khach_hang k ON b.khach_hang_id = k.khach_hang_id
                     LEFT JOIN nguoi_dung nd ON k.nguoi_dung_id = nd.id
                     WHERE b.booking_id = ?";
-            $stmt = $bookingModel->conn->prepare($sql);
+            $stmt = $this->bookingModel->conn->prepare($sql);
             $stmt->execute([$bookingId]);
             $booking = $stmt->fetch();
             
-            $roomList = $roomModel->getByBookingId($bookingId);
-            $checkin = $checkinModel->getByBookingId($bookingId);
+            $roomList = $this->roomModel->getByBookingId($bookingId);
+            $checkin = $this->tourCheckinModel->getByBookingId($bookingId);
         }
         
         if ($lichKhoiHanhId > 0) {
-            $hotelList = $roomModel->getHotelList();
+            $hotelList = $this->roomModel->getHotelList();
         }
         
         require 'views/admin/phan_phong.php';
@@ -1201,6 +1268,13 @@ class AdminController {
         $filter_loai = $_GET['loai_nhat_ky'] ?? '';
         $filter_tu_ngay = $_GET['tu_ngay'] ?? '';
         $filter_den_ngay = $_GET['den_ngay'] ?? '';
+        
+        // Đồng bộ biến filter cho view
+        $tourId = $filter_tour;
+        $hdvId = $filter_hdv;
+        $loaiNhatKy = $filter_loai;
+        $tuNgay = $filter_tu_ngay;
+        $denNgay = $filter_den_ngay;
         
         // Build query
         $sql = "SELECT nkt.*, t.ten_tour, nd.ho_ten as hdv_ten
@@ -1262,12 +1336,11 @@ class AdminController {
         }
         
         // Lấy danh sách tour cho filter
-        $tourModel = new Tour();
-        $tours = $tourModel->getAll();
+        // Dùng model đã tạo trong constructor
+        $tours = $this->tourModel->getAll();
         
         // Lấy danh sách HDV cho filter
-        $hdvModel = new HDV();
-        $hdvList = $hdvModel->getAll();
+        $hdvList = $this->hdvModel->getAll();
         
         require 'views/admin/quan_ly_nhat_ky_tour.php';
     }
@@ -1293,14 +1366,48 @@ class AdminController {
         }
         
         // Lấy danh sách tour
-        $tourModel = new Tour();
-        $tours = $tourModel->getAll();
+        // Dùng model đã tạo trong constructor
+        $tours = $this->tourModel->getAll();
         
         // Lấy danh sách HDV
-        $hdvModel = new HDV();
-        $hdvList = $hdvModel->getAll();
+        $hdvList = $this->hdvModel->getAll();
         
         require 'views/admin/form_nhat_ky_tour.php';
+    }
+
+    /**
+     * Chi tiết nhật ký tour - Admin
+     */
+    public function chiTietNhatKyTour() {
+        $conn = connectDB();
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Nhật ký không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+
+        $sql = "SELECT nkt.*, 
+                       t.ten_tour, t.tour_id, 
+                       nd.ho_ten AS hdv_ten, nd.email AS hdv_email, nd.so_dien_thoai AS hdv_sdt
+                FROM nhat_ky_tour nkt
+                LEFT JOIN tour t ON nkt.tour_id = t.tour_id
+                LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+                LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+                WHERE nkt.id = ?
+                LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->execute([$id]);
+        $entry = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$entry) {
+            $_SESSION['error'] = 'Không tìm thấy nhật ký.';
+            header('Location: index.php?act=admin/quanLyNhatKyTour');
+            exit;
+        }
+
+        require 'views/admin/chi_tiet_nhat_ky_tour.php';
     }
     
     /**
@@ -1462,5 +1569,382 @@ class AdminController {
         
         header('Location: index.php?act=admin/quanLyNhatKyTour');
         exit;
+    }
+    
+    // Thêm khách vào lịch khởi hành
+    public function themKhachLichKhoiHanh() {
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Dùng model đã tạo trong constructor
+            // Dùng models đã tạo trong constructor
+            $lichKhoiHanh = $this->lichKhoiHanhModel->findById($lichKhoiHanhId);
+            if (!$lichKhoiHanh) {
+                $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+                header('Location: index.php?act=admin/danhSachKhachTheoTour');
+                exit();
+            }
+            
+            // Tìm hoặc tạo người dùng
+            $email = trim($_POST['email'] ?? '');
+            $hoTen = trim($_POST['ho_ten'] ?? '');
+            $soDienThoai = trim($_POST['so_dien_thoai'] ?? '');
+            
+            if (empty($email) || empty($hoTen)) {
+                $_SESSION['error'] = 'Vui lòng nhập đầy đủ thông tin khách hàng.';
+                header('Location: index.php?act=admin/themKhachLichKhoiHanh&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+                exit();
+            }
+            
+            // Tìm người dùng theo email
+            $nguoiDung = $this->nguoiDungModel->findByEmail($email);
+            if (!$nguoiDung) {
+                // Tạo người dùng mới
+                $nguoiDungId = $this->nguoiDungModel->insert([
+                    'ho_ten' => $hoTen,
+                    'email' => $email,
+                    'so_dien_thoai' => $soDienThoai,
+                    'vai_tro' => 'KhachHang',
+                    'mat_khau' => password_hash('123456', PASSWORD_DEFAULT) // Mật khẩu mặc định
+                ]);
+                $nguoiDung = $this->nguoiDungModel->findById($nguoiDungId);
+            }
+            
+            // Tìm hoặc tạo khách hàng
+            $khachHang = $this->khachHangModel->findOrCreateByNguoiDungInfo(
+                $nguoiDung['id'],
+                $_POST['dia_chi'] ?? null,
+                $_POST['gioi_tinh'] ?? null,
+                $_POST['ngay_sinh'] ?? null
+            );
+            
+            // Tạo booking
+            $bookingData = [
+                'tour_id' => $lichKhoiHanh['tour_id'],
+                'khach_hang_id' => $khachHang['khach_hang_id'],
+                'ngay_dat' => date('Y-m-d'),
+                'ngay_khoi_hanh' => $lichKhoiHanh['ngay_khoi_hanh'],
+                'ngay_ket_thuc' => $lichKhoiHanh['ngay_ket_thuc'],
+                'so_nguoi' => (int)($_POST['so_nguoi'] ?? 1),
+                'tong_tien' => (float)($_POST['tong_tien'] ?? 0),
+                'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            $bookingId = $this->bookingModel->insert($bookingData);
+            if ($bookingId) {
+                $_SESSION['success'] = 'Thêm khách vào lịch khởi hành thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể thêm booking.';
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit();
+        }
+        
+        // GET: hiển thị form
+        // Dùng models đã tạo trong constructor
+        $lichKhoiHanh = $this->lichKhoiHanhModel->findById($lichKhoiHanhId);
+        if (!$lichKhoiHanh) {
+            $_SESSION['error'] = 'Lịch khởi hành không tồn tại.';
+            header('Location: index.php?act=admin/danhSachKhachTheoTour');
+            exit();
+        }
+        
+        $tour = $this->tourModel->findById($lichKhoiHanh['tour_id']);
+        $khachHangList = $this->nguoiDungModel->getAll(); // Lấy danh sách khách hàng để chọn
+        
+        require 'views/admin/them_khach_lich_khoi_hanh.php';
+    }
+    
+    // Sửa khách trong lịch khởi hành
+    public function suaKhachLichKhoiHanh() {
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Dùng model đã tạo trong constructor
+            
+            $booking = $this->bookingModel->findById($bookingId);
+            if (!$booking) {
+                $_SESSION['error'] = 'Booking không tồn tại.';
+                header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+                exit();
+            }
+            
+            $data = [
+                'so_nguoi' => (int)($_POST['so_nguoi'] ?? 1),
+                'tong_tien' => (float)($_POST['tong_tien'] ?? 0),
+                'trang_thai' => $_POST['trang_thai'] ?? 'ChoXacNhan',
+                'ghi_chu' => $_POST['ghi_chu'] ?? null
+            ];
+            
+            $result = $this->bookingModel->update($bookingId, $data);
+            if ($result) {
+                $_SESSION['success'] = 'Cập nhật thông tin booking thành công.';
+            } else {
+                $_SESSION['error'] = 'Không thể cập nhật booking.';
+            }
+            
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit();
+        }
+        
+        // GET: hiển thị form
+        // Dùng models đã tạo trong constructor
+        
+        $booking = $this->bookingModel->getBookingWithDetails($bookingId);
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+            header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+            exit();
+        }
+        
+        $lichKhoiHanh = $this->lichKhoiHanhModel->findById($lichKhoiHanhId);
+        $tour = $this->tourModel->findById($booking['tour_id']);
+        
+        require 'views/admin/sua_khach_lich_khoi_hanh.php';
+    }
+    
+    // Xóa khách khỏi lịch khởi hành
+    public function xoaKhachLichKhoiHanh() {
+        $bookingId = isset($_GET['booking_id']) ? (int)$_GET['booking_id'] : 0;
+        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
+        
+        // Dùng models đã tạo trong constructor
+        $booking = $this->bookingModel->findById($bookingId);
+        
+        if (!$booking) {
+            $_SESSION['error'] = 'Booking không tồn tại.';
+        } else {
+            // Chỉ xóa nếu chưa check-in
+            $checkin = $this->tourCheckinModel->getByBookingId($bookingId);
+            
+            if ($checkin) {
+                $_SESSION['error'] = 'Không thể xóa booking đã check-in. Vui lòng hủy booking thay vì xóa.';
+            } else {
+                $result = $this->bookingModel->delete($bookingId);
+                if ($result) {
+                    $_SESSION['success'] = 'Xóa booking thành công.';
+                } else {
+                    $_SESSION['error'] = 'Không thể xóa booking.';
+                }
+            }
+        }
+        
+        header('Location: index.php?act=admin/danhSachKhachTheoTour&lich_khoi_hanh_id=' . $lichKhoiHanhId);
+        exit();
+    }
+
+    // Hiển thị lịch sử xóa booking
+    public function lichSuXoaBooking() {
+        // Dùng model đã tạo trong constructor
+        $lichSuXoa = $this->bookingDeletionHistoryModel->getAll();
+        
+        require 'views/admin/lich_su_xoa_booking.php';
+    }
+
+    // Hiển thị lịch sử xóa nhà cung cấp
+    public function lichSuXoaNhaCungCap() {
+        // Dùng model đã tạo trong constructor
+        $lichSuXoa = $this->supplierDeletionHistoryModel->getAll();
+        
+        require 'views/admin/lich_su_xoa_nha_cung_cap.php';
+    }
+
+    // Xem chi tiết một bản ghi lịch sử xóa nhà cung cấp
+    public function chiTietLichSuXoaNhaCungCap() {
+        // Dùng model đã tạo trong constructor
+
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        if ($id <= 0) {
+            $_SESSION['error'] = 'Bản ghi không hợp lệ.';
+            header('Location: index.php?act=admin/lichSuXoaNhaCungCap');
+            exit;
+        }
+
+        $chiTiet = $this->supplierDeletionHistoryModel->getById($id);
+
+        if (!$chiTiet) {
+            $_SESSION['error'] = 'Không tìm thấy bản ghi lịch sử xóa.';
+            header('Location: index.php?act=admin/lichSuXoaNhaCungCap');
+            exit;
+        }
+
+        require 'views/admin/chi_tiet_lich_su_xoa_nha_cung_cap.php';
+    }
+
+    // ========== QUẢN LÝ YÊU CẦU TOUR TỪ KHÁCH HÀNG ==========
+    
+    /**
+     * Quản lý yêu cầu tour từ khách hàng
+     */
+    public function quanLyYeuCauTour() {
+        require_once 'models/ThongBao.php';
+        
+        // Dùng model đã tạo trong constructor
+        
+        // Lọc yêu cầu
+        $filters = [
+            'trang_thai' => $_GET['trang_thai'] ?? '',
+            'search' => trim($_GET['search'] ?? ''),
+            'limit' => 100
+        ];
+        
+        $yeuCauList = $thongBaoModel->getYeuCauTour($filters);
+        $tongYeuCau = count($yeuCauList);
+        $chuaXuLy = $this->thongBaoModel->countYeuCauTourChuaXuLy();
+        
+        require 'views/admin/quan_ly_yeu_cau_tour.php';
+    }
+    
+    /**
+     * Xem chi tiết yêu cầu tour và phản hồi
+     */
+    public function chiTietYeuCauTour() {
+        // Dùng models đã tạo trong constructor
+        
+        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+        
+        if ($id <= 0) {
+            $_SESSION['error'] = 'ID yêu cầu không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        $yeuCau = $this->thongBaoModel->findById($id);
+        
+        if (!$yeuCau || $yeuCau['tieu_de'] !== 'Yêu cầu tour theo mong muốn') {
+            $_SESSION['error'] = 'Yêu cầu không tồn tại.';
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        // Parse thông tin từ nội dung
+        $thongTin = [];
+        foreach (explode("\n", $yeuCau['noi_dung'] ?? '') as $row) {
+            $kv = explode(": ", $row, 2);
+            if (count($kv) == 2) {
+                $thongTin[$kv[0]] = $kv[1];
+            }
+        }
+        
+        // Lấy danh sách tour để admin có thể gợi ý
+        $tourList = $this->tourModel->getAll();
+        
+        require 'views/admin/chi_tiet_yeu_cau_tour.php';
+    }
+    
+    /**
+     * Xử lý phản hồi yêu cầu tour
+     */
+    public function phanHoiYeuCauTour() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        // Dùng models đã tạo trong constructor
+        
+        $yeuCauId = isset($_POST['yeu_cau_id']) ? (int)$_POST['yeu_cau_id'] : 0;
+        $phanHoi = trim($_POST['phan_hoi'] ?? '');
+        $trangThai = $_POST['trang_thai'] ?? 'DaXuLy';
+        
+        if ($yeuCauId <= 0) {
+            $_SESSION['error'] = 'ID yêu cầu không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        if (empty($phanHoi)) {
+            $_SESSION['error'] = 'Vui lòng nhập nội dung phản hồi.';
+            header('Location: index.php?act=admin/chiTietYeuCauTour&id=' . $yeuCauId);
+            exit();
+        }
+        
+        $result = $this->thongBaoModel->updatePhanHoi(
+            $yeuCauId,
+            $phanHoi,
+            $_SESSION['user_id'] ?? null,
+            $trangThai
+        );
+        
+        if ($result) {
+            $_SESSION['success'] = 'Đã gửi phản hồi thành công!';
+        } else {
+            $_SESSION['error'] = 'Có lỗi xảy ra khi gửi phản hồi.';
+        }
+        
+        header('Location: index.php?act=admin/chiTietYeuCauTour&id=' . $yeuCauId);
+        exit();
+    }
+    
+    /**
+     * Tạo tour mới từ yêu cầu của khách hàng
+     */
+    public function taoTourTuYeuCau() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        // Dùng models đã tạo trong constructor
+        
+        $yeuCauId = isset($_POST['yeu_cau_id']) ? (int)$_POST['yeu_cau_id'] : 0;
+        
+        if ($yeuCauId <= 0) {
+            $_SESSION['error'] = 'ID yêu cầu không hợp lệ.';
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        $yeuCau = $this->thongBaoModel->findById($yeuCauId);
+        
+        if (!$yeuCau) {
+            $_SESSION['error'] = 'Yêu cầu không tồn tại.';
+            header('Location: index.php?act=admin/quanLyYeuCauTour');
+            exit();
+        }
+        
+        // Parse thông tin từ yêu cầu
+        $thongTin = [];
+        foreach (explode("\n", $yeuCau['noi_dung'] ?? '') as $row) {
+            $kv = explode(": ", $row, 2);
+            if (count($kv) == 2) {
+                $thongTin[$kv[0]] = $kv[1];
+            }
+        }
+        
+        // Tạo tour mới
+        $tourData = [
+            'ten_tour' => $_POST['ten_tour'] ?? ($thongTin['Địa điểm'] ?? 'Tour mới'),
+            'loai_tour' => $_POST['loai_tour'] ?? 'TrongNuoc',
+            'mo_ta' => $_POST['mo_ta'] ?? 'Tour được tạo từ yêu cầu của khách hàng',
+            'gia_co_ban' => isset($_POST['gia_co_ban']) ? (float)$_POST['gia_co_ban'] : 0,
+            'trang_thai' => 'HoatDong',
+            'tao_boi' => $_SESSION['user_id'] ?? null
+        ];
+        
+        $tourId = $this->tourModel->insert($tourData);
+        
+        if ($tourId) {
+            // Gửi thông báo cho khách hàng
+            $phanHoi = "Chúng tôi đã tạo tour mới dựa trên yêu cầu của bạn. Vui lòng xem chi tiết: " . 
+                       "index.php?act=khachHang/chiTietTour&id=" . $tourId;
+            $this->thongBaoModel->updatePhanHoi(
+                $yeuCauId,
+                $phanHoi,
+                $_SESSION['user_id'] ?? null,
+                'DaXuLy'
+            );
+            
+            $_SESSION['success'] = 'Đã tạo tour mới và thông báo cho khách hàng!';
+            header('Location: index.php?act=admin/chiTietTour&id=' . $tourId);
+            exit();
+        } else {
+            $_SESSION['error'] = 'Không thể tạo tour mới.';
+            header('Location: index.php?act=admin/chiTietYeuCauTour&id=' . $yeuCauId);
+            exit();
+        }
     }
 }

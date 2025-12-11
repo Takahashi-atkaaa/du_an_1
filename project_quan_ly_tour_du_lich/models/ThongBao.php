@@ -230,4 +230,121 @@ class ThongBao
         $stmt->execute();
         return $stmt->fetch();
     }
+
+    /**
+     * Lấy tất cả thông báo của khách hàng
+     */
+    public function getAllByKhachHang($nguoiDungId) {
+        $sql = "SELECT tb.*, 
+                nd_gui.ho_ten as nguoi_gui_ten
+                FROM thong_bao tb
+                LEFT JOIN nguoi_dung nd_gui ON tb.nguoi_gui_id = nd_gui.id
+                WHERE tb.nguoi_gui_id = ?
+                ORDER BY tb.created_at DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([(int)$nguoiDungId]);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Lấy yêu cầu tour từ khách hàng (cho Admin)
+     */
+    public function getYeuCauTour($filters = []) {
+        $sql = "SELECT tb.*, 
+                nd_gui.ho_ten as nguoi_gui_ten,
+                nd_gui.email as nguoi_gui_email,
+                nd_gui.so_dien_thoai as nguoi_gui_phone
+                FROM thong_bao tb
+                LEFT JOIN nguoi_dung nd_gui ON tb.nguoi_gui_id = nd_gui.id
+                WHERE tb.tieu_de = 'Yêu cầu tour theo mong muốn'
+                  AND tb.vai_tro_nhan = 'Admin'";
+        
+        $params = [];
+        
+        // Lọc theo trạng thái
+        if (!empty($filters['trang_thai'])) {
+            $sql .= " AND tb.trang_thai = ?";
+            $params[] = $filters['trang_thai'];
+        }
+        
+        // Tìm kiếm
+        if (!empty($filters['search'])) {
+            $sql .= " AND (nd_gui.ho_ten LIKE ? OR tb.noi_dung LIKE ?)";
+            $search = '%' . $filters['search'] . '%';
+            $params[] = $search;
+            $params[] = $search;
+        }
+        
+        $sql .= " ORDER BY tb.created_at DESC";
+        
+        if (!empty($filters['limit'])) {
+            $sql .= " LIMIT ?";
+            $params[] = (int)$filters['limit'];
+        }
+        
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    /**
+     * Đếm yêu cầu tour chưa xử lý
+     */
+    public function countYeuCauTourChuaXuLy() {
+        $sql = "SELECT COUNT(*) as total
+                FROM thong_bao tb
+                WHERE tb.tieu_de = 'Yêu cầu tour theo mong muốn'
+                  AND tb.vai_tro_nhan = 'Admin'
+                  AND tb.trang_thai = 'DaGui'";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->fetch();
+        return (int)($result['total'] ?? 0);
+    }
+
+    /**
+     * Cập nhật trạng thái yêu cầu tour và gửi phản hồi
+     */
+    public function updatePhanHoi($yeuCauId, $phanHoi, $adminId, $trangThaiMoi = null) {
+        // Lấy thông tin yêu cầu gốc
+        $yeuCau = $this->findById($yeuCauId);
+        if (!$yeuCau) {
+            return false;
+        }
+        
+        // Cập nhật trạng thái yêu cầu (nếu có trạng thái mới)
+        // Vì bảng không có cột trạng thái riêng cho "Đã xử lý", ta sẽ giữ nguyên trạng thái "DaGui"
+        // hoặc có thể thêm ghi chú vào nội dung
+        if ($trangThaiMoi) {
+            // Cập nhật nội dung để đánh dấu đã xử lý
+            $noiDungMoi = $yeuCau['noi_dung'] . "\n\n--- Đã xử lý bởi Admin ---";
+            $this->update($yeuCauId, [
+                'tieu_de' => $yeuCau['tieu_de'],
+                'noi_dung' => $noiDungMoi,
+                'loai_thong_bao' => $yeuCau['loai_thong_bao'],
+                'muc_do_uu_tien' => $yeuCau['muc_do_uu_tien'],
+                'nguoi_nhan_id' => $yeuCau['nguoi_nhan_id'],
+                'vai_tro_nhan' => $yeuCau['vai_tro_nhan'],
+                'trang_thai' => $yeuCau['trang_thai']
+            ]);
+        }
+        
+        // Gửi thông báo phản hồi cho khách hàng
+        if (!empty($phanHoi) && $yeuCau['nguoi_gui_id']) {
+            $phanHoiData = [
+                'tieu_de' => 'Phản hồi yêu cầu tour của bạn',
+                'noi_dung' => $phanHoi,
+                'loai_thong_bao' => 'KhachHang',
+                'muc_do_uu_tien' => 'TrungBinh',
+                'nguoi_gui_id' => $adminId,
+                'nguoi_nhan_id' => $yeuCau['nguoi_gui_id'],
+                'vai_tro_nhan' => 'KhachHang',
+                'trang_thai' => 'DaGui',
+                'thoi_gian_gui' => date('Y-m-d H:i:s')
+            ];
+            return $this->insert($phanHoiData);
+        }
+        
+        return true;
+    }
 }

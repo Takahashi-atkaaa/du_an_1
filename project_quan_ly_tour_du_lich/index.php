@@ -30,6 +30,8 @@ require_once __DIR__ . '/models/NguoiDung.php';
 require_once __DIR__ . '/models/Tour.php';
 require_once __DIR__ . '/models/Booking.php';
 require_once __DIR__ . '/models/BookingHistory.php';
+require_once __DIR__ . '/models/BookingDeletionHistory.php';
+require_once __DIR__ . '/models/SupplierDeletionHistory.php';
 require_once __DIR__ . '/models/KhachHang.php';
 require_once __DIR__ . '/models/HDV.php';
 require_once __DIR__ . '/models/NhaCungCap.php';
@@ -43,23 +45,15 @@ require_once __DIR__ . '/models/HDVManagement.php';
 require_once __DIR__ . '/models/TourCheckin.php';
 require_once __DIR__ . '/models/HotelRoomAssignment.php';
 require_once __DIR__ . '/models/DichVuNhaCungCap.php';
+require_once __DIR__ . '/models/YeuCauDacBiet.php';
+require_once __DIR__ . '/models/ThongBao.php';
 
 
 // Route
-
 $act = $_GET['act'] ?? 'auth/login';
 
 // Để đảm bảo tính chất chỉ gọi 1 hàm Controller để xử lý request thì mình sử dụng match
 match ($act) {
-        'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
-        'admin/congNoKhachHang' => (new BaoCaoTaiChinhController())->congNoKhachHang(),
-        'admin/congNoNhaCungCap' => (new BaoCaoTaiChinhController())->congNoNhaCungCap(),
-    'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
-    'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
-            'admin/themKhachBooking' => (new AdminController())->themKhachBooking(),
-        'admin/danhSachKhachBooking' => (new AdminController())->danhSachKhachBooking(),
-        'admin/xoaKhachBooking' => (new AdminController())->xoaKhachBooking(),
-        'admin/suaKhachBooking' => (new AdminController())->suaKhachBooking(),
     // Trang chủ - Tour
     'tour/index' => (new TourController())->index(),
     'tour/show' => (new TourController())->show(),
@@ -93,6 +87,7 @@ match ($act) {
     'booking/chiTiet' => (new BookingController())->chiTiet(),
     'booking/update' => (new BookingController())->update(),
     'booking/updateTrangThai' => (new BookingController())->updateTrangThai(),
+    'booking/updateTienCoc' => (new BookingController())->updateTienCoc(),
     'booking/delete' => (new BookingController())->delete(),
     'booking/datTourChoKhach' => (new BookingController())->datTourChoKhach(),
     'booking/kiemTraChoTrong' => (new BookingController())->kiemTraChoTrong(),
@@ -105,33 +100,71 @@ match ($act) {
     'lichKhoiHanh/index' => (new LichKhoiHanhController())->index(),
     'lichKhoiHanh/create' => (new LichKhoiHanhController())->create(),
     'lichKhoiHanh/chiTiet' => (new LichKhoiHanhController())->chiTiet(),
+    'lichKhoiHanh/chiTietTheoBooking' => (new LichKhoiHanhController())->chiTietTheoBooking(),
+    'lichKhoiHanh/edit' => (new LichKhoiHanhController())->edit(),
     'lichKhoiHanh/update' => (new LichKhoiHanhController())->update(),
     'lichKhoiHanh/phanBoNhanSu' => (new LichKhoiHanhController())->phanBoNhanSu(),
+    'lichKhoiHanh/tuDongPhanBoNhanSu' => (new LichKhoiHanhController())->tuDongPhanBoNhanSu(),
+    'lichKhoiHanh/checkConflict' => (new LichKhoiHanhController())->checkConflict(),
     'lichKhoiHanh/updateTrangThaiNhanSu' => (new LichKhoiHanhController())->updateTrangThaiNhanSu(),
     'lichKhoiHanh/phanBoDichVu' => (new LichKhoiHanhController())->phanBoDichVu(),
     'lichKhoiHanh/updateTrangThaiDichVu' => (new LichKhoiHanhController())->updateTrangThaiDichVu(),
     'lichKhoiHanh/deleteNhanSu' => (new LichKhoiHanhController())->deleteNhanSu(),
     'lichKhoiHanh/deleteDichVu' => (new LichKhoiHanhController())->deleteDichVu(),
-    
+    'lichKhoiHanh/themKhachChiTiet' => (new LichKhoiHanhController())->themKhachChiTiet(),
+    'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
+    'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
+    'lichKhoiHanh/themYeuCauDacBiet' => (new LichKhoiHanhController())->themYeuCauDacBiet(),
+    'lichKhoiHanh/suaYeuCauDacBiet' => (new LichKhoiHanhController())->suaYeuCauDacBiet(),
+    'lichKhoiHanh/xoaYeuCauDacBiet' => (new LichKhoiHanhController())->xoaYeuCauDacBiet(),
+    'lichKhoiHanh/themNhatKy' => (new LichKhoiHanhController())->themNhatKy(),
+    'lichKhoiHanh/suaNhatKy' => (new LichKhoiHanhController())->suaNhatKy(),
+    'lichKhoiHanh/xoaNhatKy' => (new LichKhoiHanhController())->xoaNhatKy(),
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
-    'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
-    'admin/xemChiTietNguoiDung' => (new AdminController())->xemChiTietNguoiDung(),
     'admin/quanLyBooking' => (new AdminController())->quanLyBooking(),
-    'admin/baoCaoTaiChinh' => (new AdminController())->baoCaoTaiChinh(),
-    'admin/soSanhChiTietChiPhi' => (new AdminController())->soSanhChiTietChiPhi(),
+    'admin/lichSuXoaBooking' => (new AdminController())->lichSuXoaBooking(),
+    'admin/lichSuXoaNhaCungCap' => (new AdminController())->lichSuXoaNhaCungCap(),
+    'admin/chiTietLichSuXoaNhaCungCap' => (new AdminController())->chiTietLichSuXoaNhaCungCap(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
+    'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
+    'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
+    'admin/themYeuCauDacBiet' => (new AdminController())->taoYeuCauDacBiet(),
+    'admin/quanLyYeuCauTour' => (new AdminController())->quanLyYeuCauTour(),
+    'admin/chiTietYeuCauTour' => (new AdminController())->chiTietYeuCauTour(),
+    'admin/phanHoiYeuCauTour' => (new AdminController())->phanHoiYeuCauTour(),
+    'admin/taoTourTuYeuCau' => (new AdminController())->taoTourTuYeuCau(),
     'admin/quanLyNhatKyTour' => (new AdminController())->quanLyNhatKyTour(),
+    'admin/chiTietNhatKyTour' => (new AdminController())->chiTietNhatKyTour(),
     'admin/formNhatKyTour' => (new AdminController())->formNhatKyTour(),
     'admin/saveNhatKyTour' => (new AdminController())->saveNhatKyTour(),
     'admin/deleteNhatKyTour' => (new AdminController())->deleteNhatKyTour(),
     'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
+    'admin/quanLyNguoiDung' => (new AdminController())->quanLyNguoiDung(),
+    // Báo cáo tài chính
+    'admin/baoCaoTaiChinh' => (new BaoCaoTaiChinhController())->dashboard(),
+    'admin/lichSuGiaoDich' => (new BaoCaoTaiChinhController())->lichSuGiaoDich(),
+    'admin/giaoDichTheoTour' => (new BaoCaoTaiChinhController())->giaoDichTheoTour(),
+    'admin/chiTietGiaoDich' => (new BaoCaoTaiChinhController())->chiTietGiaoDich(),
+    'admin/congNo' => (new BaoCaoTaiChinhController())->congNo(),
+    'admin/congNoKhachHang' => (new BaoCaoTaiChinhController())->congNoKhachHang(),
+    'admin/congNoNhaCungCap' => (new BaoCaoTaiChinhController())->congNoNhaCungCap(),
+    'admin/laiLoTour' => (new BaoCaoTaiChinhController())->laiLoTour(),
+    'admin/duToanTour' => (new BaoCaoTaiChinhController())->duToanTour(),
+    'admin/formDuToan' => (new BaoCaoTaiChinhController())->formDuToan(),
+    'admin/chiPhiThucTe' => (new BaoCaoTaiChinhController())->chiPhiThucTe(),
+    'admin/formChiPhi' => (new BaoCaoTaiChinhController())->formChiPhi(),
+    'admin/duyetChiPhi' => (new BaoCaoTaiChinhController())->duyetChiPhi(),
+    'admin/tuChoiChiPhi' => (new BaoCaoTaiChinhController())->tuChoiChiPhi(),
+    'admin/soSanhDuToan' => (new BaoCaoTaiChinhController())->soSanhDuToan(),
+    'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
     'hdv/tours' => (new HDVController())->tours(),
     'hdv/xacNhanPhanBo' => (new HDVController())->xacNhanPhanBo(),
     'hdv/tour_detail' => (new HDVController())->tourDetail(),
+    'hdv/lich_trinh_chi_tiet' => (new HDVController())->lichTrinhChiTiet(),
     'hdv/khach' => (new HDVController())->khach(),
     'hdv/nhat_ky' => (new HDVController())->nhatKy(),
     'hdv/save_nhat_ky' => (new HDVController())->saveNhatKy(),
@@ -174,11 +207,16 @@ match ($act) {
     'admin/nhanSu_get_users' => (new AdminController())->nhanSu_get_users(),
     // Admin - Quản lý khách theo tour
     'admin/danhSachKhachTheoTour' => (new AdminController())->danhSachKhachTheoTour(),
+    'admin/themKhachLichKhoiHanh' => (new AdminController())->themKhachLichKhoiHanh(),
+    'admin/suaKhachLichKhoiHanh' => (new AdminController())->suaKhachLichKhoiHanh(),
+    'admin/xoaKhachLichKhoiHanh' => (new AdminController())->xoaKhachLichKhoiHanh(),
     'admin/checkInKhach' => (new AdminController())->checkInKhach(),
     'admin/updateCheckIn' => (new AdminController())->updateCheckIn(),
     'admin/phanPhongKhachSan' => (new AdminController())->phanPhongKhachSan(),
     'admin/nhaCungCap' => (new AdminController())->nhaCungCap(),
+    'admin/addNhacungcap' => (new AdminController())->addNhacungcap(),
     'admin/updateNhaCungCap' => (new AdminController())->updateNhaCungCap(),
+    'admin/deleteNhaCungCap' => (new AdminController())->deleteNhaCungCap(),
     'admin/chiTietDichVu' => (new AdminController())->chiTietDichVu(),
     'admin/supplierServiceAction' => (new AdminController())->supplierServiceAction(),
     
@@ -209,7 +247,10 @@ match ($act) {
     'khachHang/thongBao' => (new KhachHangController())->thongBao(),
     'khachHang/capNhatThongTin' => (new KhachHangController())->capNhatThongTin(),
     'khachHang/guiYeuCauHoTro' => (new KhachHangController())->guiYeuCauHoTro(),
+    'khachHang/guiYeuCauTour' => (new KhachHangController())->guiYeuCauTour(),
+    'khachHang/yeuCauTour' => (new KhachHangController())->guiYeuCauTour(),
     'khachHang/thanhToan' => (new KhachHangController())->thanhToan(),
+    'khachHang/thanhToanTour' => (new KhachHangController())->thanhToanTour(),
 
     // Nhân sự
     'admin/nhanSu' => (new AdminController())->nhanSu(),

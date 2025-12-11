@@ -171,6 +171,7 @@ class Tour
         $stmt->execute([(int)$tourId]);
         return $stmt->fetch();
     }
+    
 
     // Lấy danh sách hình ảnh theo tour_id
     public function getHinhAnhByTourId($tourId) {
@@ -196,15 +197,33 @@ class Tour
     }
 
     // Lấy nhật ký tour theo tour_id
-    public function getNhatKyTourByTourId($tourId) {
-        $sql = "SELECT nhan_su_id, noi_dung, ngay_ghi 
-                FROM nhat_ky_tour 
-                WHERE tour_id = ? 
-                ORDER BY ngay_ghi DESC";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->execute([(int)$tourId]);
-        return $stmt->fetchAll();
-    }
+    
+
+public function getNhatKyTourByTourId($tourId) {
+    $sql = "SELECT 
+                nkt.id,
+                nkt.tour_id,
+                nkt.nhan_su_id,
+                nkt.noi_dung,
+                nkt.ngay_ghi AS thoi_gian_su_kien,
+                nkt.loai_nhat_ky AS loai_su_kien,
+                nkt.tieu_de,
+                nkt.thoi_tiet,
+                nkt.cach_xu_ly,
+                nkt.hinh_anh,
+                NULL AS dia_diem,
+                nd.ho_ten AS nguoi_ghi_chep,
+                nd.email AS hdv_email,
+                nd.so_dien_thoai AS hdv_sdt
+            FROM nhat_ky_tour nkt
+            LEFT JOIN nhan_su ns ON nkt.nhan_su_id = ns.nhan_su_id
+            LEFT JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
+            WHERE nkt.tour_id = ? 
+            ORDER BY nkt.ngay_ghi DESC, nkt.id DESC";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute([(int)$tourId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 
     // Thêm lịch trình tour
     public function insertLichTrinh($tourId, $lichTrinh) {
@@ -216,6 +235,26 @@ class Tour
             $lichTrinh['dia_diem'] ?? '',
             $lichTrinh['hoat_dong'] ?? ''
         ]);
+    }
+
+    // Thêm nhiều lịch trình cùng lúc
+    public function insertMultipleLichTrinh($tourId, $lichTrinhList) {
+        // Xóa lịch trình cũ trước
+        $this->deleteLichTrinhByTourId($tourId);
+        
+        $sql = "INSERT INTO lich_trinh_tour (tour_id, ngay_thu, dia_diem, hoat_dong) VALUES (?, ?, ?, ?)";
+        $stmt = $this->conn->prepare($sql);
+        
+        foreach ($lichTrinhList as $lichTrinh) {
+            $stmt->execute([
+                (int)$tourId,
+                (int)$lichTrinh['ngay_thu'],
+                $lichTrinh['dia_diem'] ?? '',
+                $lichTrinh['hoat_dong'] ?? ''
+            ]);
+        }
+        
+        return true;
     }
 
     // Xóa lịch trình tour theo tour_id

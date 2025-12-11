@@ -1,289 +1,213 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch trình Tour - HDV</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-        }
-        
-        .page-header {
-            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 0 0 1rem 1rem;
-        }
-        
-        .tour-card {
-            border: none;
-            border-radius: 1rem;
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.05);
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-            transition: all 0.3s;
-        }
-        
-        .tour-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-        }
-        
-        .tour-card-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .tour-card-body {
-            padding: 1.5rem;
-        }
-        
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 2rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-        }
-        
-        .status-SapKhoiHanh {
-            background: #e3f2fd;
-            color: #1565c0;
-        }
-        
-        .status-DangChay {
-            background: #fff3e0;
-            color: #e65100;
-        }
-        
-        .status-HoanThanh {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-        
-        .status-DaHuy {
-            background: #ffebee;
-            color: #c62828;
-        }
-        
-        .filter-tabs {
-            background: white;
-            border-radius: 1rem;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.05);
-        }
-        
-        .filter-tabs .nav-link {
-            border-radius: 0.5rem;
-            color: #666;
-            font-weight: 500;
-        }
-        
-        .filter-tabs .nav-link.active {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            color: white;
-        }
-    </style>
-</head>
-<body class="bg-light">
-    <div class="page-header">
-        <div class="container">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="mb-1">
-                        <i class="bi bi-map"></i> Lịch trình Tour
-                    </h3>
-                    <p class="mb-0 opacity-75">Quản lý lịch trình và tour của bạn</p>
-                </div>
-                <a href="index.php?act=hdv/dashboard" class="btn btn-light">
-                    <i class="bi bi-arrow-left"></i> Trang chủ
-                </a>
-            </div>
-        </div>
-    </div>
+<?php
+$pageTitle = 'Lịch trình Tour';
+$currentPage = 'tours';
+ob_start();
+?>
 
-    <div class="container">
-        <!-- Filters -->
-        <div class="filter-tabs">
-            <ul class="nav nav-pills">
-                <li class="nav-item">
-                    <a class="nav-link <?php echo (!isset($_GET['status']) || $_GET['status'] === 'all') ? 'active' : ''; ?>" 
-                       href="index.php?act=hdv/tours&status=all">
-                        <i class="bi bi-list-ul"></i> Tất cả
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo (isset($_GET['status']) && $_GET['status'] === 'SapKhoiHanh') ? 'active' : ''; ?>" 
-                       href="index.php?act=hdv/tours&status=SapKhoiHanh">
-                        <i class="bi bi-calendar-event"></i> Sắp khởi hành
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo (isset($_GET['status']) && $_GET['status'] === 'DangChay') ? 'active' : ''; ?>" 
-                       href="index.php?act=hdv/tours&status=DangChay">
-                        <i class="bi bi-play-circle"></i> Đang chạy
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link <?php echo (isset($_GET['status']) && $_GET['status'] === 'HoanThanh') ? 'active' : ''; ?>" 
-                       href="index.php?act=hdv/tours&status=HoanThanh">
-                        <i class="bi bi-check-circle"></i> Hoàn thành
-                    </a>
-                </li>
-            </ul>
-        </div>
+<style>
+    .filter-tabs {
+        background: rgba(45, 45, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        padding: 15px;
+        margin-bottom: 30px;
+        backdrop-filter: blur(10px);
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
 
-        <!-- Thông báo phân bổ chờ xác nhận -->
-        <?php if (!empty($phanBoChoXacNhan)): ?>
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <div class="d-flex align-items-center mb-3">
-                <i class="bi bi-bell-fill me-2 fs-4"></i>
-                <h5 class="mb-0">Bạn có <?php echo count($phanBoChoXacNhan); ?> phân bổ nhân sự chờ xác nhận</h5>
-            </div>
-            <div class="list-group">
-                <?php foreach ($phanBoChoXacNhan as $pb): ?>
-                <div class="list-group-item">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div class="flex-grow-1">
-                            <h6 class="mb-1">
-                                <i class="bi bi-calendar-event"></i> 
-                                <?php echo htmlspecialchars($pb['ten_tour'] ?? 'Tour không xác định'); ?>
-                            </h6>
-                            <p class="mb-1 text-muted small">
-                                <i class="bi bi-calendar"></i> 
-                                Khởi hành: <?php echo date('d/m/Y', strtotime($pb['ngay_khoi_hanh'])); ?>
-                                <?php if (!empty($pb['ngay_ket_thuc'])): ?>
-                                - <?php echo date('d/m/Y', strtotime($pb['ngay_ket_thuc'])); ?>
-                                <?php endif; ?>
-                            </p>
-                            <p class="mb-1">
-                                <span class="badge bg-info"><?php echo htmlspecialchars($pb['phan_bo_vai_tro'] ?? 'HDV'); ?></span>
-                                <?php if (!empty($pb['ghi_chu'])): ?>
-                                <span class="text-muted small">- <?php echo htmlspecialchars($pb['ghi_chu']); ?></span>
-                                <?php endif; ?>
-                            </p>
-                        </div>
-                        <div class="ms-3">
-                            <form method="POST" action="index.php?act=hdv/xacNhanPhanBo" class="d-inline">
-                                <input type="hidden" name="phan_bo_id" value="<?php echo $pb['id']; ?>">
-                                <input type="hidden" name="action" value="xac_nhan">
-                                <button type="submit" class="btn btn-sm btn-success me-1" onclick="return confirm('Bạn có chắc chắn muốn xác nhận phân bổ này?');">
-                                    <i class="bi bi-check-circle"></i> Xác nhận
-                                </button>
-                            </form>
-                            <form method="POST" action="index.php?act=hdv/xacNhanPhanBo" class="d-inline">
-                                <input type="hidden" name="phan_bo_id" value="<?php echo $pb['id']; ?>">
-                                <input type="hidden" name="action" value="tu_choi">
-                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn từ chối phân bổ này?');">
-                                    <i class="bi bi-x-circle"></i> Từ chối
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-                <?php endforeach; ?>
-            </div>
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        <?php endif; ?>
+    .filter-tab {
+        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        color: var(--text-light);
+        text-decoration: none;
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        transition: all 0.3s;
+    }
 
-        <!-- Tours List -->
-        <?php if (!empty($tours)): ?>
-            <div class="row">
-                <?php foreach($tours as $tour): ?>
-                <div class="col-md-6 col-lg-4">
-                    <div class="tour-card">
-                        <div class="tour-card-header">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="mb-0"><?php echo htmlspecialchars($tour['ten_tour']); ?></h5>
-                                <span class="status-badge status-<?php echo $tour['trang_thai']; ?>">
-                                    <?php 
-                                    $statusText = [
-                                        'SapKhoiHanh' => 'Sắp khởi hành',
-                                        'DangChay' => 'Đang chạy',
-                                        'HoanThanh' => 'Hoàn thành',
-                                        'DaHuy' => 'Đã hủy'
-                                    ];
-                                    echo $statusText[$tour['trang_thai']] ?? $tour['trang_thai'];
-                                    ?>
-                                </span>
-                            </div>
-                        </div>
-                        <div class="tour-card-body">
-                            <div class="mb-3">
-                                <div class="text-muted small mb-2">
-                                    <i class="bi bi-calendar3"></i>
-                                    <strong>Khởi hành:</strong> 
-                                    <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'])); ?>
-                                </div>
-                                <div class="text-muted small mb-2">
-                                    <i class="bi bi-calendar-check"></i>
-                                    <strong>Kết thúc:</strong> 
-                                    <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'])); ?>
-                                </div>
-                                <?php if (!empty($tour['diem_tap_trung'])): ?>
-                                <div class="text-muted small mb-2">
-                                    <i class="bi bi-geo-alt"></i>
-                                    <strong>Điểm tập trung:</strong> 
-                                    <?php echo htmlspecialchars($tour['diem_tap_trung']); ?>
-                                </div>
-                                <?php endif; ?>
-                                <?php if (!empty($tour['so_nguoi'])): ?>
-                                <div class="text-muted small">
-                                    <i class="bi bi-people"></i>
-                                    <strong>Số khách:</strong> 
-                                    <?php echo $tour['so_nguoi']; ?> người
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                            
-                            <div class="d-grid gap-2">
-                                <a href="index.php?act=hdv/tour_detail&id=<?php echo $tour['id']; ?>" 
-                                   class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-eye"></i> Xem chi tiết
-                                </a>
-                                <?php if ($tour['trang_thai'] === 'DangChay' || $tour['trang_thai'] === 'SapKhoiHanh'): ?>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="index.php?act=hdv/khach&tour_id=<?php echo $tour['id']; ?>" 
-                                       class="btn btn-outline-success">
-                                        <i class="bi bi-people"></i> Khách
-                                    </a>
-                                    <a href="index.php?act=hdv/checkin&tour_id=<?php echo $tour['id']; ?>" 
-                                       class="btn btn-outline-info">
-                                        <i class="bi bi-check2-square"></i> Check-in
-                                    </a>
-                                    <a href="index.php?act=hdv/nhat_ky&tour_id=<?php echo $tour['id']; ?>" 
-                                       class="btn btn-outline-warning">
-                                        <i class="bi bi-journal-text"></i> Nhật ký
-                                    </a>
-                                </div>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
+    .filter-tab:hover,
+    .filter-tab.active {
+        background: var(--accent-gold);
+        color: var(--primary-dark);
+        border-color: var(--accent-gold);
+    }
+
+    .tour-card {
+        background: rgba(45, 45, 45, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(10px);
+        transition: all 0.3s;
+        overflow: hidden;
+    }
+
+    .tour-card:hover {
+        border-color: var(--accent-gold);
+        transform: translateY(-5px);
+    }
+
+    .tour-card-header {
+        padding: 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+    }
+
+    .tour-card-body {
+        padding: 20px;
+    }
+
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 2px;
+        font-size: 11px;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .status-SapKhoiHanh {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+        border: 1px solid rgba(102, 126, 234, 0.3);
+    }
+
+    .status-DangChay {
+        background: rgba(237, 137, 54, 0.2);
+        color: #ed8936;
+        border: 1px solid rgba(237, 137, 54, 0.3);
+    }
+
+    .status-HoanThanh {
+        background: rgba(72, 187, 120, 0.2);
+        color: #48bb78;
+        border: 1px solid rgba(72, 187, 120, 0.3);
+    }
+
+    .status-DaHuy {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+        border: 1px solid rgba(220, 53, 69, 0.3);
+    }
+
+    .tour-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        font-size: 13px;
+        color: var(--text-muted);
+    }
+
+    .info-item strong {
+        color: var(--text-light);
+        margin-right: 5px;
+    }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <h2 style="font-size: 24px; letter-spacing: 1px;">🗺️ Lịch trình Tour</h2>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs">
+    <a href="index.php?act=hdv/tours" class="filter-tab <?php echo (!isset($_GET['trang_thai']) || $_GET['trang_thai'] === '') ? 'active' : ''; ?>">
+        Tất cả
+    </a>
+    <a href="index.php?act=hdv/tours&trang_thai=SapKhoiHanh" class="filter-tab <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] === 'SapKhoiHanh') ? 'active' : ''; ?>">
+        Sắp khởi hành
+    </a>
+    <a href="index.php?act=hdv/tours&trang_thai=DangChay" class="filter-tab <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] === 'DangChay') ? 'active' : ''; ?>">
+        Đang chạy
+    </a>
+    <a href="index.php?act=hdv/tours&trang_thai=HoanThanh" class="filter-tab <?php echo (isset($_GET['trang_thai']) && $_GET['trang_thai'] === 'HoanThanh') ? 'active' : ''; ?>">
+        Hoàn thành
+    </a>
+</div>
+
+<!-- Tours List -->
+<?php if (!empty($tours)): ?>
+    <?php foreach ($tours as $tour): ?>
+    <div class="tour-card">
+        <div class="tour-card-header">
+            <div>
+                <h4 style="margin: 0 0 10px 0; font-size: 18px; letter-spacing: 0.5px;">
+                    <?php echo htmlspecialchars($tour['ten_tour'] ?? 'N/A'); ?>
+                </h4>
+                <div style="font-size: 12px; color: var(--text-muted);">
+                    Lịch khởi hành ID: #<?php echo htmlspecialchars($tour['id'] ?? 'N/A'); ?>
                 </div>
-                <?php endforeach; ?>
             </div>
-        <?php else: ?>
-            <div class="alert alert-info">
-                <i class="bi bi-info-circle"></i> 
+            <span class="status-badge status-<?php echo htmlspecialchars($tour['trang_thai'] ?? ''); ?>">
                 <?php 
-                $filter = $_GET['status'] ?? 'all';
-                if ($filter === 'all') {
-                    echo 'Hiện tại bạn chưa có tour nào.';
-                } else {
-                    echo 'Không có tour nào trong trạng thái này.';
-                }
+                $statusLabels = [
+                    'SapKhoiHanh' => 'Sắp khởi hành',
+                    'DangChay' => 'Đang chạy',
+                    'HoanThanh' => 'Hoàn thành',
+                    'DaHuy' => 'Đã hủy'
+                ];
+                echo $statusLabels[$tour['trang_thai'] ?? ''] ?? $tour['trang_thai'] ?? 'N/A';
                 ?>
+            </span>
+        </div>
+        <div class="tour-card-body">
+            <div class="tour-info">
+                <div class="info-item">
+                    <strong>📅 Ngày khởi hành:</strong>
+                    <?php echo !empty($tour['ngay_khoi_hanh']) ? date('d/m/Y', strtotime($tour['ngay_khoi_hanh'])) : 'N/A'; ?>
+                </div>
+                <div class="info-item">
+                    <strong>👥 Số người:</strong>
+                    <?php echo htmlspecialchars($tour['so_nguoi'] ?? 'N/A'); ?>
+                </div>
+                <div class="info-item">
+                    <strong>📍 Điểm tập trung:</strong>
+                    <?php echo htmlspecialchars($tour['diem_tap_trung'] ?? 'Chưa xác định'); ?>
+                </div>
+                <?php if (!empty($tour['ghi_chu'])): ?>
+                <div class="info-item" style="grid-column: 1 / -1;">
+                    <strong>📝 Ghi chú:</strong>
+                    <?php echo htmlspecialchars($tour['ghi_chu']); ?>
+                </div>
+                <?php endif; ?>
             </div>
-        <?php endif; ?>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="index.php?act=hdv/tour_detail&id=<?php echo $tour['tour_id'] ?? ''; ?>" 
+                   class="btn btn-primary btn-sm">
+                    Xem chi tiết
+                </a>
+                <a href="index.php?act=hdv/lich_trinh_chi_tiet&id=<?php echo $tour['id'] ?? ''; ?>" 
+                   class="btn btn-secondary btn-sm">
+                    Lịch trình chi tiết
+                </a>
+                <?php if (isset($tour['phan_bo_trang_thai']) && $tour['phan_bo_trang_thai'] === 'ChoXacNhan'): ?>
+                <a href="index.php?act=hdv/xacNhanPhanBo&id=<?php echo $tour['phan_bo_id'] ?? ''; ?>" 
+                   class="btn btn-secondary btn-sm" 
+                   style="background: rgba(72, 187, 120, 0.2); color: #48bb78; border-color: rgba(72, 187, 120, 0.3);">
+                    Xác nhận phân bổ
+                </a>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <div class="card" style="padding: 60px 20px; text-align: center; color: var(--text-muted);">
+        <div style="font-size: 64px; margin-bottom: 20px; opacity: 0.5;">📭</div>
+        <h5 style="margin-bottom: 10px;">Chưa có tour nào</h5>
+        <p>Hiện tại bạn chưa được phân bổ tour nào.</p>
+    </div>
+<?php endif; ?>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php
+$content = ob_get_clean();
+require __DIR__ . '/../layouts/aventura.php';
+?>

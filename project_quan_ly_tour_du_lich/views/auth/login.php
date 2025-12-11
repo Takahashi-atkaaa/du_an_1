@@ -14,6 +14,7 @@
         }
         
         body {
+            background: #1a1a1a;
             background-image: url('<?php echo BASE_URL; ?>public/images/logos/hinh-nen-viet-nam-4k10.jpg');
             background-size: cover;
             background-position: center;
@@ -23,7 +24,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             position: relative;
         }
         
@@ -35,7 +36,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.3);
+            background: rgba(26, 26, 26, 0.85);
             z-index: 1;
         }
         
