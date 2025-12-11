@@ -29,6 +29,22 @@ ON DUPLICATE KEY UPDATE dia_chi = VALUES(dia_chi);
 
 -- ============================================================
 -- 3. TẠO HDV
+-- ============================================================
+-- Xóa nhan_su cũ nếu có (tránh conflict)
+DELETE FROM nhan_su WHERE nhan_su_id = 210;
+
+-- Xóa nguoi_dung cũ theo ID hoặc ten_dang_nhap (tránh duplicate key)
+DELETE FROM nguoi_dung WHERE id = 210 OR ten_dang_nhap = 'hdv_test';
+
+-- Tạo người dùng HDV
+INSERT INTO nguoi_dung (id, ten_dang_nhap, ho_ten, email, so_dien_thoai, vai_tro, mat_khau, ngay_tao)
+VALUES 
+    (210, 'hdv_test', 'HDV Test Full', 'hdvtestfull@test.com', '0955555555', 'HDV', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW());
+
+-- Tạo nhân sự HDV (sau khi đã có nguoi_dung)
+INSERT INTO nhan_su (nhan_su_id, nguoi_dung_id, vai_tro)
+VALUES 
+    (210, 210, 'HDV');
 
 -- ============================================================
 -- 4. TẠO TOUR
@@ -99,9 +115,11 @@ VALUES
 
 -- ============================================================
 -- 10. TẠO TOUR_CHECKIN (Danh sách khách chi tiết)
--- Đảm bảo số lượng khách khớp với so_nguoi trong booking
+-- LƯU Ý: 
+-- - Khách đặt tour (có booking) → Cần đăng ký (nguoi_dung, khach_hang)
+-- - Khách check-in (không có booking) → KHÔNG cần đăng ký, chỉ cần thông tin trong tour_checkin
 -- ============================================================
-DELETE FROM tour_checkin WHERE booking_id IN (200, 201, 202, 203) AND lich_khoi_hanh_id = 200;
+DELETE FROM tour_checkin WHERE lich_khoi_hanh_id = 200;
 
 -- Booking 200: 2 người (khach_hang_id = 200)
 INSERT INTO tour_checkin (booking_id, khach_hang_id, lich_khoi_hanh_id, ho_ten, so_cmnd, so_passport, ngay_sinh, gioi_tinh, quoc_tich, so_dien_thoai, email, dia_chi, trang_thai)
@@ -181,15 +199,153 @@ VALUES
     (202, 'phong_o', 'Phòng đơn', 'Yêu cầu phòng đơn riêng, không ở chung', 'thap', 'moi', 202),
     (203, 'khac', 'Yêu cầu đặc biệt về visa', 'Cần hỗ trợ đặc biệt về thủ tục visa và giấy tờ', 'trung_binh', 'moi', 203);
 
+-- ============================================================
+-- 13. TẠO NHÀ CUNG CẤP
+-- ============================================================
+DELETE FROM nguoi_dung WHERE id IN (220, 221, 222);
+DELETE FROM nha_cung_cap WHERE id_nha_cung_cap IN (220, 221, 222);
+
+-- Tạo người dùng nhà cung cấp
+INSERT INTO nguoi_dung (id, ten_dang_nhap, ho_ten, email, so_dien_thoai, vai_tro, mat_khau, ngay_tao)
+VALUES 
+    (220, 'ncc_khachsan', 'Nhà cung cấp Khách sạn', 'ncckhachsan@test.com', '0966666666', 'NhaCungCap', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW()),
+    (221, 'ncc_nhahang', 'Nhà cung cấp Nhà hàng', 'nccnhahang@test.com', '0977777777', 'NhaCungCap', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW()),
+    (222, 'ncc_xe', 'Nhà cung cấp Xe', 'nccxe@test.com', '0988888888', 'NhaCungCap', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', NOW())
+ON DUPLICATE KEY UPDATE ho_ten = VALUES(ho_ten), email = VALUES(email);
+
+-- Tạo nhà cung cấp
+INSERT INTO nha_cung_cap (id_nha_cung_cap, nguoi_dung_id, ten_don_vi, loai_dich_vu, dia_chi, lien_he, mo_ta, danh_gia_tb)
+VALUES 
+    (220, 220, 'Khách sạn Tokyo Grand', 'KhachSan', '123 Shibuya, Tokyo, Nhật Bản', '0987654321', 'Khách sạn 4 sao tại trung tâm Tokyo, gần các điểm tham quan nổi tiếng', 4.5),
+    (221, 221, 'Nhà hàng Sushi Master', 'NhaHang', '456 Ginza, Tokyo, Nhật Bản', '0987654322', 'Nhà hàng sushi truyền thống Nhật Bản, phục vụ các món ăn cao cấp', 4.8),
+    (222, 222, 'Công ty Vận chuyển Nhật Bản', 'Xe', '789 Shinjuku, Tokyo, Nhật Bản', '0987654323', 'Dịch vụ xe du lịch chuyên nghiệp, xe mới, tài xế kinh nghiệm', 4.7)
+ON DUPLICATE KEY UPDATE ten_don_vi = VALUES(ten_don_vi), mo_ta = VALUES(mo_ta);
+
+-- ============================================================
+-- 14. TẠO DỊCH VỤ NHÀ CUNG CẤP
+-- ============================================================
+DELETE FROM dich_vu_nha_cung_cap WHERE nha_cung_cap_id IN (220, 221, 222);
+
+INSERT INTO dich_vu_nha_cung_cap (nha_cung_cap_id, ten_dich_vu, mo_ta, loai_dich_vu, gia_tham_khao, don_vi_tinh, cong_suat_toi_da, thoi_gian_xu_ly, trang_thai)
+VALUES 
+    (220, 'Phòng đôi tiêu chuẩn', 'Phòng đôi tiêu chuẩn 4 sao, view đẹp, đầy đủ tiện nghi', 'KhachSan', 2500000.00, 'phòng/đêm', 20, '2 giờ', 'HoatDong'),
+    (220, 'Phòng đơn cao cấp', 'Phòng đơn cao cấp với view thành phố', 'KhachSan', 1800000.00, 'phòng/đêm', 10, '2 giờ', 'HoatDong'),
+    (221, 'Set menu Sushi Omakase', 'Set menu sushi cao cấp do đầu bếp chế biến', 'NhaHang', 1500000.00, 'người', 30, '1 giờ', 'HoatDong'),
+    (221, 'Bữa tối Kaiseki', 'Bữa tối truyền thống Nhật Bản đầy đủ các món', 'NhaHang', 2000000.00, 'người', 25, '1.5 giờ', 'HoatDong'),
+    (222, 'Xe 16 chỗ', 'Xe du lịch 16 chỗ ngồi, có điều hòa, wifi', 'Xe', 5000000.00, 'xe/ngày', 5, '30 phút', 'HoatDong'),
+    (222, 'Xe 29 chỗ', 'Xe du lịch 29 chỗ ngồi, tiện nghi cao cấp', 'Xe', 8000000.00, 'xe/ngày', 3, '30 phút', 'HoatDong');
+
+-- ============================================================
+-- 15. TẠO PHÂN BỔ DỊCH VỤ
+-- ============================================================
+DELETE FROM phan_bo_dich_vu WHERE lich_khoi_hanh_id = 200;
+
+INSERT INTO phan_bo_dich_vu (lich_khoi_hanh_id, nha_cung_cap_id, loai_dich_vu, ten_dich_vu, so_luong, don_vi, ngay_bat_dau, ngay_ket_thuc, gio_bat_dau, gio_ket_thuc, dia_diem, gia_tien, ghi_chu, trang_thai, thoi_gian_xac_nhan)
+VALUES 
+    (200, 220, 'KhachSan', 'Phòng đôi tiêu chuẩn - Tokyo', 10, 'phòng', '2025-12-02', '2025-12-06', '14:00:00', '11:00:00', 'Khách sạn Tokyo Grand', 10000000.00, 'Đặt 10 phòng đôi cho đoàn', 'DaXacNhan', NOW()),
+    (200, 220, 'KhachSan', 'Phòng đơn cao cấp - Nagoya', 2, 'phòng', '2025-12-03', '2025-12-04', '14:00:00', '11:00:00', 'Khách sạn Nagoya Plaza', 3600000.00, 'Đặt 2 phòng đơn tại Nagoya', 'DaXacNhan', NOW()),
+    (200, 221, 'NhaHang', 'Bữa tối Kaiseki - Tokyo', 8, 'người', '2025-12-02', '2025-12-02', '18:00:00', '20:00:00', 'Nhà hàng Sushi Master', 16000000.00, 'Bữa tối chào mừng đoàn', 'DaXacNhan', NOW()),
+    (200, 222, 'Xe', 'Xe 29 chỗ - Tour 5 ngày', 1, 'xe', '2025-12-02', '2025-12-06', '08:00:00', '18:00:00', 'Toàn bộ hành trình', 32000000.00, 'Xe phục vụ suốt tour', 'DaXacNhan', NOW());
+
+-- ============================================================
+-- 16. TẠO NHẬT KÝ TOUR
+-- ============================================================
+DELETE FROM nhat_ky_tour WHERE tour_id = 100;
+
+INSERT INTO nhat_ky_tour (tour_id, nhan_su_id, loai_nhat_ky, tieu_de, noi_dung, cach_xu_ly, thoi_tiet, ngay_ghi)
+VALUES 
+    (100, 2, 'hanh_trinh', 'Khởi hành từ Hà Nội', 'Đoàn đã tập trung đầy đủ tại sân bay Nội Bài. Tất cả khách đều có mặt đúng giờ. Thủ tục check-in diễn ra suôn sẻ.', 'Đã hoàn tất thủ tục, chờ lên máy bay', 'Trời quang, không mưa', '2025-12-02 21:00:00'),
+    (100, 2, 'hoat_dong', 'Tham quan Lâu đài Nagoya', 'Đoàn đã đến tham quan Lâu đài Nagoya. Khách rất thích thú với kiến trúc cổ kính và lịch sử của lâu đài.', 'Tiếp tục hành trình theo lịch trình', 'Nắng đẹp, nhiệt độ 20°C', '2025-12-03 10:30:00'),
+    (100, 2, 'hanh_trinh', 'Đến Núi Phú Sĩ', 'Đoàn đã đến khu vực Núi Phú Sĩ. Thời tiết tốt, có thể nhìn thấy đỉnh núi rõ ràng. Khách rất phấn khích.', 'Chụp ảnh và tham quan theo lịch trình', 'Trời quang, nhìn thấy đỉnh núi', '2025-12-04 09:00:00'),
+    (100, 2, 'su_co', 'Một khách bị say xe', 'Có một khách bị say xe khi di chuyển từ Nagoya đến Kawaguchiko. Đã cho uống thuốc chống say xe.', 'Đã xử lý, khách đã ổn định. Tiếp tục hành trình', 'Nắng, nhiệt độ 18°C', '2025-12-04 11:00:00');
+
+-- ============================================================
+-- 17. TẠO ĐÁNH GIÁ
+-- ============================================================
+DELETE FROM danh_gia WHERE tour_id = 100 OR nhan_su_id = 2;
+
+INSERT INTO danh_gia (khach_hang_id, tour_id, nhan_su_id, loai_danh_gia, tieu_chi, loai_dich_vu, diem, noi_dung, ngay_danh_gia)
+VALUES 
+    (200, 100, 2, 'Tour', 'Chất lượng tour', 'Tour', 5, 'Tour rất tuyệt vời! Hướng dẫn viên nhiệt tình, lịch trình hợp lý, các điểm tham quan đẹp. Sẽ quay lại lần sau.', NOW()),
+    (201, 100, 2, 'Tour', 'Chất lượng tour', 'Tour', 4, 'Tour tốt, nhưng thời gian ở một số điểm hơi gấp. HDV rất chuyên nghiệp.', NOW()),
+    (202, 100, 2, 'NhanSu', 'Chuyên môn', 'HDV', 5, 'HDV rất am hiểu về văn hóa Nhật Bản, giải thích rõ ràng, nhiệt tình hỗ trợ khách.', NOW()),
+    (203, 100, 2, 'NhanSu', 'Thái độ phục vụ', 'HDV', 5, 'HDV có thái độ phục vụ rất tốt, luôn sẵn sàng giúp đỡ khách hàng.', NOW());
+
+-- ============================================================
+-- 18. TẠO ĐÁNH GIÁ HDV
+-- ============================================================
+DELETE FROM danh_gia_hdv WHERE nhan_su_id = 2 AND tour_id = 100;
+
+INSERT INTO danh_gia_hdv (tour_id, nhan_su_id, khach_hang_id, diem_chuyen_mon, diem_thai_do, diem_giao_tiep, diem_tong, noi_dung_danh_gia, ngay_danh_gia)
+VALUES 
+    (100, 2, 200, 5, 5, 5, 5.00, 'HDV rất chuyên nghiệp, am hiểu sâu về địa điểm tham quan. Thái độ phục vụ tuyệt vời!', NOW()),
+    (100, 2, 201, 4, 5, 4, 4.33, 'HDV tốt, nhưng có thể cải thiện thêm về kỹ năng giao tiếp.', NOW()),
+    (100, 2, 202, 5, 5, 5, 5.00, 'HDV xuất sắc! Rất hài lòng với dịch vụ.', NOW());
+
+-- ============================================================
+-- 19. TẠO PHẢN HỒI HDV
+-- ============================================================
+DELETE FROM phan_hoi_hdv WHERE tour_id = 100 AND hdv_id = 2;
+
+INSERT INTO phan_hoi_hdv (tour_id, hdv_id, loai_danh_gia, ten_doi_tuong, diem_danh_gia, tieu_de, noi_dung, diem_manh, diem_yeu, de_xuat, trang_thai, ngay_tao)
+VALUES 
+    (100, 2, 'KhachSan', 'Khách sạn Tokyo Grand', 4, 'Đánh giá dịch vụ khách sạn', 'Khách sạn có vị trí tốt, phòng sạch sẽ, nhưng dịch vụ ăn sáng cần cải thiện.', 'Vị trí đẹp, phòng sạch sẽ', 'Dịch vụ ăn sáng chưa đa dạng', 'Nên cải thiện menu ăn sáng', 'moi', NOW()),
+    (100, 2, 'NhaHang', 'Nhà hàng Sushi Master', 5, 'Đánh giá nhà hàng', 'Nhà hàng tuyệt vời! Món ăn ngon, phục vụ chuyên nghiệp, không gian đẹp.', 'Món ăn ngon, phục vụ tốt', 'Không có', 'Tiếp tục duy trì chất lượng', 'da_xem', NOW()),
+    (100, 2, 'Xe', 'Công ty Vận chuyển', 4, 'Đánh giá dịch vụ xe', 'Xe mới, sạch sẽ, tài xế lái an toàn. Tuy nhiên, cần cải thiện wifi trên xe.', 'Xe mới, tài xế an toàn', 'Wifi không ổn định', 'Cải thiện chất lượng wifi', 'moi', NOW());
+
+-- ============================================================
+-- 20. TẠO THÔNG BÁO
+-- ============================================================
+DELETE FROM thong_bao WHERE id >= 200 AND id < 210;
+
+INSERT INTO thong_bao (id, tieu_de, noi_dung, loai_thong_bao, muc_do_uu_tien, nguoi_gui_id, nguoi_nhan_id, vai_tro_nhan, trang_thai, thoi_gian_gui, created_at)
+VALUES 
+    (200, 'Tour sắp khởi hành', 'Tour NAGOYA – PHÚ SĨ – TOKYO sẽ khởi hành vào ngày 02/12/2025. Vui lòng chuẩn bị đầy đủ giấy tờ và hành lý.', 'KhachHang', 'Cao', 1, NULL, 'KhachHang', 'DaGui', NOW(), NOW()),
+    (201, 'Thông báo cho HDV', 'Bạn đã được phân bổ làm HDV cho tour NAGOYA – PHÚ SĨ – TOKYO. Vui lòng xem chi tiết lịch trình.', 'HDV', 'Cao', 1, 2, 'HDV', 'DaGui', NOW(), NOW()),
+    (202, 'Yêu cầu đặc biệt cần xử lý', 'Có yêu cầu đặc biệt về dị ứng hải sản cần được xử lý cho tour sắp tới.', 'HDV', 'TrungBinh', 1, 2, 'HDV', 'DaGui', NOW(), NOW()),
+    (203, 'Đánh giá tour', 'Cảm ơn bạn đã tham gia tour. Vui lòng dành vài phút để đánh giá tour của chúng tôi.', 'KhachHang', 'Thap', 1, NULL, 'KhachHang', 'DaGui', NOW(), NOW());
+
+-- ============================================================
+-- 21. TẠO GIAO DỊCH TÀI CHÍNH
+-- ============================================================
+DELETE FROM giao_dich_tai_chinh WHERE id >= 200 AND id < 210;
+
+INSERT INTO giao_dich_tai_chinh (id, tour_id, booking_id, khach_hang_id, loai, loai_doi_tuong, doi_tuong_id, loai_giao_dich, so_tien, mo_ta, nguoi_thuc_hien_id, ngay_giao_dich)
+VALUES 
+    (200, 100, 200, 200, 'Thu', 'KhachHang', 200, 'Booking', 65980000.00, 'Thanh toán booking #200 - Tour NAGOYA – PHÚ SĨ – TOKYO', 200, '2025-12-01'),
+    (201, 100, 201, 201, 'Thu', 'KhachHang', 201, 'Booking', 50000000.00, 'Cọc booking #201 - Tour NAGOYA – PHÚ SĨ – TOKYO', 201, '2025-12-01'),
+    (202, 100, NULL, NULL, 'Chi', 'NhaCungCap', 220, 'ChiPhi', 10000000.00, 'Thanh toán khách sạn Tokyo Grand - 10 phòng', 1, '2025-12-02'),
+    (203, 100, NULL, NULL, 'Chi', 'NhaCungCap', 221, 'ChiPhi', 16000000.00, 'Thanh toán nhà hàng Sushi Master - Bữa tối Kaiseki', 1, '2025-12-02'),
+    (204, 100, NULL, NULL, 'Chi', 'NhaCungCap', 222, 'ChiPhi', 32000000.00, 'Thanh toán dịch vụ xe - Tour 5 ngày', 1, '2025-12-02');
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================
 -- HOÀN THÀNH!
 -- ============================================================
--- Tour ID: 100
--- Lịch khởi hành ID: 200
--- HDV ID: 2 (nhan_su_id = 2, nguoi_dung_id = 6)
--- Số booking: 4
--- Tổng số khách: 8
+-- Dữ liệu mẫu đã tạo:
+-- ✅ Người dùng: 4 khách hàng + 1 HDV + 3 nhà cung cấp = 8 người
+-- ✅ Khách hàng: 4 khách hàng
+-- ✅ Nhân sự: 1 HDV (nhan_su_id = 210)
+-- ✅ Tour: 1 tour (tour_id = 100)
+-- ✅ Lịch trình tour: 6 ngày
+-- ✅ Lịch khởi hành: 1 lịch (id = 200)
+-- ✅ Phân bổ nhân sự: 1 HDV
+-- ✅ Booking: 4 booking (200, 201, 202, 203)
+-- ✅ Điểm check-in: 4 điểm
+-- ✅ Tour check-in: 8 khách (từ booking + khách độc lập)
+-- ✅ Check-in khách: 4 booking đã check-in
+-- ✅ Yêu cầu đặc biệt: 4 yêu cầu
+-- ✅ Nhà cung cấp: 3 nhà cung cấp (khách sạn, nhà hàng, xe)
+-- ✅ Dịch vụ nhà cung cấp: 6 dịch vụ
+-- ✅ Phân bổ dịch vụ: 4 dịch vụ đã phân bổ
+-- ✅ Nhật ký tour: 4 nhật ký
+-- ✅ Đánh giá: 4 đánh giá
+-- ✅ Đánh giá HDV: 3 đánh giá
+-- ✅ Phản hồi HDV: 3 phản hồi
+-- ✅ Thông báo: 4 thông báo
+-- ✅ Giao dịch tài chính: 5 giao dịch
 -- ============================================================
 
