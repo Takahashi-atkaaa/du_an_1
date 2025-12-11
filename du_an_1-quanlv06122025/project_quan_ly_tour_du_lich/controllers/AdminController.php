@@ -1996,4 +1996,22 @@ class AdminController {
             exit();
         }
     }
+    
+    public function quanLyLuongHDV() {
+        require_once __DIR__ . '/LuongThuongController.php';
+        $controller = new LuongThuongController();
+        $controller->quanLyLuongHDV();
+    }
+    
+    public function approveSalary() {
+        require_once __DIR__ . '/LuongThuongController.php';
+        $controller = new LuongThuongController();
+        $controller->approveSalary();
+    }
+    
+    public function approveBonus() {
+        require_once __DIR__ . '/LuongThuongController.php';
+        $controller = new LuongThuongController();
+        $controller->approveBonus();
+    }
 }
