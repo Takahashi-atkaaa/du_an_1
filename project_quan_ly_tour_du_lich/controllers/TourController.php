@@ -148,102 +148,140 @@ class TourController {
         }
     }
     
-    public function update() {
-        // requireRole('Admin');
-        $id = $_POST['id'] ?? $_GET['id'] ?? null;
-        $id = $id !== null ? (int)$id : null;
+   public function update() {
+    $id = $_POST['id'] ?? $_GET['id'] ?? null;
+    $id = $id !== null ? (int)$id : null;
+    
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
+        $hanhDong = $_POST['hanh_dong'] ?? 'update';
+        $data = [
+            'ten_tour' => $_POST['ten_tour'] ?? '',
+            'loai_tour' => $_POST['loai_tour'] ?? 'TrongNuoc',
+            'mo_ta' => $_POST['mo_ta'] ?? '',
+            'gia_co_ban' => isset($_POST['gia_co_ban']) ? (float)$_POST['gia_co_ban'] : 0,
+            'chinh_sach' => $_POST['chinh_sach'] ?? null,
+            'id_nha_cung_cap' => isset($_POST['id_nha_cung_cap']) && $_POST['id_nha_cung_cap'] !== '' ? (int)$_POST['id_nha_cung_cap'] : null,
+            'trang_thai' => $_POST['trang_thai'] ?? 'HoatDong'
+        ];
         
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && $id) {
-            $hanhDong = $_POST['hanh_dong'] ?? 'update';
-            $data = [
-                'ten_tour' => $_POST['ten_tour'] ?? '',
-                'loai_tour' => $_POST['loai_tour'] ?? 'TrongNuoc',
-                'mo_ta' => $_POST['mo_ta'] ?? '',
-                'gia_co_ban' => isset($_POST['gia_co_ban']) ? (float)$_POST['gia_co_ban'] : 0,
-                'chinh_sach' => $_POST['chinh_sach'] ?? null,
-                'id_nha_cung_cap' => isset($_POST['id_nha_cung_cap']) && $_POST['id_nha_cung_cap'] !== '' ? (int)$_POST['id_nha_cung_cap'] : null,
-                'trang_thai' => $_POST['trang_thai'] ?? 'HoatDong'
-            ];
-            
-            $lichTrinhPost = isset($_POST['lich_trinh']) && is_array($_POST['lich_trinh']) ? array_values($_POST['lich_trinh']) : [];
-            $lichKhoiHanhPost = isset($_POST['lich_khoi_hanh']) && is_array($_POST['lich_khoi_hanh']) ? $_POST['lich_khoi_hanh'] : [];
-            $hinhAnhPost = isset($_POST['hinh_anh']) && is_array($_POST['hinh_anh']) ? array_values($_POST['hinh_anh']) : [];
+        $lichTrinhPost = isset($_POST['lich_trinh']) && is_array($_POST['lich_trinh']) ? array_values($_POST['lich_trinh']) : [];
+        $lichKhoiHanhPost = isset($_POST['lich_khoi_hanh']) && is_array($_POST['lich_khoi_hanh']) ? $_POST['lich_khoi_hanh'] : [];
+        $hinhAnhPost = isset($_POST['hinh_anh']) && is_array($_POST['hinh_anh']) ? array_values($_POST['hinh_anh']) : [];
 
-            $this->xuLyUploadHinhAnh($hinhAnhPost, 'hinh_anh_file');
-            $hasImageError = false;
-            if (isset($_SESSION['image_upload_error'])) {
-                $hasImageError = true;
-                unset($_SESSION['image_upload_error']);
-            }
+        // Upload hình ảnh
+        $this->xuLyUploadHinhAnh($hinhAnhPost, 'hinh_anh_file');
+        $hasImageError = false;
+        if (isset($_SESSION['image_upload_error'])) {
+            $hasImageError = true;
+            unset($_SESSION['image_upload_error']);
+        }
 
-            if ($hanhDong === 'preview') {
-                $tour = array_merge($this->model->findById($id) ?: [], $data);
-                $lichTrinhList = $lichTrinhPost;
-                $lichKhoiHanhList = !empty($lichKhoiHanhPost) ? [$lichKhoiHanhPost] : $this->model->getLichKhoiHanhByTourId($id);
-                $hinhAnhList = $hinhAnhPost;
-                $anhChinh = $this->chonAnhChinh($hinhAnhList);
-                require 'views/admin/tao_tour.php';
-                return;
-            }
-            if ($hasImageError) {
-                $tour = array_merge($this->model->findById($id) ?: [], $data);
-                $lichTrinhList = $lichTrinhPost;
-                $lichKhoiHanhList = !empty($lichKhoiHanhPost) ? [$lichKhoiHanhPost] : $this->model->getLichKhoiHanhByTourId($id);
-                $hinhAnhList = $hinhAnhPost;
-                $anhChinh = $this->chonAnhChinh($hinhAnhList);
-                require 'views/admin/tao_tour.php';
-                return;
-            }
-
-            $this->model->update($id, $data);
-            
-            // Xóa và thêm lại lịch trình
-            $this->model->deleteLichTrinhByTourId($id);
-            if (!empty($lichTrinhPost)) {
-                foreach ($lichTrinhPost as $index => $lichTrinh) {
-                    $lichTrinh['ngay_thu'] = isset($lichTrinh['ngay_thu']) && $lichTrinh['ngay_thu'] !== '' ? (int)$lichTrinh['ngay_thu'] : ($index + 1);
-                    if (!empty($lichTrinh['dia_diem'])) {
-                        $this->model->insertLichTrinh($id, $lichTrinh);
-                    }
-                }
-            }
-            
-            // Xóa và thêm lại lịch khởi hành
-            $this->model->deleteLichKhoiHanhByTourId($id);
-            if (!empty($lichKhoiHanhPost) && is_array($lichKhoiHanhPost)) {
-                if (!empty($lichKhoiHanhPost['ngay_khoi_hanh'])) {
-                    $this->model->insertLichKhoiHanh($id, $lichKhoiHanhPost);
-                }
-            }
-            
-            // Xóa và thêm lại hình ảnh
-            $this->model->deleteHinhAnhByTourId($id);
-            if (!empty($hinhAnhPost)) {
-                foreach ($hinhAnhPost as $hinhAnh) {
-                    if (!empty($hinhAnh['url_anh'])) {
-                        $this->model->insertHinhAnh($id, $hinhAnh);
-                    }
-                }
-            }
-            
-       
-            // Redirect với thông báo thành công
-            $_SESSION['success'] = 'Cập nhật tour thành công!';
-            header('Location: index.php?act=admin/quanLyTour');
-            exit();
-        } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && $id) {
-            $tour = $this->model->findById($id);
-            if (!$tour) {
-                header('Location: index.php?act=admin/quanLyTour');
-                exit();
-            }
-            $lichTrinhList = $this->model->getLichTrinhByTourId($id);
-            $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($id);
-            $hinhAnhList = $this->model->getHinhAnhByTourId($id);
+        // Preview
+        if ($hanhDong === 'preview') {
+            $tour = array_merge($this->model->findById($id) ?: [], $data);
+            $lichTrinhList = $lichTrinhPost;
+            $lichKhoiHanhList = !empty($lichKhoiHanhPost) ? [$lichKhoiHanhPost] : $this->model->getLichKhoiHanhByTourId($id);
+            $hinhAnhList = $hinhAnhPost;
             $anhChinh = $this->chonAnhChinh($hinhAnhList);
             require 'views/admin/tao_tour.php';
+            return;
         }
+
+        // Lỗi hình ảnh
+        if ($hasImageError) {
+            $tour = array_merge($this->model->findById($id) ?: [], $data);
+            $lichTrinhList = $lichTrinhPost;
+            $lichKhoiHanhList = !empty($lichKhoiHanhPost) ? [$lichKhoiHanhPost] : $this->model->getLichKhoiHanhByTourId($id);
+            $hinhAnhList = $hinhAnhPost;
+            $anhChinh = $this->chonAnhChinh($hinhAnhList);
+            require 'views/admin/tao_tour.php';
+            return;
+        }
+
+        // 👉 UPDATE TOUR
+        $this->model->update($id, $data);
+
+        /*  
+        -------------------------------------------------------
+        👉 BƯỚC 1: TẠO LƯƠNG HDV NẾU TOUR HOÀN THÀNH
+        -------------------------------------------------------
+        */
+        if ($data['trang_thai'] === 'HoanThanh') {
+
+            require_once 'models/SalaryModel.php';
+
+            // lấy dữ liệu tour để tính lương
+            $tour = $this->model->findById($id);
+
+            $guideId            = $tour['id_nhan_su'] ?? null;
+            $baseSalary         = $tour['luong_co_ban'] ?? 0;
+            $commissionPercent  = $tour['hoa_hong'] ?? 0;
+            $revenue            = $tour['doanh_thu'] ?? 0;
+
+            $commissionAmount = ($revenue * $commissionPercent) / 100;
+            $total = $baseSalary + $commissionAmount;
+
+            SalaryModel::createSalary([
+                'nhan_su_id' => $guideId,
+                'tour_id' => $id,
+                'base_salary' => $baseSalary,
+                'commission_percentage' => $commissionPercent,
+                'commission_amount' => $commissionAmount,
+                'total_amount' => $total,
+                'payment_status' => 'Pending'
+            ]);
+        }
+
+        // ----------------------------------------------------
+
+        // Lịch trình
+        $this->model->deleteLichTrinhByTourId($id);
+        if (!empty($lichTrinhPost)) {
+            foreach ($lichTrinhPost as $index => $lichTrinh) {
+                $lichTrinh['ngay_thu'] = isset($lichTrinh['ngay_thu']) && $lichTrinh['ngay_thu'] !== '' ? (int)$lichTrinh['ngay_thu'] : ($index + 1);
+                if (!empty($lichTrinh['dia_diem'])) {
+                    $this->model->insertLichTrinh($id, $lichTrinh);
+                }
+            }
+        }
+        
+        // Lịch khởi hành
+        $this->model->deleteLichKhoiHanhByTourId($id);
+        if (!empty($lichKhoiHanhPost) && is_array($lichKhoiHanhPost)) {
+            if (!empty($lichKhoiHanhPost['ngay_khoi_hanh'])) {
+                $this->model->insertLichKhoiHanh($id, $lichKhoiHanhPost);
+            }
+        }
+
+        // Hình ảnh
+        $this->model->deleteHinhAnhByTourId($id);
+        if (!empty($hinhAnhPost)) {
+            foreach ($hinhAnhPost as $hinhAnh) {
+                if (!empty($hinhAnh['url_anh'])) {
+                    $this->model->insertHinhAnh($id, $hinhAnh);
+                }
+            }
+        }
+
+        // Redirect
+        $_SESSION['success'] = 'Cập nhật tour thành công!';
+        header('Location: index.php?act=admin/quanLyTour');
+        exit();
+
+    } else if ($_SERVER['REQUEST_METHOD'] === 'GET' && $id) {
+        $tour = $this->model->findById($id);
+        if (!$tour) {
+            header('Location: index.php?act=admin/quanLyTour');
+            exit();
+        }
+        $lichTrinhList = $this->model->getLichTrinhByTourId($id);
+        $lichKhoiHanhList = $this->model->getLichKhoiHanhByTourId($id);
+        $hinhAnhList = $this->model->getHinhAnhByTourId($id);
+        $anhChinh = $this->chonAnhChinh($hinhAnhList);
+        require 'views/admin/tao_tour.php';
     }
+}
+
     
     public function delete() {
         // requireRole('Admin');
