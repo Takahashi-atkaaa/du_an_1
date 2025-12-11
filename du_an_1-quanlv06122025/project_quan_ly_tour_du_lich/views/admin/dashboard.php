@@ -270,6 +270,12 @@ pieLegend.innerHTML = tourNames.map((name, i) =>
         <p>Quản lý hướng dẫn viên, điều hành và toàn bộ nhân viên</p>
     </a>
 
+    <a href="index.php?act=admin/quanLyLuongHDV" class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h5>Lương & Thưởng HDV</h5>
+        <p>Quản lý lương, thưởng và hoa hồng cho hướng dẫn viên</p>
+    </a>
+
     <a href="index.php?act=admin/quanLyNguoiDung" class="feature-card">
         <div class="feature-icon">👤</div>
         <h5>Quản lý Người dùng</h5>
