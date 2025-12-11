@@ -642,8 +642,15 @@ class AdminController {
         } catch (Exception $e) {
             // ignore if table not exists
         }
-        require 'views/admin/quan_ly_hdv.php';
+    } catch (Exception $e) {
+        $salary_list = [];
     }
+
+    // Truyền dữ liệu sang view
+    // View sẽ dùng: $hdv_list, $groups, $salary_list, $groupId, $q
+    require 'views/admin/quan_ly_hdv.php';
+}
+
 
     public function quanLyHDVCreate() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -1774,10 +1781,9 @@ class AdminController {
         require 'views/admin/chi_tiet_lich_su_xoa_nha_cung_cap.php';
     }
 
-    // ========== QUẢN LÝ YÊU CẦU TOUR TỪ KHÁCH HÀNG ==========
-    
     /**
-     * Quản lý yêu cầu tour từ khách hàng
+     * Quản lý lương & thưởng HDV
+     * Đã chuyển sang module luong_thuong_hoa_hong
      */
     public function quanLyYeuCauTour() {
         require_once 'models/ThongBao.php';
@@ -1799,7 +1805,8 @@ class AdminController {
     }
     
     /**
-     * Xem chi tiết yêu cầu tour và phản hồi
+     * Duyệt/thanh toán lương HDV (AJAX)
+     * Đã chuyển sang module luong_thuong_hoa_hong
      */
     public function chiTietYeuCauTour() {
         // Dùng models đã tạo trong constructor
@@ -1836,7 +1843,8 @@ class AdminController {
     }
     
     /**
-     * Xử lý phản hồi yêu cầu tour
+     * Phê duyệt/từ chối thưởng HDV (AJAX)
+     * Đã chuyển sang module luong_thuong_hoa_hong
      */
     public function phanHoiYeuCauTour() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
