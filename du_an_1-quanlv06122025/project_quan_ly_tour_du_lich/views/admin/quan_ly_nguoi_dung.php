@@ -150,7 +150,15 @@ ob_start();
         border-color: rgba(13, 202, 240, 0.3);
         color: #0dcaf0;
     }
-    <style>
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+</style>
+
+<style>
     .welcome-admin {
         position: relative;
         background: linear-gradient(90deg, #2d2d2d 0%, #3a2e13 100%);
@@ -207,13 +215,6 @@ ob_start();
             <div class="welcome-desc">Chúc bạn một ngày làm việc hiệu quả và vui vẻ.</div>
         </div>
     </div>
-
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--text-muted);
-    }
-</style>
 
 <!-- Page Header -->
 <div class="page-header-section">
