@@ -1,10 +1,24 @@
 <?php
 $pageTitle = 'Quản lý Người dùng';
 $currentPage = 'nguoiDung';
+// Khởi tạo một mảng dữ liệu giả định nếu chưa có (chỉ để minh họa)
+// TRONG CODE THỰC TẾ, DỮ LIỆU NÀY PHẢI ĐƯỢC LẤY TỪ DATABASE
+if (!isset($users)) {
+    $users = [
+        ['id' => 1, 'ten_dang_nhap' => 'admin_01', 'ho_ten' => 'Nguyễn Văn A', 'email' => 'a.nguyen@example.com', 'so_dien_thoai' => '0912345678', 'vai_tro' => 'Admin', 'trang_thai' => 'Hoạt động', 'ngay_tao' => '2023-01-15 10:00:00'],
+        ['id' => 2, 'ten_dang_nhap' => 'huongdanvien_b', 'ho_ten' => 'Lê Thị B', 'email' => 'b.le@example.com', 'so_dien_thoai' => '0901122334', 'vai_tro' => 'HDV', 'trang_thai' => 'Hoạt động', 'ngay_tao' => '2023-03-20 14:30:00'],
+        ['id' => 3, 'ten_dang_nhap' => 'khachhang_c', 'ho_ten' => 'Phạm Văn C', 'email' => 'c.pham@example.com', 'so_dien_thoai' => '0887766554', 'vai_tro' => 'KhachHang', 'trang_thai' => 'Bị khóa', 'ngay_tao' => '2023-05-10 08:45:00'],
+        ['id' => 4, 'ten_dang_nhap' => 'nhacungcap_d', 'ho_ten' => 'Trần Văn D', 'email' => 'd.tran@example.com', 'so_dien_thoai' => '0709988776', 'vai_tro' => 'NhaCungCap', 'trang_thai' => 'Hoạt động', 'ngay_tao' => '2023-07-01 16:20:00'],
+    ];
+}
+
 ob_start();
 ?>
 
 <style>
+/* ================================================= */
+/* PHẦN CSS TỪ GIAO DIỆN CŨ (Đã được giữ nguyên) */
+/* ================================================= */
     .page-header-section {
         background: rgba(45, 45, 45, 0.5);
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -150,7 +164,7 @@ ob_start();
         border-color: rgba(13, 202, 240, 0.3);
         color: #0dcaf0;
     }
-    <style>
+
     .welcome-admin {
         position: relative;
         background: linear-gradient(90deg, #2d2d2d 0%, #3a2e13 100%);
@@ -197,25 +211,118 @@ ob_start();
         color: #fffde7; font-size: 1rem; margin-top: 6px;
         text-shadow: 0 1px 4px #2d2d2d;
     }
-    </style>
-    <!-- Xin chào Quản trị viên -->
-    <div class="welcome-admin">
-        <div class="welcome-glow"></div>
-        <div class="welcome-avatar">👑</div>
-        <div class="welcome-text">
-            <h2 class="welcome-title">Xin chào Quản trị viên!</h2>
-            <div class="welcome-desc">Chúc bạn một ngày làm việc hiệu quả và vui vẻ.</div>
-        </div>
-    </div>
+    /* ================================================= */
+    /* CSS MỚI CHO MODAL/POPUP VÀ FORM */
+    /* ================================================= */
+    .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 1000; 
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.7); 
+        backdrop-filter: blur(5px);
+        padding-top: 50px;
+    }
 
-    .empty-state {
-        text-align: center;
-        padding: 60px 20px;
-        color: var(--text-muted);
+    .modal-content {
+        background-color: rgba(45, 45, 45, 0.9);
+        margin: 5% auto; 
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        width: 90%; 
+        max-width: 600px; 
+        border-radius: 4px;
+        box-shadow: 0 5px 15px rgba(212, 175, 55, 0.2);
+        position: relative;
+        color: var(--text-light);
+    }
+
+    .close-btn {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        transition: color 0.3s;
+    }
+
+    .close-btn:hover,
+    .close-btn:focus {
+        color: var(--accent-gold);
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    #modalTitle {
+        color: var(--accent-gold);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+
+    .modal-form label {
+        display: block;
+        margin-top: 10px;
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: var(--text-light); /* Màu label trong modal */
+    }
+
+    .modal-form input[type="text"], 
+    .modal-form input[type="email"], 
+    .modal-form select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-light);
+        font-family: inherit;
+        box-sizing: border-box;
+        transition: border-color 0.3s;
+    }
+
+    .modal-form select {
+        /* Tạo kiểu dáng đẹp cho select trong form Sửa */
+        background: rgba(255, 255, 255, 0.05) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d4af37' d='M6 9L1 4h10z'/%3E%3C/svg%3E") no-repeat right 10px center;
+        padding-right: 30px;
+        appearance: none;
+    }
+
+    .modal-form input:focus, .modal-form select:focus {
+        outline: none;
+        border-color: #d4af37;
+        box-shadow: 0 0 0 1px #d4af37;
+    }
+
+    .btn-save-modal {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        background: #d4af37;
+        color: #222;
+        font-weight: bold;
+        transition: background 0.3s;
+    }
+
+    .btn-save-modal:hover {
+        background: #ffe082;
     }
 </style>
 
-<!-- Page Header -->
+<div class="welcome-admin">
+    <div class="welcome-glow"></div>
+    <div class="welcome-avatar">👑</div>
+    <div class="welcome-text">
+        <h2 class="welcome-title">Xin chào Quản trị viên!</h2>
+        <div class="welcome-desc">Chúc bạn một ngày làm việc hiệu quả và vui vẻ.</div>
+    </div>
+</div>
+
 <div class="page-header-section">
     <div>
         <h1>👥 Quản lý Người dùng</h1>
@@ -223,7 +330,6 @@ ob_start();
     </div>
 </div>
 
-<!-- Flash -->
 <?php if (!empty($_SESSION['flash'])): ?>
     <div class="alert alert-info">
         <?php echo htmlspecialchars($_SESSION['flash']['message'] ?? ''); ?>
@@ -231,7 +337,6 @@ ob_start();
     <?php unset($_SESSION['flash']); ?>
 <?php endif; ?>
 
-<!-- Search & Filter form -->
 <div class="filter-section">
     <form method="get" action="">
         <input type="hidden" name="act" value="admin/quanLyNguoiDung">
@@ -262,7 +367,6 @@ ob_start();
     </form>
 </div>
 
-<!-- Table -->
 <div class="table-wrapper">
     <div style="padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); display: flex; justify-content: space-between; align-items: center;">
         <h5 style="margin: 0; color: var(--text-light); font-size: 16px;">Danh sách Người dùng</h5>
@@ -273,12 +377,13 @@ ob_start();
             <thead>
                 <tr>
                     <th style="width: 80px;">ID</th>
-                    <th>Tên đăng nhập</th>
+                    <!-- <th>Tên đăng nhập</th> -->
                     <th>Họ tên</th>
                     <th>Email</th>
                     <th>Số điện thoại</th>
                     <th style="width: 150px;">Vai trò</th>
-                    <th style="width: 150px;">Ngày tạo</th>
+                    <!-- <th style="width: 150px;">Ngày tạo</th> -->
+                    <th style="width: 150px; text-align: center;">Hành động</th>
                 </tr>
             </thead>
             <tbody>
@@ -286,7 +391,7 @@ ob_start();
                     <?php foreach ($users as $u): ?>
                         <tr>
                             <td><?php echo htmlspecialchars($u['id']); ?></td>
-                            <td><?php echo htmlspecialchars($u['ten_dang_nhap'] ?? ''); ?></td>
+                            <!-- <td><?php echo htmlspecialchars($u['ten_dang_nhap'] ?? ''); ?></td> -->
                             <td><?php echo htmlspecialchars($u['ho_ten'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($u['email'] ?? ''); ?></td>
                             <td><?php echo htmlspecialchars($u['so_dien_thoai'] ?? '-'); ?></td>
@@ -296,12 +401,29 @@ ob_start();
                                     <?php echo htmlspecialchars($v); ?>
                                 </span>
                             </td>
-                            <td><?php echo htmlspecialchars($u['ngay_tao'] ?? ''); ?></td>
+                            <!-- <td><?php echo htmlspecialchars($u['ngay_tao'] ?? ''); ?></td> -->
+                            <td style="text-align: center;">
+                                <button 
+                                    class="btn btn-sm btn-info view-detail-btn" 
+                                    data-id="<?php echo htmlspecialchars($u['id']); ?>"
+                                    data-user='<?php echo json_encode($u); ?>'
+                                    style="margin-right: 5px;"
+                                >
+                                    👀 Xem
+                                </button>
+                                <button 
+                                    class="btn btn-sm btn-primary edit-btn" 
+                                    data-id="<?php echo htmlspecialchars($u['id']); ?>"
+                                    data-user='<?php echo json_encode($u); ?>'
+                                >
+                                    ✏️ Sửa
+                                </button>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr>
-                        <td colspan="7" class="empty-state">
+                        <td colspan="8" class="empty-state" style="text-align: center; padding: 60px 20px; color: var(--text-muted);">
                             Không có dữ liệu phù hợp.
                         </td>
                     </tr>
@@ -310,6 +432,191 @@ ob_start();
         </table>
     </div>
 </div>
+
+<div id="userModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2 id="modalTitle"></h2>
+        <div id="modalBody">
+            </div>
+        <div id="modalActions" style="margin-top: 20px; text-align: right;">
+            </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('userModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalBody = document.getElementById('modalBody');
+        const modalActions = document.getElementById('modalActions');
+        const closeBtn = document.querySelector('.close-btn');
+
+        // Hàm hiển thị Modal
+        function showModal(title, bodyHTML, actionsHTML = '') {
+            modalTitle.innerHTML = title;
+            modalBody.innerHTML = bodyHTML;
+            modalActions.innerHTML = actionsHTML;
+            modal.style.display = 'block';
+        }
+
+        // Hàm đóng Modal
+        function hideModal() {
+            modal.style.display = 'none';
+        }
+
+        // Đóng Modal khi click nút X
+        closeBtn.onclick = hideModal;
+
+        // Đóng Modal khi click ngoài Modal
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                hideModal();
+            }
+        }
+        
+        // **********************************************
+        // Xử lý nút Xem Chi Tiết
+        // **********************************************
+        document.querySelectorAll('.view-detail-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userData = JSON.parse(this.getAttribute('data-user'));
+
+                // Tạo nội dung HTML cho Xem Chi Tiết
+                const detailHTML = `
+                    <div class="modal-detail-info">
+                        <p><strong>ID:</strong> ${userData.id || 'N/A'}</p>
+                        <p><strong>Ngày tạo:</strong> ${userData.ngay_tao || 'N/A'}</p>
+                        <hr style="border-top: 1px solid rgba(255, 255, 255, 0.1); margin: 15px 0;">
+                        <p><strong>Tên đăng nhập:</strong> ${userData.ten_dang_nhap || '-'}</p>
+                        <p><strong>Họ tên:</strong> ${userData.ho_ten || '-'}</p>
+                        <p><strong>Email:</strong> ${userData.email || '-'}</p>
+                        <p><strong>Số điện thoại:</strong> ${userData.so_dien_thoai || '-'}</p>
+                        <p><strong>Vai trò:</strong> <span class="badge-role badge-${userData.vai_tro || 'KhachHang'}">${userData.vai_tro || 'KhachHang'}</span></p>
+                        <p><strong>Trạng thái:</strong> <span style="font-weight: bold; color: ${userData.trang_thai === 'Hoạt động' ? '#63e6be' : '#ff7b7b'};">${userData.trang_thai || 'N/A'}</span></p>
+                    </div>
+                `;
+
+                showModal('👀 Chi tiết Người dùng: ' + (userData.ho_ten || userData.ten_dang_nhap), detailHTML, '');
+            });
+        });
+
+        // **********************************************
+        // Xử lý nút Sửa (Form với đầy đủ các trường)
+        // **********************************************
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const userData = JSON.parse(this.getAttribute('data-user'));
+
+                // Tạo form Sửa
+                const editFormHTML = `
+                    <form id="editUserForm" class="modal-form">
+                        <div style="display: flex; gap: 20px;">
+                            <div style="flex: 1;">
+                                <label>ID (Chỉ xem)</label>
+                                <input type="text" value="${userData.id}" readonly style="background: rgba(255, 255, 255, 0.03); color: #aaa;">
+                            </div>
+                            <div style="flex: 1;">
+                                <label>Ngày tạo (Chỉ xem)</label>
+                                <input type="text" value="${userData.ngay_tao || 'N/A'}" readonly style="background: rgba(255, 255, 255, 0.03); color: #aaa;">
+                            </div>
+                        </div>
+
+                        <label for="ten_dang_nhap">Tên đăng nhập</label>
+                        <input type="text" id="ten_dang_nhap" name="ten_dang_nhap" value="${userData.ten_dang_nhap || ''}" required>
+
+                        <label for="ho_ten">Họ tên</label>
+                        <input type="text" id="ho_ten" name="ho_ten" value="${userData.ho_ten || ''}" required>
+
+                        <div style="display: flex; gap: 20px;">
+                            <div style="flex: 1;">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" name="email" value="${userData.email || ''}" required>
+                            </div>
+                            <div style="flex: 1;">
+                                <label for="so_dien_thoai">Số điện thoại</label>
+                                <input type="text" id="so_dien_thoai" name="so_dien_thoai" value="${userData.so_dien_thoai || ''}">
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 20px;">
+                            <div style="flex: 1;">
+                                <label for="vai_tro">Vai trò</label>
+                                <select id="vai_tro" name="vai_tro">
+                                    <option value="Admin" ${userData.vai_tro === 'Admin' ? 'selected' : ''}>Admin</option>
+                                    <option value="HDV" ${userData.vai_tro === 'HDV' ? 'selected' : ''}>HDV</option>
+                                    <option value="KhachHang" ${userData.vai_tro === 'KhachHang' || !userData.vai_tro ? 'selected' : ''}>Khách hàng</option>
+                                    <option value="NhaCungCap" ${userData.vai_tro === 'NhaCungCap' ? 'selected' : ''}>Nhà cung cấp</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label for="trang_thai">Trạng thái</label>
+                                <select id="trang_thai" name="trang_thai">
+                                    <option value="Hoạt động" ${userData.trang_thai === 'Hoạt động' ? 'selected' : ''}>Hoạt động</option>
+                                    <option value="Bị khóa" ${userData.trang_thai === 'Bị khóa' ? 'selected' : ''}>Bị khóa</option>
+                                </select>
+                            </div>
+                        </div>
+                        <input type="hidden" name="id" value="${userData.id}">
+                    </form>
+                `;
+                
+                // Thêm nút Lưu
+                const actionsHTML = `
+                    <button type="button" class="btn-save-modal" id="saveEditBtn">
+                        💾 Lưu Thay Đổi
+                    </button>
+                `;
+
+                showModal('✏️ Sửa thông tin Người dùng: ' + (userData.ho_ten || userData.ten_dang_nhap), editFormHTML, actionsHTML);
+                
+                // **********************************************
+                // Xử lý sự kiện Lưu (AJAX) - Cần được triển khai ở Backend
+                // **********************************************
+                document.getElementById('saveEditBtn').addEventListener('click', function() {
+                    const form = document.getElementById('editUserForm');
+                    const formData = new FormData(form);
+                    
+                    const data = {};
+                    formData.forEach((value, key) => (data[key] = value));
+
+                    console.log("Dữ liệu cần gửi đi:", data);
+                    
+                    // --- ĐOẠN CODE AJAX THỰC TẾ CẦN ĐƯỢC BỎ COMMENT VÀ CHỈNH SỬA ---
+                    
+                    fetch('index.php?act=admin/updateUser', { // Thay bằng URL API/Action thực tế của bạn
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            alert('Cập nhật thành công!');
+                            hideModal();
+                            // Tải lại trang hoặc cập nhật DOM
+                            window.location.reload(); 
+                        } else {
+                            alert('Lỗi cập nhật: ' + (result.message || 'Lỗi không xác định'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Lỗi khi gửi AJAX:', error);
+                        alert('Đã xảy ra lỗi hệ thống khi cập nhật.');
+                    });
+                    
+                    
+                    // Gỉa lập:
+                    // alert('Đã giả lập Lưu thành công. Dữ liệu đã được log ra console.');
+                    // hideModal();
+                    // window.location.reload();
+                });
+            });
+        });
+    });
+</script>
 
 <?php
 $content = ob_get_clean();

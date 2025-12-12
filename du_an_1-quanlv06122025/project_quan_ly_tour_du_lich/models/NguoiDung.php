@@ -159,10 +159,22 @@ class NguoiDung
     }
 
     // Cập nhật người dùng
+ 
+
+
+    private $table_name = "nguoi_dung";
+
+ 
+    
+    // Phương thức CẬP NHẬT CHUNG cho Model
     public function update($id, $data) {
         $fields = [];
         $params = [];
         
+        if (isset($data['ten_dang_nhap'])) { // Thêm ten_dang_nhap
+            $fields[] = "ten_dang_nhap = ?";
+            $params[] = $data['ten_dang_nhap'];
+        }
         if (isset($data['ho_ten'])) {
             $fields[] = "ho_ten = ?";
             $params[] = $data['ho_ten'];
@@ -179,20 +191,59 @@ class NguoiDung
             $fields[] = "vai_tro = ?";
             $params[] = $data['vai_tro'];
         }
-        if (isset($data['mat_khau'])) {
-            $fields[] = "mat_khau = ?";
-            $params[] = $data['mat_khau'];
+        if (isset($data['trang_thai'])) { // Thêm trang_thai
+            $fields[] = "trang_thai = ?";
+            $params[] = $data['trang_thai'];
         }
+        
+        // Loại bỏ trường mat_khau vì không cập nhật qua form này
         
         if (empty($fields)) {
-            return false;
+            return false; // Không có trường nào để cập nhật
         }
         
+        // Thêm ID vào cuối mảng tham số cho mệnh đề WHERE
         $params[] = $id;
-        $sql = "UPDATE nguoi_dung SET " . implode(", ", $fields) . " WHERE id = ?";
-        $stmt = $this->conn->prepare($sql);
-        return $stmt->execute($params);
+        
+        $sql = "UPDATE " . $this->table_name . " SET " . implode(", ", $fields) . " WHERE id = ?";
+        
+        try {
+            $stmt = $this->conn->prepare($sql);
+            // Dòng này trả về true/false dựa trên kết quả thực thi
+            return $stmt->execute($params);
+        } catch (PDOException $e) {
+            // Ghi log lỗi SQL để debug
+            error_log("Lỗi SQL khi cập nhật Người dùng: " . $e->getMessage());
+            return false;
+        }
     }
+    
+    // -------------------------------------------------------------------
+    // PHƯƠNG THỨC MÀ CONTROLLER GỌI (updateUser) - CẦN THÊM VÀO MODEL
+    // -------------------------------------------------------------------
+    
+    /**
+     * Phương thức xử lý cập nhật người dùng, được gọi bởi Controller AJAX.
+     * @param int $id ID của người dùng
+     * @param array $data Dữ liệu cần cập nhật (ten_dang_nhap, ho_ten, email,...)
+     * @return bool Trả về true nếu thành công, false nếu thất bại (kể cả lỗi SQL)
+     */
+    public function updateUser($id, $data) {
+        // Giả sử bạn không cần logic xác thực phức tạp ở đây 
+        // và chỉ gọi phương thức update chung.
+        
+        return $this->update($id, $data);
+    }
+
+    // PHƯƠNG THỨC LỌC DỮ LIỆU CŨ CŨNG CẦN PHẢI TỒN TẠI
+    // public function getFilteredUsers($search, $role) {
+    //     // ... (Triển khai logic lấy dữ liệu từ DB theo filter) ...
+    //     // Tạm thời trả về mảng rỗng hoặc logic demo nếu bạn chưa có
+    //     // Trong môi trường thực tế, đây là nơi bạn dùng SQL SELECT
+    //     return []; 
+    // }
+
+
 
     // Cập nhật mật khẩu (hash)
     public function updatePassword($id, $hashedPassword) {

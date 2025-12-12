@@ -92,31 +92,81 @@ class AdminController {
 
 // ... các code khác ...
 
+    
+    // Phương thức xử lý cả hiển thị trang và cập nhật AJAX
     public function quanLyNguoiDung() {
-    // 1. Lấy tham số tìm kiếm và lọc từ URL (GET)
-    // Các tên biến PHẢI khớp với tên trong form của View: name="search" và name="role"
-    $search = $_GET['search'] ?? '';
-    $role = $_GET['role'] ?? '';
-    error_log('DEBUG: role param = ' . $role);
-    
-    // 2. Load Model và gọi phương thức lọc
+        
+        // ----------------------------------------------------
+        // I. XỬ LÝ YÊU CẦU AJAX CẬP NHẬT (POST request)
+        // ----------------------------------------------------
+        
+        // Kiểm tra nếu request hiện tại là yêu cầu cập nhật AJAX
+        if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['act'] ?? '') === 'admin/updateUser') {
+            
+            // Đảm bảo chỉ xử lý JSON từ Frontend (Fetch API)
+            $data = json_decode(file_get_contents("php://input"), true);
+            
+            $response = ['success' => false, 'message' => 'Lỗi hệ thống hoặc dữ liệu không hợp lệ.'];
+
+            // Lấy dữ liệu cần thiết
+            $userId = $data['id'] ?? null;
+            $updateData = [
+                'ten_dang_nhap' => $data['ten_dang_nhap'] ?? '',
+                'ho_ten' => $data['ho_ten'] ?? '',
+                'email' => $data['email'] ?? '',
+                'so_dien_thoai' => $data['so_dien_thoai'] ?? '',
+                'vai_tro' => $data['vai_tro'] ?? '',
+                'trang_thai' => $data['trang_thai'] ?? '',
+            ];
+
+            if (empty($userId) || empty($updateData['ho_ten']) || empty($updateData['email'])) {
+                $response['message'] = 'Dữ liệu cập nhật bắt buộc (ID, Họ tên, Email) bị thiếu.';
+            } else {
+                // 1. Load Model
+                require_once __DIR__ . '/../models/NguoiDung.php';
+                $nguoiDungModel = new NguoiDung();
+                
+                // 2. Gọi phương thức cập nhật (Sẽ được tạo ở Model NguoiDung.php)
+                $isUpdated = $nguoiDungModel->updateUser($userId, $updateData); 
+                
+                if ($isUpdated) {
+                    $response['success'] = true;
+                    $response['message'] = 'Cập nhật thông tin người dùng thành công!';
+                } else {
+                    $response['message'] = 'Cập nhật thất bại. Vui lòng kiểm tra ràng buộc database (ví dụ: email bị trùng).';
+                }
+            }
+
+            // Trả về phản hồi JSON và DỪNG THỰC THI
+            header('Content-Type: application/json');
+            echo json_encode($response);
+            exit; // 🛑 ĐIỂM QUAN TRỌNG: DỪNG VIỆC RENDER VIEW HTML
+        }
+
+        // ----------------------------------------------------
+        // II. XỬ LÝ HIỂN THỊ TRANG (GET request)
+        // ----------------------------------------------------
+        
+        // 1. Lấy tham số tìm kiếm và lọc từ URL (GET)
+        $search = $_GET['search'] ?? '';
+        $role = $_GET['role'] ?? '';
+        error_log('DEBUG: role param = ' . $role);
+        
+        // 2. Load Model và gọi phương thức lọc
         require_once __DIR__ . '/../models/NguoiDung.php';
-    $nguoiDungModel = new NguoiDung();
-    
-    // Phương thức này cần được bạn tạo trong NguoiDung.php
-    $users = $nguoiDungModel->getFilteredUsers($search, $role);
-    
-    // 3. Truyền các biến cần thiết xuống View
-    // View của bạn cần $users, $search, và $role để hiển thị dữ liệu và giữ trạng thái form.
-    // Nếu bạn không dùng framework, cách đơn giản nhất là khai báo chúng:
-    
-    // $users đã có
-    // $search đã có
-    // $role đã có
-    
-    // 4. Load View
+        $nguoiDungModel = new NguoiDung();
+        
+        // Phương thức này cần được bạn tạo trong NguoiDung.php
+        $users = $nguoiDungModel->getFilteredUsers($search, $role);
+        
+        // 3. Truyền các biến cần thiết xuống View
+        // $users, $search, và $role sẽ được sử dụng trong view
+        
+        // 4. Load View
         require __DIR__ . '/../views/admin/quan_ly_nguoi_dung.php';
     }
+
+// Nếu không dùng Class, bạn chỉ cần đặt hàm này vào file Controller chính
 // ... các code khác ...
     
     public function quanLyBooking() {
