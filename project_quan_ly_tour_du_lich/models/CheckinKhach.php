@@ -17,7 +17,7 @@ class CheckinKhach
                 ORDER BY updated_at DESC, checkin_time DESC";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([(int)$lichKhoiHanhId]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll();
     }
 
     public function findOne($lichKhoiHanhId, $bookingId, $khachHangId)
@@ -33,23 +33,15 @@ class CheckinKhach
         return $stmt->fetch();
     }
 
-    public function getByBookingId($bookingId, $lichKhoiHanhId = null)
+    public function getByBookingId($bookingId)
     {
         $sql = "SELECT *
                 FROM tour_checkin
-                WHERE booking_id = ?";
-        $params = [(int)$bookingId];
-        
-        // Nếu có lich_khoi_hanh_id, lọc thêm để đảm bảo lấy đúng khách của lịch khởi hành này
-        if ($lichKhoiHanhId !== null) {
-            $sql .= " AND lich_khoi_hanh_id = ?";
-            $params[] = (int)$lichKhoiHanhId;
-        }
-        
-        $sql .= " ORDER BY id ASC";
+                WHERE booking_id = ?
+                ORDER BY id ASC";
         $stmt = $this->conn->prepare($sql);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt->execute([(int)$bookingId]);
+        return $stmt->fetchAll();
     }
 
     public function findById($id)
@@ -80,8 +72,8 @@ class CheckinKhach
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([
-            $data['booking_id'] !== null ? (int)$data['booking_id'] : null,
-            $data['khach_hang_id'] !== null ? (int)$data['khach_hang_id'] : null,
+            (int)$data['booking_id'],
+            (int)$data['khach_hang_id'],
             (int)$data['lich_khoi_hanh_id'],
             $data['ho_ten'] ?? '',
             $data['so_cmnd'] ?? null,

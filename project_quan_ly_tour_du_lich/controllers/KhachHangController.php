@@ -5,7 +5,7 @@ class KhachHangController {
     public function __construct() {
         requireLogin();
     }
-    
+
     // Gửi yêu cầu tour theo mong muốn
     public function guiYeuCauTour() {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -50,13 +50,13 @@ class KhachHangController {
         require_once 'models/ThongBao.php';
         require_once 'models/Tour.php';
         require_once 'models/DanhGia.php';
-        
+
         $bookingModel = new Booking();
         $khachHangModel = new KhachHang();
         $thongBaoModel = new ThongBao();
         $tourModel = new Tour();
         $danhGiaModel = new DanhGia();
-        
+
         // Lấy thông tin khách hàng
         $khachHang = $khachHangModel->findByUserId($_SESSION['user_id']);
         if (!$khachHang) {
@@ -64,14 +64,14 @@ class KhachHangController {
             header('Location: index.php?act=auth/profile');
             exit();
         }
-        
+
         // Lấy booking của khách hàng
         $bookings = $bookingModel->getByKhachHangId($khachHang['khach_hang_id']);
-        
+
         // Lấy thông báo chưa đọc
         $thongBaoChuaDoc = $thongBaoModel->countChuaDoc($_SESSION['user_id']);
         $thongBaoList = $thongBaoModel->getByNguoiDung($_SESSION['user_id'], 5);
-        
+
         // Lấy tour sắp tới (booking có ngày khởi hành >= hôm nay)
         $tourSapToi = [];
         $today = date('Y-m-d');
@@ -81,7 +81,7 @@ class KhachHangController {
                 $tourSapToi[] = $booking;
             }
         }
-        
+
         // Thống kê
         $tongBooking = count($bookings);
         $bookingChoXacNhan = count(array_filter($bookings, fn($b) => $b['trang_thai'] === 'ChoXacNhan'));
@@ -121,7 +121,7 @@ class KhachHangController {
         unset($tour);
         $tourTrongNuoc = array_filter($allTours, fn($t) => $t['loai_tour'] === 'TrongNuoc' && $t['trang_thai'] === 'HoatDong');
         $tourQuocTe = array_filter($allTours, fn($t) => $t['loai_tour'] === 'QuocTe' && $t['trang_thai'] === 'HoatDong');
-        
+
         require 'views/khach_hang/dashboard.php';
     }
     

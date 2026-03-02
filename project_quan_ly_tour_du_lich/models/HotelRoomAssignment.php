@@ -7,12 +7,41 @@ class HotelRoomAssignment {
         $this->conn = connectDB();
     }
 
+    // Lấy tất cả phân phòng
+    public function getAll() {
+        $sql = "SELECT hra.*, 
+                       tc.ho_ten as khach_ho_ten,
+                       b.tour_id
+                FROM hotel_room_assignment hra
+                LEFT JOIN tour_checkin tc ON hra.checkin_id = tc.id
+                LEFT JOIN booking b ON hra.booking_id = b.booking_id
+                ORDER BY hra.ngay_nhan_phong DESC";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
     // Lấy phân phòng theo ID
     public function findById($id) {
         $sql = "SELECT * FROM hotel_room_assignment WHERE id = ?";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$id]);
         return $stmt->fetch();
+    }
+
+    // Lấy phân phòng theo lịch khởi hành
+    public function getByLichKhoiHanhId($lichKhoiHanhId) {
+        $sql = "SELECT hra.*, 
+                       tc.ho_ten as khach_ho_ten, tc.so_dien_thoai,
+                       b.booking_id
+                FROM hotel_room_assignment hra
+                LEFT JOIN tour_checkin tc ON hra.checkin_id = tc.id
+                LEFT JOIN booking b ON hra.booking_id = b.booking_id
+                WHERE hra.lich_khoi_hanh_id = ?
+                ORDER BY hra.ten_khach_san, hra.so_phong";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([$lichKhoiHanhId]);
+        return $stmt->fetchAll();
     }
 
     // Lấy phân phòng theo booking
@@ -69,6 +98,13 @@ class HotelRoomAssignment {
             $data['ghi_chu'] ?? null,
             $id
         ]);
+    }
+
+    // Cập nhật trạng thái
+    public function updateStatus($id, $status) {
+        $sql = "UPDATE hotel_room_assignment SET trang_thai = ? WHERE id = ?";
+        $stmt = $this->conn->prepare($sql);
+        return $stmt->execute([$status, $id]);
     }
 
     // Xóa phân phòng

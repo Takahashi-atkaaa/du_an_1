@@ -56,21 +56,50 @@ class Booking
 
     // Thêm booking mới
     public function insert($data) {
-        $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, ngay_ket_thuc, so_nguoi, tong_tien, trang_thai, ghi_chu) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $this->conn->prepare($sql);
-        $result = $stmt->execute([
-            $data['tour_id'] ?? 0,
-            $data['khach_hang_id'] ?? 0,
-            $data['ngay_dat'] ?? date('Y-m-d'),
-            $data['ngay_khoi_hanh'] ?? null,
-            $data['ngay_ket_thuc'] ?? null,
-            $data['so_nguoi'] ?? 1,
-            $data['tong_tien'] ?? 0,
-            $data['trang_thai'] ?? 'ChoXacNhan',
-            $data['ghi_chu'] ?? null
-        ]);
-        
+        // Kiểm tra cột so_tien_con_lai
+        $checkSoTienConLai = $this->conn->query("SHOW COLUMNS FROM booking LIKE 'so_tien_con_lai'");
+        $hasSoTienConLai = $checkSoTienConLai->rowCount() > 0;
+            $soTienConLai = 0; // Khởi tạo biến số tiền còn lại
+        if ($hasSoTienConLai) {
+            // Nếu có cột, tính số tiền còn lại = tổng tiền - tiền cọc (nếu có), mặc định là tổng tiền nếu chưa cọc
+                $tienCoc = $data['tien_coc'] ?? 0;
+                if (isset($data['tong_tien'])) {
+                    $soTienConLai = $data['tong_tien'] - $tienCoc;
+                } else {
+                    $soTienConLai = 0;
+                }
+            if ($soTienConLai < 0) $soTienConLai = 0;
+            $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, ngay_ket_thuc, so_nguoi, tong_tien, so_tien_con_lai, trang_thai, ghi_chu) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute([
+                $data['tour_id'] ?? 0,
+                $data['khach_hang_id'] ?? 0,
+                $data['ngay_dat'] ?? date('Y-m-d'),
+                $data['ngay_khoi_hanh'] ?? null,
+                $data['ngay_ket_thuc'] ?? null,
+                $data['so_nguoi'] ?? 1,
+                $data['tong_tien'] ?? 0,
+                $soTienConLai,
+                $data['trang_thai'] ?? 'ChoXacNhan',
+                $data['ghi_chu'] ?? null
+            ]);
+        } else {
+            $sql = "INSERT INTO booking (tour_id, khach_hang_id, ngay_dat, ngay_khoi_hanh, ngay_ket_thuc, so_nguoi, tong_tien, trang_thai, ghi_chu) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $stmt = $this->conn->prepare($sql);
+            $result = $stmt->execute([
+                $data['tour_id'] ?? 0,
+                $data['khach_hang_id'] ?? 0,
+                $data['ngay_dat'] ?? date('Y-m-d'),
+                $data['ngay_khoi_hanh'] ?? null,
+                $data['ngay_ket_thuc'] ?? null,
+                $data['so_nguoi'] ?? 1,
+                $data['tong_tien'] ?? 0,
+                $data['trang_thai'] ?? 'ChoXacNhan',
+                $data['ghi_chu'] ?? null
+            ]);
+        }
         if ($result) {
             return $this->conn->lastInsertId();
         }
@@ -86,20 +115,30 @@ class Booking
         $checkTrangThaiCoc = $this->conn->query("SHOW COLUMNS FROM booking LIKE 'trang_thai_coc'");
         $hasTrangThaiCoc = $checkTrangThaiCoc->rowCount() > 0;
         
-        if ($hasTienCoc && $hasTrangThaiCoc && isset($data['tien_coc'])) {
-            $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, tien_coc = ?, trang_thai_coc = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
-            $stmt = $this->conn->prepare($sql);
-            return $stmt->execute([
-                $data['so_nguoi'] ?? 1,
-                $data['ngay_khoi_hanh'] ?? null,
-                $data['ngay_ket_thuc'] ?? null,
-                $data['tong_tien'] ?? 0,
-                $data['tien_coc'] ?? 0,
-                $data['trang_thai_coc'] ?? 'ChuaCoc',
-                $data['trang_thai'] ?? 'ChoXacNhan',
-                $data['ghi_chu'] ?? null,
-                $id
-            ]);
+            // Kiểm tra cột so_tien_con_lai
+            $checkSoTienConLai = $this->conn->query("SHOW COLUMNS FROM booking LIKE 'so_tien_con_lai'");
+            $hasSoTienConLai = $checkSoTienConLai->rowCount() > 0;
+            if ($hasTienCoc && $hasSoTienConLai && isset($data['tien_coc'])) {
+                // Tính số tiền còn lại nếu chưa truyền vào
+                    if (isset($data['tong_tien']) && isset($data['so_tien_coc'])) {
+                        $soTienConLai = $data['tong_tien'] - $data['so_tien_coc'];
+                    } else {
+                        $soTienConLai = $data['so_tien_con_lai'] ?? (($data['tong_tien'] ?? 0) - ($data['tien_coc'] ?? 0));
+                    }
+                if ($soTienConLai < 0) $soTienConLai = 0;
+                $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, tien_coc = ?, so_tien_con_lai = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
+                $stmt = $this->conn->prepare($sql);
+                return $stmt->execute([
+                    $data['so_nguoi'] ?? 1,
+                    $data['ngay_khoi_hanh'] ?? null,
+                    $data['ngay_ket_thuc'] ?? null,
+                    $data['tong_tien'] ?? 0,
+                    $data['tien_coc'] ?? 0,
+                    $soTienConLai,
+                    $data['trang_thai'] ?? 'ChoXacNhan',
+                    $data['ghi_chu'] ?? null,
+                    $id
+                ]);
         } elseif ($hasTienCoc && isset($data['tien_coc'])) {
             $sql = "UPDATE booking SET so_nguoi = ?, ngay_khoi_hanh = ?, ngay_ket_thuc = ?, tong_tien = ?, tien_coc = ?, trang_thai = ?, ghi_chu = ? WHERE booking_id = ?";
             $stmt = $this->conn->prepare($sql);
@@ -222,10 +261,15 @@ class Booking
                 LEFT JOIN tour t ON b.tour_id = t.tour_id
                 LEFT JOIN khach_hang kh ON b.khach_hang_id = kh.khach_hang_id
                 LEFT JOIN nguoi_dung nd ON kh.nguoi_dung_id = nd.id
-                WHERE b.booking_id = ?";
+                WHERE b.booking_id = ? LIMIT 1";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([$bookingId]);
-        return $stmt->fetch();
+        $result = $stmt->fetchAll();
+        // Đảm bảo luôn trả về mảng đơn, không phải danh sách
+        if (is_array($result) && count($result) > 0) {
+            return $result[0];
+        }
+        return null;
     }
 
     // Lấy danh sách yêu cầu đặc biệt dành cho một lịch khởi hành cụ thể

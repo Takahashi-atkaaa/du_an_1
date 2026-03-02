@@ -24,6 +24,7 @@ require_once __DIR__ . '/controllers/NhaCungCapController.php';
 require_once __DIR__ . '/controllers/LichKhoiHanhController.php';
 require_once __DIR__ . '/controllers/DanhGiaController.php';
 require_once __DIR__ . '/controllers/BaoCaoTaiChinhController.php';
+require_once __DIR__ . '/controllers/LuongThuongController.php';
 
 // Models
 require_once __DIR__ . '/models/NguoiDung.php';
@@ -46,7 +47,7 @@ require_once __DIR__ . '/models/TourCheckin.php';
 require_once __DIR__ . '/models/HotelRoomAssignment.php';
 require_once __DIR__ . '/models/DichVuNhaCungCap.php';
 require_once __DIR__ . '/models/YeuCauDacBiet.php';
-require_once __DIR__ . '/models/ThongBao.php';
+require_once __DIR__ . '/models/SalaryBonus.php';
 
 
 // Route
@@ -115,11 +116,7 @@ match ($act) {
     'lichKhoiHanh/suaKhachChiTiet' => (new LichKhoiHanhController())->suaKhachChiTiet(),
     'lichKhoiHanh/xoaKhachChiTiet' => (new LichKhoiHanhController())->xoaKhachChiTiet(),
     'lichKhoiHanh/themYeuCauDacBiet' => (new LichKhoiHanhController())->themYeuCauDacBiet(),
-    'lichKhoiHanh/suaYeuCauDacBiet' => (new LichKhoiHanhController())->suaYeuCauDacBiet(),
-    'lichKhoiHanh/xoaYeuCauDacBiet' => (new LichKhoiHanhController())->xoaYeuCauDacBiet(),
     'lichKhoiHanh/themNhatKy' => (new LichKhoiHanhController())->themNhatKy(),
-    'lichKhoiHanh/suaNhatKy' => (new LichKhoiHanhController())->suaNhatKy(),
-    'lichKhoiHanh/xoaNhatKy' => (new LichKhoiHanhController())->xoaNhatKy(),
     // Admin
     'admin/dashboard' => (new AdminController())->dashboard(),
     'admin/quanLyTour' => (new AdminController())->quanLyTour(),
@@ -127,9 +124,6 @@ match ($act) {
     'admin/lichSuXoaBooking' => (new AdminController())->lichSuXoaBooking(),
     'admin/lichSuXoaNhaCungCap' => (new AdminController())->lichSuXoaNhaCungCap(),
     'admin/chiTietLichSuXoaNhaCungCap' => (new AdminController())->chiTietLichSuXoaNhaCungCap(),
-    'admin/quanLyLuongHDV' => (new AdminController())->quanLyLuongHDV(),
-    'admin/approveSalary' => (new AdminController())->approveSalary(),
-    'admin/approveBonus' => (new AdminController())->approveBonus(),
     'admin/chiTietTour' => (new AdminController())->chiTietTour(),
     'admin/yeuCauDacBiet' => (new AdminController())->yeuCauDacBiet(),
     'admin/capNhatYeuCauDacBiet' => (new AdminController())->capNhatYeuCauDacBiet(),
@@ -162,13 +156,13 @@ match ($act) {
     'admin/tuChoiChiPhi' => (new BaoCaoTaiChinhController())->tuChoiChiPhi(),
     'admin/soSanhDuToan' => (new BaoCaoTaiChinhController())->soSanhDuToan(),
     'admin/nhacHanCongNo' => (new BaoCaoTaiChinhController())->nhacHanCongNo(),
+    'admin/thuChiTour' => (new BaoCaoTaiChinhController())->thuChiTour(),
     // HDV
     'hdv/dashboard' => (new HDVController())->dashboard(),
     'hdv/tours' => (new HDVController())->tours(),
     'hdv/xacNhanPhanBo' => (new HDVController())->xacNhanPhanBo(),
     'hdv/tour_detail' => (new HDVController())->tourDetail(),
-    'hdv/lich_trinh_chi_tiet' => (new HDVController())->lichTrinhChiTiet(),
-    'hdv/khach' => (new HDVController())->khach(),
+    'hdv/khach' => (new HDVController())->danhSachKhach(),
     'hdv/nhat_ky' => (new HDVController())->nhatKy(),
     'hdv/save_nhat_ky' => (new HDVController())->saveNhatKy(),
     'hdv/delete_nhat_ky' => (new HDVController())->deleteNhatKy(),
@@ -187,6 +181,7 @@ match ($act) {
     'hdv/danh_gia' => (new HDVController())->danhGia(),
     'hdv/notifications' => (new HDVController())->notifications(),
     'hdv/lichLamViec' => (new HDVController())->lichLamViec(),
+    'hdv/lich_trinh_chi_tiet' => (new HDVController())->lichTrinhChiTiet(),
     'hdv/nhatKyTour' => (new HDVController())->nhatKyTour(),
     'hdv/danhSachKhach' => (new HDVController())->danhSachKhach(),
     'hdv/checkInKhach' => (new HDVController())->checkInKhach(),
@@ -279,6 +274,11 @@ match ($act) {
     'admin/danhGia/xoa' => (new DanhGiaController())->xoa(),
     'admin/danhGia/baoCao' => (new DanhGiaController())->baoCao(),
     'admin/danhGia/export' => (new DanhGiaController())->export(),
+    
+    // Quản lý lương thưởng HDV
+    'admin/quanLyLuongHDV' => (new AdminController())->quanLyLuongHDV(),
+    'admin/approveSalary' => (new AdminController())->approveSalary(),
+    'admin/approveBonus' => (new AdminController())->approveBonus(),
     
     // Default
     default => die("Route không tồn tại: $act")

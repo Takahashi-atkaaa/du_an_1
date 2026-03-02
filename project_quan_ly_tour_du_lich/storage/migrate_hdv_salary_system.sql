@@ -4,6 +4,15 @@
 -- Ngày tạo: 2025-01-01
 -- ============================================================
 
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
 -- ============================================================
 -- 1. ALTER TABLE nhan_su - Thêm cột commission_percentage
 -- ============================================================
@@ -27,81 +36,61 @@ DEALLOCATE PREPARE alterIfNotExists;
 -- ============================================================
 -- 2. CREATE TABLE hdv_salary - Bảng lương HDV
 -- ============================================================
-CREATE TABLE IF NOT EXISTS hdv_salary (
-    id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID bản ghi lương',
-    nhan_su_id INT NOT NULL COMMENT 'ID nhân sự',
-    tour_id INT COMMENT 'ID tour',
-    lich_khoi_hanh_id INT COMMENT 'ID lịch khởi hành',
-    base_salary DECIMAL(15,2) DEFAULT 0 COMMENT 'Lương cơ bản',
-    commission_percentage DECIMAL(5,2) DEFAULT 0 COMMENT 'Tỉ lệ hoa hồng (%)',
-    tour_revenue DECIMAL(15,2) DEFAULT 0 COMMENT 'Doanh thu tour',
-    commission_amount DECIMAL(15,2) DEFAULT 0 COMMENT 'Tiền hoa hồng',
-    bonus_amount DECIMAL(15,2) DEFAULT 0 COMMENT 'Tiền thưởng',
-    total_amount DECIMAL(15,2) DEFAULT 0 COMMENT 'Tổng tiền',
-    payment_status ENUM('Pending', 'Approved', 'Paid') DEFAULT 'Pending' COMMENT 'Trạng thái thanh toán',
-    payment_date DATETIME COMMENT 'Ngày thanh toán',
-    notes TEXT COMMENT 'Ghi chú',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày tạo',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Ngày cập nhật',
+CREATE TABLE IF NOT EXISTS `hdv_salary` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID bản ghi lương',
+    `nhan_su_id` INT NOT NULL COMMENT 'ID nhân sự',
+    `tour_id` INT COMMENT 'ID tour',
+    `lich_khoi_hanh_id` INT COMMENT 'ID lịch khởi hành',
+    `base_salary` DECIMAL(15,2) DEFAULT 0 COMMENT 'Lương cơ bản',
+    `commission_percentage` DECIMAL(5,2) DEFAULT 0 COMMENT 'Tỉ lệ hoa hồng (%)',
+    `tour_revenue` DECIMAL(15,2) DEFAULT 0 COMMENT 'Doanh thu tour',
+    `commission_amount` DECIMAL(15,2) DEFAULT 0 COMMENT 'Tiền hoa hồng',
+    `bonus_amount` DECIMAL(15,2) DEFAULT 0 COMMENT 'Tiền thưởng',
+    `total_amount` DECIMAL(15,2) DEFAULT 0 COMMENT 'Tổng tiền',
+    `payment_status` ENUM('Pending', 'Approved', 'Paid') DEFAULT 'Pending' COMMENT 'Trạng thái thanh toán',
+    `payment_date` DATETIME COMMENT 'Ngày thanh toán',
+    `notes` TEXT COMMENT 'Ghi chú',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày tạo',
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Ngày cập nhật',
     
-    FOREIGN KEY (nhan_su_id) REFERENCES nhan_su(nhan_su_id) ON DELETE CASCADE,
-    FOREIGN KEY (tour_id) REFERENCES tour(tour_id) ON DELETE SET NULL,
-    FOREIGN KEY (lich_khoi_hanh_id) REFERENCES lich_khoi_hanh(id) ON DELETE SET NULL,
+    FOREIGN KEY (`nhan_su_id`) REFERENCES `nhan_su`(`nhan_su_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`tour_id`) REFERENCES `tour`(`tour_id`) ON DELETE SET NULL,
+    FOREIGN KEY (`lich_khoi_hanh_id`) REFERENCES `lich_khoi_hanh`(`id`) ON DELETE SET NULL,
     
-    INDEX idx_nhan_su_id (nhan_su_id),
-    INDEX idx_tour_id (tour_id),
-    INDEX idx_lich_khoi_hanh_id (lich_khoi_hanh_id),
-    INDEX idx_payment_status (payment_status)
+    INDEX `idx_nhan_su_id` (`nhan_su_id`),
+    INDEX `idx_tour_id` (`tour_id`),
+    INDEX `idx_lich_khoi_hanh_id` (`lich_khoi_hanh_id`),
+    INDEX `idx_payment_status` (`payment_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng lương theo tour của HDV';
 
 -- ============================================================
 -- 3. CREATE TABLE hdv_bonus - Bảng thưởng HDV
 -- ============================================================
-CREATE TABLE IF NOT EXISTS hdv_bonus (
-    id INT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID bản ghi thưởng',
-    nhan_su_id INT NOT NULL COMMENT 'ID nhân sự',
-    bonus_type VARCHAR(100) DEFAULT 'KhongXacDinh' COMMENT 'Loại thưởng',
-    amount DECIMAL(15,2) DEFAULT 0 COMMENT 'Số tiền thưởng',
-    reason TEXT COMMENT 'Lý do thưởng',
-    award_date DATE COMMENT 'Ngày thưởng',
-    approval_status ENUM('ChoPheDuyet', 'DuyetPhep', 'TuChoi') DEFAULT 'ChoPheDuyet' COMMENT 'Trạng thái phê duyệt',
-    approved_by INT COMMENT 'Phê duyệt bởi (user_id)',
-    notes TEXT COMMENT 'Ghi chú',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày tạo',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Ngày cập nhật',
+CREATE TABLE IF NOT EXISTS `hdv_bonus` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID bản ghi thưởng',
+    `nhan_su_id` INT NOT NULL COMMENT 'ID nhân sự',
+    `bonus_type` VARCHAR(100) DEFAULT 'KhongXacDinh' COMMENT 'Loại thưởng',
+    `amount` DECIMAL(15,2) DEFAULT 0 COMMENT 'Số tiền thưởng',
+    `reason` TEXT COMMENT 'Lý do thưởng',
+    `award_date` DATE COMMENT 'Ngày thưởng',
+    `approval_status` ENUM('ChoPheDuyet', 'DuyetPhep', 'TuChoi') DEFAULT 'ChoPheDuyet' COMMENT 'Trạng thái phê duyệt',
+    `approved_by` INT COMMENT 'Phê duyệt bởi (user_id)',
+    `notes` TEXT COMMENT 'Ghi chú',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT 'Ngày tạo',
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Ngày cập nhật',
     
-    FOREIGN KEY (nhan_su_id) REFERENCES nhan_su(nhan_su_id) ON DELETE CASCADE,
-    FOREIGN KEY (approved_by) REFERENCES nguoi_dung(id) ON DELETE SET NULL,
+    FOREIGN KEY (`nhan_su_id`) REFERENCES `nhan_su`(`nhan_su_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`approved_by`) REFERENCES `nguoi_dung`(`id`) ON DELETE SET NULL,
     
-    INDEX idx_nhan_su_id (nhan_su_id),
-    INDEX idx_approval_status (approval_status),
-    INDEX idx_award_date (award_date)
+    INDEX `idx_nhan_su_id` (`nhan_su_id`),
+    INDEX `idx_approval_status` (`approval_status`),
+    INDEX `idx_award_date` (`award_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Bảng thưởng cho HDV';
 
 -- ============================================================
--- 4. INSERT dữ liệu mẫu (tùy chọn)
+-- 4. Tạo VIEW cho thống kê lương HDV
 -- ============================================================
--- Thêm dữ liệu mẫu cho lương (bỏ comment để chạy)
-/*
-INSERT INTO hdv_salary (nhan_su_id, tour_id, lich_khoi_hanh_id, base_salary, commission_percentage, tour_revenue, commission_amount, bonus_amount, total_amount, payment_status)
-SELECT 
-    100, 
-    6, 
-    10, 
-    5000000.00, 
-    5.00, 
-    263920000.00, 
-    (263920000.00 * 5.00 / 100), 
-    0, 
-    5000000.00 + (263920000.00 * 5.00 / 100), 
-    'Pending'
-WHERE NOT EXISTS (SELECT 1 FROM hdv_salary WHERE nhan_su_id = 100 AND tour_id = 6 AND lich_khoi_hanh_id = 10);
-*/
-
--- ============================================================
--- 5. Tạo VIEW cho thống kê lương HDV
--- ============================================================
-CREATE OR REPLACE VIEW view_hdv_salary_summary AS
+CREATE OR REPLACE VIEW `view_hdv_salary_summary` AS
 SELECT 
     hs.nhan_su_id,
     nd.ho_ten,
@@ -120,6 +109,12 @@ JOIN nhan_su ns ON hs.nhan_su_id = ns.nhan_su_id
 JOIN nguoi_dung nd ON ns.nguoi_dung_id = nd.id
 LEFT JOIN hdv_bonus hb ON hs.nhan_su_id = hb.nhan_su_id AND hb.approval_status = 'DuyetPhep'
 GROUP BY hs.nhan_su_id, nd.ho_ten, nd.so_dien_thoai;
+
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 
 -- ============================================================
 -- NOTES:

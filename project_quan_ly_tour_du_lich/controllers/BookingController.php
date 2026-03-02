@@ -61,14 +61,16 @@ class BookingController {
         $ngayKhoiHanh = $_POST['ngay_khoi_hanh'] ?? '';
         $ngayKetThuc = $_POST['ngay_ket_thuc'] ?? $ngayKhoiHanh;
 
+            $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
             $data = [
                 'tour_id' => $tourId,
                 'khach_hang_id' => $khachHangId,
                 'ngay_dat' => date('Y-m-d'),
                 'so_nguoi' => isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1,
-            'ngay_khoi_hanh' => $ngayKhoiHanh,
-            'ngay_ket_thuc' => $ngayKetThuc,
+                'ngay_khoi_hanh' => $ngayKhoiHanh,
+                'ngay_ket_thuc' => $ngayKetThuc,
                 'tong_tien' => isset($_POST['tong_tien']) ? (float)$_POST['tong_tien'] : (float)($tour['gia_co_ban'] ?? 0) * (isset($_POST['so_nguoi']) ? (int)$_POST['so_nguoi'] : 1),
+                'tien_coc' => $tienCoc,
                 'trang_thai' => 'ChoXacNhan',
                 'ghi_chu' => $_POST['ghi_chu'] ?? null
             ];
@@ -252,6 +254,8 @@ class BookingController {
         $tienCoc = isset($_POST['tien_coc']) ? (float)$_POST['tien_coc'] : 0;
         $trangThaiCoc = $_POST['trang_thai_coc'] ?? 'ChuaCoc';
         $ghiChuCoc = trim($_POST['ghi_chu_coc'] ?? '');
+        // Tính số tiền còn lại
+        $soTienConLai = 0;
         
         // Lấy thông tin booking hiện tại
         $booking = $this->bookingModel->findById($bookingId);
@@ -298,9 +302,20 @@ class BookingController {
             
             if ($hasTienCoc) {
                 // Cập nhật với các trường mới
-                $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ? WHERE booking_id = ?";
-                $stmt = $conn->prepare($sql);
-                $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $bookingId]);
+                // Kiểm tra cột so_tien_con_lai
+                $checkSoTienConLai = $conn->query("SHOW COLUMNS FROM booking LIKE 'so_tien_con_lai'");
+                $hasSoTienConLai = $checkSoTienConLai->rowCount() > 0;
+                $soTienConLai = $tongTien - $tienCoc;
+                if ($soTienConLai < 0) $soTienConLai = 0;
+                if ($hasSoTienConLai) {
+                    $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ?, so_tien_con_lai = ? WHERE booking_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $soTienConLai, $bookingId]);
+                } else {
+                    $sql = "UPDATE booking SET tien_coc = ?, trang_thai_coc = ? WHERE booking_id = ?";
+                    $stmt = $conn->prepare($sql);
+                    $result = $stmt->execute([$tienCoc, $trangThaiCocMoi, $bookingId]);
+                }
             } else {
                 // Nếu chưa có cột, chỉ cập nhật trạng thái booking nếu cần
                 // Hoặc có thể tự động tạo cột (không khuyến khích trong production)
@@ -525,20 +540,12 @@ class BookingController {
             if ($coThayDoi) {
                 // Nếu trạng thái thay đổi, dùng updateTrangThai (đã có logic lưu lịch sử)
                 if ($trangThaiMoi !== $trangThaiCu) {
-                    // Lấy ghi chú từ form (nếu có), nếu không thì dùng ghi chú tự động
-                    $ghiChuTuForm = trim($_POST['ghi_chu'] ?? '');
-                    if (!empty($ghiChuTuForm)) {
-                        // Nếu có ghi chú từ form, dùng nó
-                        $ghiChu = $ghiChuTuForm;
-                    } else {
-                        // Nếu không có, dùng ghi chú tự động từ các thay đổi
-                        $ghiChu = 'Cập nhật thông tin booking';
-                        if (!empty($thayDoiChiTiet)) {
-                            $ghiChu .= ': ' . implode(', ', $thayDoiChiTiet);
-                        }
-                        if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
-                            $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
-                        }
+                    $ghiChu = 'Cập nhật thông tin booking';
+                    if (!empty($thayDoiChiTiet)) {
+                        $ghiChu .= ': ' . implode(', ', $thayDoiChiTiet);
+                    }
+                    if ($tongTien > 0 && abs($tienCoc - $tongTien) < 0.01) {
+                        $ghiChu .= ' - Tiền cọc = tổng tiền, tự động chuyển thành "Hoàn tất" (Đã thanh toán đủ)';
                     }
                     $this->bookingModel->updateTrangThai($id, $trangThaiMoi, $_SESSION['user_id'] ?? null, $ghiChu);
                     
@@ -552,17 +559,7 @@ class BookingController {
                 } else {
                     // Trạng thái không đổi nhưng có thay đổi khác - lưu lịch sử với trạng thái giữ nguyên
                     $historyModel = new BookingHistory();
-                    
-                    // Lấy ghi chú từ form (nếu có), nếu không thì dùng ghi chú tự động
-                    $ghiChuTuForm = trim($_POST['ghi_chu'] ?? '');
-                    if (!empty($ghiChuTuForm)) {
-                        // Nếu có ghi chú từ form, dùng nó
-                        $ghiChu = $ghiChuTuForm;
-                    } else {
-                        // Nếu không có, dùng ghi chú tự động từ các thay đổi
-                        $ghiChu = 'Cập nhật thông tin booking: ' . implode(', ', $thayDoiChiTiet);
-                    }
-                    
+                    $ghiChu = 'Cập nhật thông tin booking: ' . implode(', ', $thayDoiChiTiet);
                     $historyModel->insert([
                         'booking_id' => $id,
                         'trang_thai_cu' => $trangThaiCu,
@@ -922,6 +919,11 @@ class BookingController {
             exit();
         }
         
+        // Đảm bảo chỉ truyền một booking duy nhất vào template
+        if (isset($booking[0]) && is_array($booking[0])) {
+            $booking = $booking[0];
+        }
+        
         require 'views/admin/xuat_tai_lieu_booking.php';
     }
 
@@ -939,7 +941,10 @@ class BookingController {
             die('Booking không tồn tại');
         }
         
-        // Tạo nội dung HTML
+        // Đảm bảo chỉ truyền một booking duy nhất vào template
+        if (isset($booking[0]) && is_array($booking[0])) {
+            $booking = $booking[0];
+        }
         ob_start();
         switch ($type) {
             case 'hop-dong':
@@ -955,9 +960,6 @@ class BookingController {
                 $filename = 'Bao_Gia_' . $booking['booking_id'] . '.pdf';
         }
         $html = ob_get_clean();
-        
-        // Sử dụng thư viện dompdf hoặc tương tự để tạo PDF
-        // Nếu chưa cài, có thể tạm dùng cách đơn giản hơn
         $this->generateSimplePDF($html, $filename);
     }
 

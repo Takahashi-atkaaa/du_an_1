@@ -79,20 +79,17 @@ class LichKhoiHanhController {
         
         // Reset array keys sau khi filter
         $lichKhoiHanhList = array_values($lichKhoiHanhList);
-        
+
         // Kiểm tra trùng lịch HDV cho từng lịch khởi hành
         foreach ($lichKhoiHanhList as &$lich) {
             $lich['coTrungLichHDV'] = false;
             $lich['soLichTrungHDV'] = 0;
-            
             // Lấy danh sách HDV của lịch này
             $hdvIds = [];
-            
             // Lấy từ hdv_id trực tiếp
             if (!empty($lich['hdv_id'])) {
                 $hdvIds[] = (int)$lich['hdv_id'];
             }
-            
             // Lấy từ phan_bo_nhan_su với vai_trò HDV
             if (!empty($lich['hdv_ids'])) {
                 $idsFromPhanBo = explode(',', $lich['hdv_ids']);
@@ -102,10 +99,8 @@ class LichKhoiHanhController {
                     }
                 }
             }
-            
             // Loại bỏ trùng lặp
             $hdvIds = array_unique($hdvIds);
-            
             // Kiểm tra conflict cho từng HDV
             if (!empty($hdvIds) && !empty($lich['id'])) {
                 foreach ($hdvIds as $hdvId) {
@@ -177,11 +172,6 @@ class LichKhoiHanhController {
         
         // Tính tổng chi phí
         $tongChiPhi = $this->phanBoDichVuModel->getTongChiPhi($id);
-        
-        // Kiểm tra các dịch vụ cơ bản đã được phân bổ chưa (để cảnh báo)
-        $dichVuCanThiet = ['Xe', 'KhachSan', 'VeMayBay']; // Các loại dịch vụ cơ bản
-        $dichVuDaPhanBo = array_column($phanBoDichVu, 'loai_dich_vu');
-        $dichVuThieu = array_diff($dichVuCanThiet, $dichVuDaPhanBo);
 
         // Lấy yêu cầu đặc biệt của khách cho lịch khởi hành này
         $yeuCauDacBietList = [];
@@ -212,88 +202,38 @@ class LichKhoiHanhController {
         }
         
         // Lấy danh sách booking và khách chi tiết cho lịch khởi hành
-        // LƯU Ý QUAN TRỌNG:
-        // - Danh sách khách trong đoàn CHỈ lấy từ tour_checkin (không phải từ nguoi_dung/khach_hang)
-        // - nguoi_dung/khach_hang chỉ dùng để đặt tour (booking), KHÔNG tính vào danh sách khách trong đoàn
-        // - Nếu không có trong tour_checkin thì KHÔNG hiển thị (không fallback về nguoi_dung)
         $bookingList = [];
         $danhSachKhachChiTiet = [];
-        
-        // LUÔN lấy từ tour_checkin theo lich_khoi_hanh_id (không phụ thuộc vào tour_id hay ngay_khoi_hanh)
-        require_once 'models/CheckinKhach.php';
-        $checkinModel = new CheckinKhach();
-        $allCheckinRows = $checkinModel->getByLichKhoiHanh($id);
-        // Debug: Kiểm tra dữ liệu (đã tắt)
-        // error_log("DEBUG CONTROLLER: allCheckinRows count: " . count($allCheckinRows) . " cho lich_khoi_hanh_id=$id");
-        
         if (!empty($lichKhoiHanh['tour_id']) && !empty($lichKhoiHanh['ngay_khoi_hanh'])) {
-            // 1. Lấy danh sách nhóm booking theo tour + ngày khởi hành (chỉ để hiển thị nhóm booking)
+            // 1. Lấy danh sách nhóm booking theo tour + ngày khởi hành
             $bookingList = $this->bookingModel->getKhachByTourAndNgayKhoiHanh(
                 $lichKhoiHanh['tour_id'],
                 $lichKhoiHanh['ngay_khoi_hanh']
             );
             
-            // 2. Lấy danh sách khách chi tiết từ tour_checkin (danh sách khách trong đoàn)
-            // $allCheckinRows đã được lấy ở trên
-            
+            // 2. Lấy danh sách khách chi tiết từ tour_checkin
+            require_once 'models/CheckinKhach.php';
+            $checkinModel = new CheckinKhach();
+
             if (!empty($bookingList)) {
-                // Debug: Kiểm tra dữ liệu (đã tắt)
-                // error_log("DEBUG CONTROLLER: Có " . count($bookingList) . " booking, bắt đầu lọc từ " . count($allCheckinRows) . " khách trong allCheckinRows");
-                // Có booking: map từng booking -> danh sách khách trong tour_checkin (theo lich_khoi_hanh_id)
-                // LƯU Ý: Chỉ lấy khách có trong tour_checkin, không tự động tạo từ nguoi_dung
-                // Sử dụng $allCheckinRows đã lấy ở trên để tránh query lại nhiều lần
-                foreach ($bookingList as $booking) {
-                    $bookingId = (int)$booking['booking_id'];
-                    // Lọc khách từ $allCheckinRows theo booking_id (đã lọc theo lich_khoi_hanh_id rồi)
-                    $khachList = [];
-                    foreach ($allCheckinRows as $row) {
-                        // Kiểm tra cả NULL và 0
-                        $rowBookingId = $row['booking_id'] !== null ? (int)$row['booking_id'] : 0;
-                        if ($rowBookingId === $bookingId && $rowBookingId > 0) {
-                            $khachList[] = $row;
-                        }
-                    }
-                    // Debug: Kiểm tra dữ liệu (đã tắt)
-                    // error_log("DEBUG CONTROLLER: Booking $bookingId (lich_khoi_hanh_id=$id) có " . count($khachList) . " khách từ allCheckinRows");
-                    // LUÔN gán vào danhSachKhachChiTiet, kể cả khi rỗng
-                    $danhSachKhachChiTiet[$bookingId] = $khachList;
-                }
-                
-                // Tìm khách check-in không có booking (booking_id = null hoặc 0)
-                $khachKhongBooking = [];
-                foreach ($allCheckinRows as $row) {
-                    $bId = (int)($row['booking_id'] ?? 0);
-                    if ($bId <= 0) {
-                        $khachKhongBooking[] = $row;
-                    }
-                }
-                
-                // Nếu có khách check-in không có booking, thêm vào danh sách
-                if (!empty($khachKhongBooking)) {
-                    $bookingList[] = [
-                        'booking_id' => 0, // 0 = không có booking
-                        'khach_hang_id' => null,
-                        'so_nguoi' => count($khachKhongBooking),
-                        'ngay_dat' => null,
-                        'ghi_chu_booking' => null,
-                        'ho_ten' => 'Khách check-in không có booking',
-                        'email' => null,
-                        'so_dien_thoai' => null,
-                        'dia_chi' => null,
-                    ];
-                    $danhSachKhachChiTiet[0] = $khachKhongBooking;
-                }
+                // Có booking: map từng booking -> danh sách khách trong tour_checkin
+            foreach ($bookingList as $booking) {
+                $khachList = $checkinModel->getByBookingId($booking['booking_id']);
+                $danhSachKhachChiTiet[$booking['booking_id']] = $khachList;
+            }
             } else {
-                // Không có booking nhưng có khách check-in trong tour_checkin
-                // => đọc trực tiếp theo lich_khoi_hanh_id từ tour_checkin (KHÔNG lấy từ nguoi_dung)
-                if (!empty($allCheckinRows)) {
+                // Không có booking nhưng HDV đã có danh sách khách trong tour_checkin
+                // => đọc trực tiếp theo lich_khoi_hanh_id để admin vẫn xem được giống HDV
+                $checkinRows = $checkinModel->getByLichKhoiHanh($id);
+
+                if (!empty($checkinRows)) {
                     $bookingGrouped = [];
 
-                    foreach ($allCheckinRows as $row) {
+                    foreach ($checkinRows as $row) {
                         $bId = (int)($row['booking_id'] ?? 0);
                         if ($bId <= 0) {
-                            // Gán booking_id = 0 cho khách không có booking
-                            $bId = 0;
+                            // Gán booking giả nếu thiếu ID
+                            $bId = -1;
                         }
 
                         if (!isset($bookingGrouped[$bId])) {
@@ -304,7 +244,7 @@ class LichKhoiHanhController {
                                 'ngay_dat'     => null,
                                 'ghi_chu_booking' => null,
                                 // Dùng tên khách đầu tiên làm nhãn nhóm
-                                'ho_ten'       => $bId > 0 ? ($row['ho_ten'] ?? 'Khách') : 'Khách check-in không có booking',
+                                'ho_ten'       => $row['ho_ten'] ?? 'Khách',
                                 'email'        => $row['email'] ?? null,
                                 'so_dien_thoai'=> $row['so_dien_thoai'] ?? null,
                                 'dia_chi'      => $row['dia_chi'] ?? null,
@@ -336,40 +276,6 @@ class LichKhoiHanhController {
                 }
             }
             $lichKhoiHanh['tong_nguoi_dat'] = $tongNguoi;
-        } else {
-            // Nếu không có tour_id hoặc ngay_khoi_hanh, vẫn lấy từ tour_checkin theo lich_khoi_hanh_id
-            if (!empty($allCheckinRows)) {
-                $bookingGrouped = [];
-                
-                foreach ($allCheckinRows as $row) {
-                    $bId = (int)($row['booking_id'] ?? 0);
-                    if ($bId <= 0) {
-                        $bId = 0;
-                    }
-                    
-                    if (!isset($bookingGrouped[$bId])) {
-                        $bookingGrouped[$bId] = [
-                            'booking_id'   => $bId,
-                            'khach_hang_id'=> $row['khach_hang_id'] ?? null,
-                            'so_nguoi'     => 0,
-                            'ngay_dat'     => null,
-                            'ghi_chu_booking' => null,
-                            'ho_ten'       => $bId > 0 ? ($row['ho_ten'] ?? 'Khách') : 'Khách check-in không có booking',
-                            'email'        => $row['email'] ?? null,
-                            'so_dien_thoai'=> $row['so_dien_thoai'] ?? null,
-                            'dia_chi'      => $row['dia_chi'] ?? null,
-                        ];
-                        $danhSachKhachChiTiet[$bId] = [];
-                    }
-                    
-                    $bookingGrouped[$bId]['so_nguoi']++;
-                    $danhSachKhachChiTiet[$bId][] = $row;
-                }
-                
-                $bookingList = array_values($bookingGrouped);
-                $lichKhoiHanh['so_booking'] = count($bookingList);
-                $lichKhoiHanh['tong_nguoi_dat'] = count($allCheckinRows);
-            }
         }
         
 
@@ -463,22 +369,6 @@ if (!empty($lichKhoiHanh['tour_id'])) {
 }
 // --- Kết thúc khối nhật ký ---
         
-        // Lấy thông tin tour nếu có tour_id
-        $tour = null;
-        if (!empty($lichKhoiHanh['tour_id'])) {
-            $tour = $this->tourModel->findById($lichKhoiHanh['tour_id']);
-        }
-        
-        // Set biến để view biết context (từ lich khoi hanh list)
-        $fromTourDetail = false;
-        
-        // Debug: Kiểm tra dữ liệu trước khi truyền vào view (đã tắt)
-        // error_log("DEBUG CONTROLLER: bookingList count: " . count($bookingList));
-        // error_log("DEBUG CONTROLLER: danhSachKhachChiTiet keys: " . implode(', ', array_keys($danhSachKhachChiTiet)));
-        // error_log("DEBUG CONTROLLER: allCheckinRows count: " . count($allCheckinRows ?? []));
-        
-        // Đảm bảo biến allCheckinRows được truyền vào view
-        // $allCheckinRows đã được khai báo ở trên
         
         require 'views/admin/chi_tiet_lich_khoi_hanh.php';
     }
@@ -918,24 +808,16 @@ if (!empty($lichKhoiHanh['tour_id'])) {
             require_once 'models/Booking.php';
             
             $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
-            $bookingId = isset($_POST['booking_id']) && $_POST['booking_id'] !== '' ? (int)$_POST['booking_id'] : null;
+            $bookingId = isset($_POST['booking_id']) ? (int)$_POST['booking_id'] : 0;
             
-            $booking = null;
-            $khachHangId = null;
+            $bookingModel = new Booking();
+            $booking = $bookingModel->findById($bookingId);
             
-            // Nếu có booking_id, kiểm tra booking tồn tại
-            if ($bookingId !== null && $bookingId > 0) {
-                $bookingModel = new Booking();
-                $booking = $bookingModel->findById($bookingId);
-                
-                if (!$booking) {
-                    $_SESSION['error'] = 'Booking không tồn tại.';
-                    header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-                    exit();
-                }
-                $khachHangId = $booking['khach_hang_id'];
+            if (!$booking) {
+                $_SESSION['error'] = 'Booking không tồn tại.';
+                header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
+                exit();
             }
-            // Nếu không có booking_id, khách check-in không cần đăng ký (booking_id = null, khach_hang_id = null)
             
             $checkinModel = new CheckinKhach();
             $hoTenArr = $_POST['ho_ten'] ?? [];
@@ -975,7 +857,7 @@ if (!empty($lichKhoiHanh['tour_id'])) {
 
             $data = [
                 'booking_id' => $bookingId,
-                'khach_hang_id' => $khachHangId,
+                'khach_hang_id' => $booking['khach_hang_id'],
                 'lich_khoi_hanh_id' => $lichKhoiHanhId,
                     'ho_ten' => $hoTen,
                     'so_cmnd' => $soCmndArr[$index] ?? null,
@@ -1250,176 +1132,6 @@ public function themYeuCauDacBiet() {
         exit;
     }
 
-    // Sửa yêu cầu đặc biệt
-    public function suaYeuCauDacBiet() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?act=lichKhoiHanh/index');
-            exit;
-        }
-
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
-
-        if ($id <= 0 || $lichKhoiHanhId <= 0) {
-            $_SESSION['error'] = 'Thông tin không hợp lệ.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        require_once 'models/YeuCauDacBiet.php';
-        $yeuCauModel = new YeuCauDacBiet();
-        
-        $data = [
-            'loai_yeu_cau' => $_POST['loai_yeu_cau'] ?? 'khac',
-            'mo_ta' => $_POST['noi_dung'] ?? '',
-            'muc_do_uu_tien' => $_POST['muc_do_uu_tien'] ?? 'trung_binh',
-            'trang_thai' => $_POST['trang_thai'] ?? 'moi'
-        ];
-
-        $adminId = $_SESSION['user_id'] ?? null;
-        $result = $yeuCauModel->updateByAdmin($id, $data, $adminId, $adminId);
-
-        if ($result) {
-            $_SESSION['success'] = 'Cập nhật yêu cầu đặc biệt thành công.';
-        } else {
-            $_SESSION['error'] = 'Không thể cập nhật yêu cầu đặc biệt.';
-        }
-
-        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-        exit;
-    }
-
-    // Xóa yêu cầu đặc biệt
-    public function xoaYeuCauDacBiet() {
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
-
-        if ($id <= 0 || $lichKhoiHanhId <= 0) {
-            $_SESSION['error'] = 'Thông tin không hợp lệ.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        require_once 'models/YeuCauDacBiet.php';
-        $yeuCauModel = new YeuCauDacBiet();
-        
-        // Kiểm tra yêu cầu có tồn tại không
-        $yeuCau = $yeuCauModel->findByIdWithRelations($id);
-        if (!$yeuCau) {
-            $_SESSION['error'] = 'Không tìm thấy yêu cầu đặc biệt.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        // Xóa (cần thêm method delete vào model)
-        $sql = "DELETE FROM yeu_cau_dac_biet WHERE id = ?";
-        $stmt = $yeuCauModel->conn->prepare($sql);
-        $result = $stmt->execute([$id]);
-
-        if ($result) {
-            $_SESSION['success'] = 'Xóa yêu cầu đặc biệt thành công.';
-        } else {
-            $_SESSION['error'] = 'Không thể xóa yêu cầu đặc biệt.';
-        }
-
-        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-        exit;
-    }
-
-    // Sửa nhật ký tour
-    public function suaNhatKy() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: index.php?act=lichKhoiHanh/index');
-            exit;
-        }
-
-        $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
-        $lichKhoiHanhId = isset($_POST['lich_khoi_hanh_id']) ? (int)$_POST['lich_khoi_hanh_id'] : 0;
-
-        if ($id <= 0 || $lichKhoiHanhId <= 0) {
-            $_SESSION['error'] = 'Thông tin không hợp lệ.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        require_once 'models/NhatKyTour.php';
-        $nhatKyModel = new NhatKyTour();
-        
-        // Lấy thông tin lịch khởi hành
-        $lich = $this->lichKhoiHanhModel->findById($lichKhoiHanhId);
-        if (!$lich) {
-            $_SESSION['error'] = 'Không tìm thấy lịch khởi hành.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        $tourId = $lich['tour_id'] ?? 0;
-        $loaiSuKien = $_POST['loai_su_kien'] ?? '';
-        $thoiGian = $_POST['thoi_gian_su_kien'] ?? null;
-        $noiDung = trim($_POST['noi_dung'] ?? '');
-
-        // Lấy nhật ký hiện tại để có nhan_su_id
-        $nhatKyHienTai = $nhatKyModel->findByIdAdmin($id);
-        if (!$nhatKyHienTai) {
-            $_SESSION['error'] = 'Không tìm thấy nhật ký.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        // Chuẩn bị dữ liệu
-        $contentToSave = $noiDung;
-        if ($loaiSuKien) {
-            $contentToSave = ($loaiSuKien . ($contentToSave ? ' - ' . $contentToSave : ''));
-        }
-
-        $ngayGhi = date('Y-m-d H:i:s');
-        if (!empty($thoiGian)) {
-            $thoiGian = str_replace('T', ' ', $thoiGian);
-            $ngayGhi = date('Y-m-d H:i:s', strtotime($thoiGian));
-        }
-
-        $data = [
-            'tour_id' => $tourId,
-            'noi_dung' => $contentToSave,
-            'ngay_ghi' => $ngayGhi
-        ];
-
-        $result = $nhatKyModel->update($id, $nhatKyHienTai['nhan_su_id'] ?? 0, $data);
-
-        if ($result) {
-            $_SESSION['success'] = 'Cập nhật nhật ký thành công.';
-        } else {
-            $_SESSION['error'] = 'Không thể cập nhật nhật ký.';
-        }
-
-        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-        exit;
-    }
-
-    // Xóa nhật ký tour
-    public function xoaNhatKy() {
-        $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-        $lichKhoiHanhId = isset($_GET['lich_khoi_hanh_id']) ? (int)$_GET['lich_khoi_hanh_id'] : 0;
-
-        if ($id <= 0 || $lichKhoiHanhId <= 0) {
-            $_SESSION['error'] = 'Thông tin không hợp lệ.';
-            header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-            exit;
-        }
-
-        require_once 'models/NhatKyTour.php';
-        $nhatKyModel = new NhatKyTour();
-        
-        $result = $nhatKyModel->delete($id);
-
-        if ($result) {
-            $_SESSION['success'] = 'Xóa nhật ký thành công.';
-        } else {
-            $_SESSION['error'] = 'Không thể xóa nhật ký.';
-        }
-
-        header('Location: index.php?act=lichKhoiHanh/chiTiet&id=' . $lichKhoiHanhId);
-        exit;
-    }
+    
 }
 

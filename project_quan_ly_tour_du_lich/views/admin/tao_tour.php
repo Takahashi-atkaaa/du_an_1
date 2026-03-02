@@ -328,7 +328,7 @@ ob_start();
 
 
 
-        <form method="post" enctype="multipart/form-data" 
+        <form method="post" wa" 
                 action="<?php echo BASE_URL; ?>index.php?act=<?php echo $isCapNhat ? 'tour/update' : 'tour/create'; ?>">
             <?php if ($isCapNhat): ?>
                 <input type="hidden" name="id" value="<?php echo htmlspecialchars($tour['tour_id']); ?>">

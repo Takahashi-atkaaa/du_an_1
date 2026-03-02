@@ -1,110 +1,85 @@
-<?php
-$pageTitle = 'Thông báo - HDV';
-$currentPage = 'notifications';
-ob_start();
-?>
-
-<style>
-    .page-header-section {
-        background: rgba(45, 45, 45, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        padding: 40px;
-        margin-bottom: 40px;
-        backdrop-filter: blur(10px);
-    }
-
-    .notification-item {
-        background: rgba(45, 45, 45, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-left: 4px solid;
-        border-radius: 2px;
-        padding: 25px;
-        margin-bottom: 20px;
-        backdrop-filter: blur(10px);
-        transition: all 0.3s;
-    }
-
-    .notification-item:hover {
-        border-color: var(--accent-gold);
-        transform: translateX(4px);
-    }
-
-    .notification-item.unread {
-        border-left-color: #0d6efd;
-        background: rgba(13, 110, 253, 0.1);
-    }
-
-    .alert {
-        padding: 15px 20px;
-        border-radius: 2px;
-        margin-bottom: 20px;
-        border: 1px solid;
-    }
-
-    .alert-info {
-        background: rgba(13, 202, 240, 0.1);
-        border-color: rgba(13, 202, 240, 0.3);
-        color: #0dcaf0;
-    }
-
-    .badge {
-        padding: 6px 12px;
-        border-radius: 2px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-
-    .badge-danger {
-        background: rgba(220, 53, 69, 0.2);
-        color: #dc3545;
-        border: 1px solid rgba(220, 53, 69, 0.3);
-    }
-</style>
-
-<!-- Page Header -->
-<div class="page-header-section">
-    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 20px;">
-        <div>
-            <h1>🔔 Thông báo</h1>
-            <p style="color: var(--text-muted); margin-top: 10px;">Tất cả thông báo của bạn</p>
-        </div>
-        <div>
-            <a href="javascript:window.history.back();" class="btn btn-secondary">
-                ← Quay lại
-            </a>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thông báo - HDV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .notification-item {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+        
+        .notification-item:hover {
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+        }
+        
+        .notification-item.unread {
+            border-left: 4px solid var(--primary-color);
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">
+                        <i class="bi bi-bell"></i> Thông báo
+                    </h3>
+                    <p class="mb-0 opacity-75">Tất cả thông báo của bạn</p>
+                </div>
+                <a href="index.php?act=hdv/dashboard" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Trang chủ
+                </a>
+            </div>
         </div>
     </div>
-</div>
 
-<!-- Notifications List -->
-<?php if (!empty($notifications)): ?>
-    <?php foreach($notifications as $notif): ?>
-    <div class="notification-item <?php echo !$notif['da_xem'] ? 'unread' : ''; ?>">
-        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; flex-wrap: wrap; gap: 15px;">
-            <h5 style="margin: 0; font-size: 18px; color: var(--text-light);">
-                <?php echo htmlspecialchars($notif['tieu_de']); ?>
-                <?php if (!$notif['da_xem']): ?>
-                <span class="badge badge-danger" style="margin-left: 10px;">Mới</span>
-                <?php endif; ?>
-            </h5>
-            <small style="color: var(--text-muted); font-size: 12px;">
-                🕐 <?php echo date('d/m/Y H:i', strtotime($notif['ngay_gui'])); ?>
-            </small>
-        </div>
-        <p style="margin: 0; color: var(--text-light); line-height: 1.6;">
-            <?php echo nl2br(htmlspecialchars($notif['noi_dung'])); ?>
-        </p>
+    <div class="container">
+        <?php if (!empty($notifications)): ?>
+            <?php foreach($notifications as $notif): ?>
+            <div class="notification-item <?php echo !$notif['da_xem'] ? 'unread' : ''; ?>">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="mb-0">
+                        <?php echo htmlspecialchars($notif['tieu_de']); ?>
+                        <?php if (!$notif['da_xem']): ?>
+                        <span class="badge bg-danger">Mới</span>
+                        <?php endif; ?>
+                    </h5>
+                    <small class="text-muted">
+                        <i class="bi bi-clock"></i> 
+                        <?php echo date('d/m/Y H:i', strtotime($notif['ngay_gui'])); ?>
+                    </small>
+                </div>
+                <p class="mb-0"><?php echo nl2br(htmlspecialchars($notif['noi_dung'])); ?></p>
+            </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Bạn chưa có thông báo nào.
+            </div>
+        <?php endif; ?>
     </div>
-    <?php endforeach; ?>
-<?php else: ?>
-    <div class="alert alert-info">
-        ℹ️ Bạn chưa có thông báo nào.
-    </div>
-<?php endif; ?>
 
-<?php
-$content = ob_get_clean();
-require __DIR__ . '/../layouts/aventura.php';
-?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

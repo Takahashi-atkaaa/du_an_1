@@ -210,6 +210,10 @@ class SalaryBonus {
                 $updates[] = "payment_status = ?";
                 $params[] = $data['payment_status'];
             }
+            if (isset($data['payment_date'])) {
+                $updates[] = "payment_date = ?";
+                $params[] = $data['payment_date'];
+            }
             if (isset($data['notes'])) {
                 $updates[] = "notes = ?";
                 $params[] = $data['notes'];

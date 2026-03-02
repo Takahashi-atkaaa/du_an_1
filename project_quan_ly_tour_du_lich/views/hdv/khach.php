@@ -1,289 +1,261 @@
-<?php
-$pageTitle = 'Danh sách Khách - HDV';
-$currentPage = 'khach';
-ob_start();
-?>
-
-<style>
-    .page-header-section {
-        background: rgba(45, 45, 45, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        padding: 40px;
-        margin-bottom: 40px;
-        backdrop-filter: blur(10px);
-    }
-
-    .table-wrapper {
-        background: rgba(45, 45, 45, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        overflow: hidden;
-        backdrop-filter: blur(10px);
-    }
-
-    .table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .table thead {
-        background: rgba(212, 175, 55, 0.1);
-    }
-
-    .table th {
-        padding: 15px;
-        text-align: left;
-        font-size: 12px;
-        letter-spacing: 1px;
-        color: var(--accent-gold);
-        font-weight: 600;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .table td {
-        padding: 15px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        color: var(--text-light);
-        font-size: 13px;
-    }
-
-    .table tbody tr:hover {
-        background: rgba(255, 255, 255, 0.05);
-    }
-
-    .status-badge {
-        padding: 6px 12px;
-        border-radius: 2px;
-        font-size: 11px;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-    }
-
-    .status-ChuaCheckIn {
-        background: rgba(255, 193, 7, 0.2);
-        color: #ffc107;
-        border: 1px solid rgba(255, 193, 7, 0.3);
-    }
-
-    .status-DaCheckIn {
-        background: rgba(25, 135, 84, 0.2);
-        color: #198754;
-        border: 1px solid rgba(25, 135, 84, 0.3);
-    }
-
-    .status-DaCheckOut {
-        background: rgba(108, 117, 125, 0.2);
-        color: #6c757d;
-        border: 1px solid rgba(108, 117, 125, 0.3);
-    }
-
-    .card {
-        background: rgba(45, 45, 45, 0.5);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 2px;
-        padding: 30px;
-        margin-bottom: 30px;
-        backdrop-filter: blur(10px);
-    }
-
-    .form-group select {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: var(--text-light);
-        padding: 12px 10px;
-        font-size: 13px;
-        border-radius: 2px;
-        width: 100%;
-        font-family: inherit;
-    }
-
-    .form-group select:focus {
-        outline: none;
-        background: rgba(255, 255, 255, 0.15);
-        border-color: var(--accent-gold);
-    }
-
-    .alert {
-        padding: 15px 20px;
-        border-radius: 2px;
-        margin-bottom: 20px;
-        border: 1px solid;
-    }
-
-    .alert-info {
-        background: rgba(13, 202, 240, 0.1);
-        border-color: rgba(13, 202, 240, 0.3);
-        color: #0dcaf0;
-    }
-
-    .badge {
-        padding: 6px 12px;
-        border-radius: 2px;
-        font-size: 12px;
-        font-weight: 600;
-    }
-
-    .badge-primary {
-        background: rgba(13, 110, 253, 0.2);
-        color: #0d6efd;
-        border: 1px solid rgba(13, 110, 253, 0.3);
-    }
-</style>
-<!-- Page Header -->
-<div class="page-header-section">
-    <div style="display: flex; justify-content: space-between; align-items: start; flex-wrap: wrap; gap: 20px;">
-        <div>
-            <h1>👥 Danh sách Khách</h1>
-            <?php if ($tour): ?>
-            <p style="color: var(--text-muted); margin-top: 10px;"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></p>
-            <?php endif; ?>
-        </div>
-        <div>
-            <a href="javascript:window.history.back();" class="btn btn-secondary">
-                ← Quay lại
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Tour Selector -->
-<?php if (empty($tour)): ?>
-<div class="card">
-    <h5 style="margin-bottom: 20px; color: var(--accent-gold);">Chọn tour để xem danh sách khách</h5>
-    <div class="form-group">
-        <select onchange="if(this.value) window.location.href='index.php?act=hdv/khach&tour_id=' + this.value" class="form-group select">
-            <option value="">-- Chọn tour --</option>
-            <?php foreach($tours_list as $t): ?>
-            <option value="<?php echo $t['id']; ?>">
-                <?php echo htmlspecialchars($t['ten_tour'] ?? ''); ?> 
-                (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'] ?? 'now')); ?>)
-            </option>
-            <?php endforeach; ?>
-        </select>
-    </div>
-</div>
-<?php else: ?>
-
-<!-- Tour Info -->
-<div class="card" style="margin-bottom: 30px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-        <div>
-            <h5 style="margin-bottom: 10px; font-size: 18px;"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></h5>
-            <div style="color: var(--text-muted); font-size: 13px;">
-                📅 <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'] ?? 'now')); ?>
-                - <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'] ?? 'now')); ?>
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Danh sách Khách - HDV</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+        }
+        
+        .page-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .tour-info-card {
+            background: white;
+            border-radius: 1.2rem;
+            box-shadow: 0 0.25rem 0.5rem rgba(102,126,234,0.08);
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+        }
+        .table-custom {
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 0.25rem 0.5rem rgba(102,126,234,0.08);
+        }
+        .table-custom th {
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: #fff;
+            font-weight: 600;
+            border: none;
+        }
+        .table-custom td {
+            background: #fff;
+            vertical-align: middle;
+            border: none;
+        }
+        .table-custom tbody tr {
+            transition: box-shadow 0.2s;
+        }
+        .table-custom tbody tr:hover {
+            box-shadow: 0 0.5rem 1rem rgba(102,126,234,0.12);
+            background: #f7f8fa;
+        }
+        .badge-status {
+            font-size: 1rem;
+            padding: 0.5em 1em;
+            border-radius: 1em;
+            font-weight: 500;
+            box-shadow: 0 0.15rem 0.3rem rgba(102,126,234,0.08);
+        }
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-right: 0.5rem;
+        }
+        .table-responsive {
+            border-radius: 1rem;
+            overflow: hidden;
+        }
+        .fs-5 {
+            font-size: 1.15rem !important;
+        }
+        .fw-bold {
+            font-weight: 600 !important;
+        }
+        .mb-1 {
+            margin-bottom: 0.5rem !important;
+        }
+        .mb-2 {
+            margin-bottom: 1rem !important;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="page-header">
+        <div class="container">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="mb-1">
+                        <i class="bi bi-people"></i> Danh sách Khách
+                    </h3>
+                    <?php if ($tour): ?>
+                    <p class="mb-0 opacity-75"><?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?></p>
+                    <?php endif; ?>
+                </div>
+                <a href="index.php?act=hdv/dashboard" class="btn btn-light">
+                    <i class="bi bi-arrow-left"></i> Trang chủ
+                </a>
             </div>
         </div>
-        <div>
-            <span class="badge badge-primary" style="font-size: 14px; padding: 8px 16px;">
-                👥 <?php echo count($khach_list); ?> khách
-            </span>
+    </div>
+
+    <div class="container">
+        <!-- Tour Selector -->
+        <?php if (empty($tour)): ?>
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Chọn tour để xem danh sách khách</h5>
+                <select class="form-select" onchange="if(this.value) window.location.href='index.php?act=hdv/khach&tour_id=' + this.value">
+                    <option value="">-- Chọn tour --</option>
+                    <?php foreach($tours_list as $t): ?>
+                    <option value="<?php echo $t['id']; ?>">
+                        <?php echo htmlspecialchars($t['ten_tour'] ?? ''); ?> 
+                        (<?php echo date('d/m/Y', strtotime($t['ngay_khoi_hanh'] ?? 'now')); ?>)
+                    </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
         </div>
-    </div>
-</div>
-
-<!-- Customer List -->
-<?php if (!empty($khach_list)): ?>
-    <div class="table-wrapper">
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>STT</th>
-                    <th>Họ tên</th>
-                    <th>CMND/Passport</th>
-                    <th>Ngày sinh</th>
-                    <th>Giới tính</th>
-                    <th>Quốc tịch</th>
-                    <th>Liên hệ</th>
-                    <th>Địa chỉ</th>
-                    <th>Trạng thái</th>
-                    <th>Booking ID</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($khach_list as $index => $khach): ?>
-                <tr>
-                    <td><?php echo $index + 1; ?></td>
-                    <td>
-                        <strong><?php echo htmlspecialchars($khach['ho_ten'] ?? 'Khách'); ?></strong>
-                    </td>
-                    <td>
-                        <?php if (!empty($khach['so_cmnd'])): ?>
-                            CMND: <?php echo htmlspecialchars($khach['so_cmnd'] ?? ''); ?><br>
-                        <?php endif; ?>
-                        <?php if (!empty($khach['so_passport'])): ?>
-                            Passport: <?php echo htmlspecialchars($khach['so_passport'] ?? ''); ?>
-                        <?php endif; ?>
-                        <?php if (empty($khach['so_cmnd']) && empty($khach['so_passport'])): ?>
-                            <span style="color: var(--text-muted);">Chưa cập nhật</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php echo !empty($khach['ngay_sinh']) ? date('d/m/Y', strtotime($khach['ngay_sinh'])) : 'N/A'; ?>
-                    </td>
-                    <td>
-                        <?php 
-                        $gioiTinhLabels = ['Nam' => 'Nam', 'Nu' => 'Nữ', 'Khac' => 'Khác'];
-                        echo $gioiTinhLabels[$khach['gioi_tinh']] ?? $khach['gioi_tinh'] ?? 'N/A';
-                        ?>
-                    </td>
-                    <td>
-                        <?php echo htmlspecialchars($khach['quoc_tich'] ?? 'Việt Nam'); ?>
-                    </td>
-                    <td>
-                        <?php if (!empty($khach['email'])): ?>
-                            <small style="color: var(--text-muted);">✉ <?php echo htmlspecialchars($khach['email'] ?? ''); ?></small><br>
-                        <?php endif; ?>
-                        <?php if (!empty($khach['so_dien_thoai'])): ?>
-                            <small style="color: var(--text-muted);">📞 <?php echo htmlspecialchars($khach['so_dien_thoai'] ?? ''); ?></small>
-                        <?php endif; ?>
-                        <?php if (empty($khach['email']) && empty($khach['so_dien_thoai'])): ?>
-                            <span style="color: var(--text-muted);">N/A</span>
-                        <?php endif; ?>
-                    </td>
-                    <td>
-                        <?php echo !empty($khach['dia_chi']) ? htmlspecialchars($khach['dia_chi'] ?? '') : 'N/A'; ?>
-                    </td>
-                    <td>
-                        <?php
-                        $trangThaiLabels = [
-                            'ChuaCheckIn' => 'Chưa check-in',
-                            'DaCheckIn' => 'Đã check-in',
-                            'DaCheckOut' => 'Đã check-out'
-                        ];
-                        $trangThai = $khach['trang_thai'] ?? 'ChuaCheckIn';
-                        ?>
-                        <span class="status-badge status-<?php echo $trangThai; ?>">
-                            <?php echo $trangThaiLabels[$trangThai] ?? $trangThai; ?>
-                        </span>
-                    </td>
-                    <td>
-                        <?php if (!empty($khach['booking_id'])): ?>
-                            <span style="font-family: monospace; font-weight: 600; color: var(--accent-gold);">
-                                #<?php echo $khach['booking_id']; ?>
-                            </span>
-                        <?php else: ?>
-                            N/A
-                        <?php endif; ?>
-                    </td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-        <div style="padding: 15px 20px; border-top: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-size: 12px;">
-            Tổng số: <strong><?php echo count($khach_list); ?></strong> khách
+        <?php else: ?>
+        
+        <!-- Tour Info -->
+        <div class="tour-info-card mb-2">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h4 class="fw-bold mb-1 text-primary">
+                        <i class="bi bi-geo-alt"></i> <?php echo htmlspecialchars($tour['ten_tour'] ?? ''); ?>
+                    </h4>
+                    <div class="text-muted mb-2">
+                        <i class="bi bi-calendar3"></i> <?php echo date('d/m/Y', strtotime($tour['ngay_khoi_hanh'] ?? 'now')); ?>
+                        &rarr; <?php echo date('d/m/Y', strtotime($tour['ngay_ket_thuc'] ?? 'now')); ?>
+                    </div>
+                    <div class="text-muted">
+                        <i class="bi bi-pin-map"></i> Điểm tập trung: <span class="fw-bold"> <?php echo htmlspecialchars($tour['diem_tap_trung'] ?? 'Chưa xác định'); ?> </span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-end">
+                    <span class="badge bg-primary fs-5">
+                        <i class="bi bi-people"></i> <?php echo count($khach_list); ?> khách
+                    </span>
+                </div>
+            </div>
         </div>
-    </div>
-<?php else: ?>
-    <div class="alert alert-info">
-        ℹ️ Chưa có khách nào trong danh sách. Vui lòng thêm khách vào lịch khởi hành này.
-    </div>
-<?php endif; ?>
 
-<?php endif; ?>
+        <!-- Customer List -->
+        <?php if (!empty($khach_list)): ?>
+            <div class="table-responsive">
+                <table class="table table-custom align-middle">
+                    <thead>
+                        <tr>
+                            <th>STT</th>
+                            <th>Khách</th>
+                            <th>CMND/Passport</th>
+                            <th>Ngày sinh</th>
+                            <th>Giới tính</th>
+                            <th>Quốc tịch</th>
+                            <th>Liên hệ</th>
+                            <th>Địa chỉ</th>
+                            <th>Trạng thái</th>
+                            <th>Booking ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach($khach_list as $index => $khach): ?>
+                        <tr>
+                            <td class="fw-bold text-primary">#<?php echo $index + 1; ?></td>
+                            <td class="d-flex align-items-center">
+                                <span class="customer-avatar">
+                                    <?php 
+                                    $name = $khach['ho_ten'] ?? 'Khách';
+                                    $initials = implode('', array_map(fn($w) => mb_substr($w,0,1), explode(' ', $name)));
+                                    echo strtoupper($initials);
+                                    ?>
+                                </span>
+                                <span class="fw-bold"> <?php echo htmlspecialchars($khach['ho_ten'] ?? 'Khách'); ?> </span>
+                            </td>
+                            <td>
+                                <?php if (!empty($khach['so_cmnd'])): ?>
+                                    <span class="badge bg-info-subtle text-dark mb-1">CMND: <?php echo htmlspecialchars($khach['so_cmnd'] ?? ''); ?></span><br>
+                                <?php endif; ?>
+                                <?php if (!empty($khach['so_passport'])): ?>
+                                    <span class="badge bg-secondary-subtle text-dark mb-1">Passport: <?php echo htmlspecialchars($khach['so_passport'] ?? ''); ?></span>
+                                <?php endif; ?>
+                                <?php if (empty($khach['so_cmnd']) && empty($khach['so_passport'])): ?>
+                                    <span class="text-muted">Chưa cập nhật</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php echo !empty($khach['ngay_sinh']) ? date('d/m/Y', strtotime($khach['ngay_sinh'])) : '<span class="text-muted">N/A</span>'; ?>
+                            </td>
+                            <td>
+                                <?php 
+                                $gioiTinhLabels = ['Nam' => 'Nam', 'Nu' => 'Nữ', 'Khac' => 'Khác'];
+                                echo $gioiTinhLabels[$khach['gioi_tinh']] ?? $khach['gioi_tinh'] ?? '<span class="text-muted">N/A</span>';
+                                ?>
+                            </td>
+                            <td>
+                                <?php echo htmlspecialchars($khach['quoc_tich'] ?? 'Việt Nam'); ?>
+                            </td>
+                            <td>
+                                <?php if (!empty($khach['email'])): ?>
+                                    <small><i class="bi bi-envelope"></i> <?php echo htmlspecialchars($khach['email'] ?? ''); ?></small><br>
+                                <?php endif; ?>
+                                <?php if (!empty($khach['so_dien_thoai'])): ?>
+                                    <small><i class="bi bi-telephone"></i> <?php echo htmlspecialchars($khach['so_dien_thoai'] ?? ''); ?></small>
+                                <?php endif; ?>
+                                <?php if (empty($khach['email']) && empty($khach['so_dien_thoai'])): ?>
+                                    <span class="text-muted">N/A</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php echo !empty($khach['dia_chi']) ? htmlspecialchars($khach['dia_chi'] ?? '') : '<span class="text-muted">N/A</span>'; ?>
+                            </td>
+                            <td>
+                                <?php
+                                $trangThaiLabels = [
+                                    'ChuaCheckIn' => 'Chưa check-in',
+                                    'DaCheckIn' => 'Đã check-in',
+                                    'DaCheckOut' => 'Đã check-out'
+                                ];
+                                $trangThaiClass = [
+                                    'ChuaCheckIn' => 'warning',
+                                    'DaCheckIn' => 'success',
+                                    'DaCheckOut' => 'secondary'
+                                ];
+                                $trangThai = $khach['trang_thai'] ?? 'ChuaCheckIn';
+                                ?>
+                                <span class="badge badge-status bg-<?php echo $trangThaiClass[$trangThai] ?? 'warning'; ?>">
+                                    <?php echo $trangThaiLabels[$trangThai] ?? $trangThai; ?>
+                                </span>
+                            </td>
+                            <td>
+                                <?php if (!empty($khach['booking_id'])): ?>
+                                    <span class="badge bg-primary-subtle text-dark">#<?php echo $khach['booking_id']; ?></span>
+                                <?php else: ?>
+                                    <span class="text-muted">N/A</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Chưa có khách nào trong danh sách. Vui lòng thêm khách vào lịch khởi hành này.
+            </div>
+        <?php endif; ?>
+        
+        <?php endif; ?>
+    </div>
 
-<?php
-$content = ob_get_clean();
-require __DIR__ . '/../layouts/aventura.php';
-?>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

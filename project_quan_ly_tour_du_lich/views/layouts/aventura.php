@@ -33,6 +33,7 @@
                         <li><a href="index.php?act=admin/quanLyBooking" class="<?php echo (isset($currentPage) && $currentPage === 'booking') ? 'active' : ''; ?>">Booking</a></li>
                         <li><a href="index.php?act=lichKhoiHanh/index" class="<?php echo (isset($currentPage) && $currentPage === 'lichKhoiHanh') ? 'active' : ''; ?>">Quản lý lịch khởi hành</a></li>
                         <li><a href="index.php?act=admin/nhanSu" class="<?php echo (isset($currentPage) && $currentPage === 'nhanSu') ? 'active' : ''; ?>">Quản lý nhân sự</a></li>
+                        <li><a href="index.php?act=admin/quanLyLuongHDV" class="<?php echo (isset($currentPage) && $currentPage === 'quanLyLuongHDV') ? 'active' : ''; ?>">Lương & Thưởng HDV</a></li>
                         <li><a href="index.php?act=admin/quanLyNguoiDung" class="<?php echo (isset($currentPage) && $currentPage === 'nguoiDung') ? 'active' : ''; ?>">Quản lý người dùng</a></li>
                         <li><a href="index.php?act=admin/nhaCungCap" class="<?php echo (isset($currentPage) && $currentPage === 'nhaCungCap') ? 'active' : ''; ?>">Nhà cung cấp</a></li>
                         <li><a href="index.php?act=admin/baoCaoTaiChinh" class="<?php echo (isset($currentPage) && $currentPage === 'baoCaoTaiChinh') ? 'active' : ''; ?>">Báo cáo tài chính</a></li>
@@ -42,6 +43,7 @@
                         <li><a href="index.php?act=hdv/lichLamViec" class="<?php echo (isset($currentPage) && $currentPage === 'lichLamViec') ? 'active' : ''; ?>">Lịch làm việc</a></li>
                         <li><a href="index.php?act=hdv/tours" class="<?php echo (isset($currentPage) && $currentPage === 'tours') ? 'active' : ''; ?>">Tour của tôi</a></li>
                         <li><a href="index.php?act=hdv/nhatKy" class="<?php echo (isset($currentPage) && $currentPage === 'nhatKy') ? 'active' : ''; ?>">Nhật ký tour</a></li>
+                        <li><a href="index.php?act=hdv/luongThuong" class="<?php echo (isset($currentPage) && $currentPage === 'luongThuong') ? 'active' : ''; ?>">Lương & Thưởng</a></li>
                         <li><a href="index.php?act=hdv/yeuCauDacBiet" class="<?php echo (isset($currentPage) && $currentPage === 'yeuCauDacBiet') ? 'active' : ''; ?>">Yêu cầu đặc biệt</a></li>
                     <?php elseif ($_SESSION['role'] === 'KhachHang'): ?>
                         <li><a href="index.php?act=khachHang/dashboard" class="<?php echo (isset($currentPage) && $currentPage === 'dashboard') ? 'active' : ''; ?>">Trang chủ</a></li>
