@@ -76,7 +76,7 @@
                 <a href="#telegram">✈</a>
             </div>
 
-            <div class="copyright">© <?php echo date('Y'); ?> Aventura. All Rights Reserved</div>
+            <div class="copyright">© <?php echo date('Y'); ?> Nguyen Tung Anh</div>
         </aside>
 
         <div class="main-content">
@@ -85,11 +85,11 @@
                 <div class="header-left">
                     <div class="header-item">
                         <span>☎</span>
-                        <a href="tel:+1-888-665-5553">Call Center: +1-888-665-5553</a>
+                        <a href="tel:+84-367-462-158">Call Center: +84-367-462-158</a>
                     </div>
                     <div class="header-item">
                         <span>✉</span>
-                        <a href="mailto:info@aventura.com">info@aventura.com</a>
+                        <a href="mailto:nguyentunganh22102020@gmail.com">nguyentunganh22102020@gmail.com</a>
                     </div>
                 </div>
                 <div class="header-right">
