@@ -1,25 +1,7 @@
-# Dự án 1
+# Hệ thống quản lý tour du lịch
 
-Dự án này được quản lý bằng Git và đã được đẩy lên GitHub.
+Mã nguồn dự án được quản lý bằng Git và đồng bộ trên GitHub để phục vụ phát triển, review code và triển khai.
 
 ## Mô tả
 
-Thêm mô tả dự án của bạn vào đây.
-
-## Cài đặt
-
-Hướng dẫn cài đặt dự án (nếu có).
-
-## Sử dụng
-
-Hướng dẫn sử dụng dự án (nếu có).
-Truy cập: https://github.com/Takahashi-atkaaa/du_an_1
-Bạn có thể:
-Xem code trên GitHub
-Commit và push các thay đổi mới
-Chia sẻ repository với người khác
-Lưu ý: Nếu sau này thêm file mới hoặc sửa đổi, chạy:
-
-git add .
-git commit -m "Mô tả thay đổi"
-git push
+Hệ thống quản lý tour du lịch (web app PHP) cho phép quản trị viên, hướng dẫn viên, nhà cung cấp và khách hàng quản lý tour, lịch khởi hành, booking, thanh toán, lương thưởng hướng dẫn viên và các báo cáo tài chính liên quan trong một nền tảng tập trung.
