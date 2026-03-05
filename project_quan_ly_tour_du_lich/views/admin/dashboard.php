@@ -1,7 +1,10 @@
+
 <?php
 $pageTitle = 'Dashboard Admin';
 $currentPage = 'dashboard';
 ob_start();
+
+// $tours đã được truyền từ controller
 ?>
 
 <style>
@@ -87,6 +90,8 @@ ob_start();
         padding: 40px;
         margin-bottom: 40px;
         backdrop-filter: blur(10px);
+        border-color: var(--accent-gold);
+        
     }
 
     .welcome-avatar {
@@ -131,13 +136,111 @@ ob_start();
     }
 </style>
 
-<div class="welcome-section">
+<div class="welcome-section" style="display: flex; justify-content: flex-start; gap: 20px; ">
     <div class="welcome-avatar">
         <?php echo strtoupper(mb_substr($_SESSION['user_name'] ?? 'A', 0, 1, 'UTF-8')); ?>
     </div>
-    <h2>Xin chào, <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Administrator'); ?>!</h2>
-    <p>Quản trị viên hệ thống - Quản lý tour du lịch</p>
+    <div>
+        <h2>Xin chào, <?php echo htmlspecialchars($_SESSION['user_name'] ?? 'Administrator'); ?>!</h2>
+        <p>Quản trị viên hệ thống - Quản lý tour du lịch</p>
+    </div>
 </div>
+
+<!-- BIỂU ĐỒ TÀI CHÍNH -->
+<div class="report-card" style="margin-bottom:40px; margin-left: 100px; margin-top: 10px; color:yellow;">
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;">
+        <div style="flex:1;min-width:420px;max-width:700px;display:flex;align-items:center;justify-content:center;margin-left:15px;">
+            <canvas id="barChart" width="880" height="400"></canvas>
+        </div>
+        <div style="flex:1;min-width:420px;max-width:700px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start; margin-left:10px;">
+            <canvas id="pieChart" width="400" height="200" style="margin-left: 200px; margin-top: 0px;"></canvas>
+            <div id="pieLegend" style="margin-top:24px;margin-left:280px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-width:260px;"></div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Dữ liệu PHP sang JS
+const tours = <?php echo json_encode($tours ?? []); ?>;
+const tourNames = tours.map(t => t.ten_tour);
+const tongThu = tours.map(t => Number(t.tong_thu));
+const tongChi = tours.map(t => Number(t.tong_chi_thuc_te));
+const duToan = tours.map(t => Number(t.tong_du_toan));
+const loiNhuan = tours.map(t => Number(t.loi_nhuan));
+
+// Bar chart: Tổng Thu, Chi phí, Dự toán
+const ctxBar = document.getElementById('barChart').getContext('2d');
+// Dữ liệu doanh thu các tháng
+const monthLabels = <?php echo json_encode(array_keys($doanhThuTheoThang ?? [])); ?>;
+const monthRevenue = <?php echo json_encode(array_values($doanhThuTheoThang ?? [])); ?>.map(x => Number(x) || 0);
+
+// Bar chart: Doanh thu các tháng
+new Chart(ctxBar, {
+    type: 'bar',
+    data: {
+        labels: monthLabels,
+        datasets: [
+            { label: 'Doanh thu', data: monthRevenue, backgroundColor: 'rgba(16,185,129,0.7)' }
+        ]
+    },
+    options: {
+        responsive: false,
+        plugins: {
+            legend: { display: true },
+            tooltip: {
+                enabled: true,
+                callbacks: {
+                    label: function(context) {
+                        let value = context.parsed.y || 0;
+                        return 'Doanh thu: ' + value.toLocaleString('vi-VN');
+                    }
+                }
+            }
+        },
+        scales: { y: { beginAtZero: true } },
+        layout: { padding: { left: 20, right: 20, top: 20, bottom: 20 } }
+    }
+});
+
+// Pie chart: Tỷ lệ lợi nhuận các tour
+const ctxPie = document.getElementById('pieChart').getContext('2d');
+const pieColors = [
+    'rgba(16,185,129,0.7)',
+    'rgba(239,68,68,0.7)',
+    'rgba(212,175,55,0.7)',
+    'rgba(59,130,246,0.7)',
+    'rgba(168,85,247,0.7)',
+    'rgba(251,191,36,0.7)',
+    'rgba(34,197,94,0.7)',
+    'rgba(244,63,94,0.7)',
+    'rgba(132,204,22,0.7)',
+    'rgba(253,224,71,0.7)'
+];
+const pieChart = new Chart(ctxPie, {
+    type: 'pie',
+    data: {
+        labels: tourNames,
+        datasets: [{
+            label: 'Lợi nhuận',
+            data: loiNhuan,
+            backgroundColor: pieColors.slice(0, tourNames.length)
+        }]
+    },
+    options: {
+        responsive: false,
+        plugins: { legend: { display: false } },
+        layout: { padding: { left: 20, right: 20, top: 20, bottom: 20 } }
+    }
+});
+// Custom legend dưới biểu đồ tròn (1 cột dọc, nhỏ gọn)
+const pieLegend = document.getElementById('pieLegend');
+pieLegend.innerHTML = tourNames.map((name, i) =>
+    `<span style="display:flex;align-items:center;margin-bottom:4px;width:240px;">
+        <span style="display:inline-block;width:13px;height:13px;background:${pieColors[i]};border-radius:3px;margin-right:7px;flex-shrink:0;"></span>
+        <span style="font-size:10px;color:#fff;line-height:1.2;text-align:left;">${name}</span>
+    </span>`
+).join('');
+</script>
 
 <div class="dashboard-grid">
     <a href="index.php?act=admin/quanLyTour" class="feature-card">
@@ -165,6 +268,12 @@ ob_start();
         <div class="feature-icon">👥</div>
         <h5>Quản lý Nhân sự</h5>
         <p>Quản lý hướng dẫn viên, điều hành và toàn bộ nhân viên</p>
+    </a>
+
+    <a href="index.php?act=admin/quanLyLuongHDV" class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h5>Lương & Thưởng HDV</h5>
+        <p>Quản lý lương, thưởng và hoa hồng cho hướng dẫn viên</p>
     </a>
 
     <a href="index.php?act=admin/quanLyNguoiDung" class="feature-card">

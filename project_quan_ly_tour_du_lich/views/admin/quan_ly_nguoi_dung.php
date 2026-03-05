@@ -51,6 +51,7 @@ ob_start();
         padding: 15px;
         text-align: left;
         font-size: 12px;
+    
         letter-spacing: 1px;
         color: var(--accent-gold);
         font-weight: 600;
@@ -114,12 +115,12 @@ ob_start();
     }
 
     .form-group .select {
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: var(--text-light);
+        background: linear-gradient(90deg, #ffe082 0%, #fffde7 100%);
+        border: 1px solid #d4af37;
+        color: #222;
         padding: 12px 10px;
         font-size: 13px;
-        border-radius: 2px;
+        border-radius: 4px;
         transition: all 0.3s;
         width: 100%;
         font-family: inherit;
@@ -156,6 +157,64 @@ ob_start();
         color: var(--text-muted);
     }
 </style>
+
+<style>
+    .welcome-admin {
+        position: relative;
+        background: linear-gradient(90deg, #2d2d2d 0%, #3a2e13 100%);
+        border-radius: 8px;
+        padding: 24px 32px;
+        margin-bottom: 32px;
+        box-shadow: 0 2px 12px rgba(212,175,55,0.10);
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        overflow: hidden;
+    }
+    .welcome-admin .welcome-glow {
+        content: '';
+        position: absolute;
+        top: 0; left: -60%;
+        width: 60%; height: 100%;
+        background: linear-gradient(120deg, rgba(255, 236, 140, 0.18) 0%, rgba(255, 236, 140, 0.45) 50%, rgba(255, 236, 140, 0.18) 100%);
+        filter: blur(2px);
+        animation: welcome-glow-move 2.8s linear infinite;
+        z-index: 1;
+    }
+    @keyframes welcome-glow-move {
+        0% { left: -60%; }
+        100% { left: 100%; }
+    }
+    .welcome-admin .welcome-avatar {
+        width: 64px; height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #d4af37 60%, #fffde7 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 2.2rem; color: #fff; font-weight: bold;
+        box-shadow: 0 0 0 4px rgba(212,175,55,0.12);
+        z-index: 2;
+    }
+    .welcome-admin .welcome-text {
+        z-index: 2;
+    }
+    .welcome-admin .welcome-title {
+        margin: 0; color: #ffe082; font-size: 1.7rem; font-weight: 700;
+        text-shadow: 0 2px 8px #2d2d2d;
+    }
+    .welcome-admin .welcome-desc {
+        color: #fffde7; font-size: 1rem; margin-top: 6px;
+        text-shadow: 0 1px 4px #2d2d2d;
+    }
+    </style>
+    <!-- Xin chào Quản trị viên -->
+    <div class="welcome-admin">
+        <div class="welcome-glow"></div>
+        <div class="welcome-avatar">👑</div>
+        <div class="welcome-text">
+            <h2 class="welcome-title">Xin chào Quản trị viên!</h2>
+            <div class="welcome-desc">Chúc bạn một ngày làm việc hiệu quả và vui vẻ.</div>
+        </div>
+    </div>
 
 <!-- Page Header -->
 <div class="page-header-section">
